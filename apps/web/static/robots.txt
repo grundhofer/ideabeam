@@ -1,0 +1,5 @@
+# /w/ is NOT disallowed, on purpose: robots.txt only stops fetching, not indexing, and a crawler that may not fetch
+# a wall's address never sees the noindex it carries (X-Robots-Tag in _headers, the robots meta tag in the page).
+
+User-agent: *
+Disallow: /api/

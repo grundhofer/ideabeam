@@ -1,0 +1,22 @@
+node_modules/
+proto/e0-messung/models/
+proto/e0-messung/dist/
+proto/e0-messung/.chrome-profile/
+proto/e0-messung/.venv/
+.wrangler/
+.DS_Store
+proto/e0-messung/models-eval/
+proto/e0-messung/.venv-eval/
+proto/e0-messung/results/*.f32
+proto/e0-messung/results/server.log
+proto/e0-messung/results/port.txt
+proto/e0-messung/results/*.log
+__pycache__/
+dist/
+# secrets of a local run never enter the repository; the one tracked file holds a test switch and no secret
+.dev.vars*
+!apps/worker/.dev.vars
+test-results/
+playwright-report/
+coverage/
+*.tsbuildinfo

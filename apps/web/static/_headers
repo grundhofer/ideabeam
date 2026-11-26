@@ -1,0 +1,29 @@
+# Header rules of Cloudflare's static assets (the file itself is not served). They are matched against the path of
+# the REQUEST and hold for the answers of the single-page fallback too: /w/<id> has no file of its own, is answered
+# with index.html and still gets these lines. They do NOT hold for what the Worker answers itself: /api/* runs the
+# Worker first, and its noindex is set in apps/worker/src/index.ts. tests/worker.spec.ts reads them back from the
+# built app. From FokusBeam's file, there from RetroBeam's and the starter's recipe (docs/HERKUNFT.md).
+
+# The same policy as the <meta> in index.html (src/headers.test.ts keeps the two equal; a browser applies both).
+# frame-ancestors works only as a header: the app is never shown inside another page. connect-src names, beside the
+# app's own origin, the three providers a moderation can arrange with from its own key (PLAN.md 4.5): only its
+# browser calls them, and only once it has entered a key. src/headers.test.ts holds the list against
+# packages/arrange; docs/sebaro-luecken.md, A4.
+/*
+  Content-Security-Policy: default-src 'self'; script-src 'self'; style-src 'self'; img-src 'self'; font-src 'self'; connect-src 'self' https://api.eu.mistral.ai https://api.openai.com https://api.anthropic.com; base-uri 'self'; form-action 'self'; object-src 'none'; frame-ancestors 'none'
+  Referrer-Policy: no-referrer
+  X-Content-Type-Options: nosniff
+
+# Files with their content's hash in the name never change.
+/assets/*
+  Cache-Control: public, max-age=31536000, immutable
+
+# A wall's address is its capability. One that was posted in public must never show up in a search index. Wall.tsx
+# adds a robots meta tag as well; this header is the half a crawler sees without running the script.
+/w/*
+  X-Robots-Tag: noindex
+
+# A workers.dev address is where the product runs while it has no domain of its own, and where every test copy
+# runs: none of them belongs in a search index. Once the product has a domain, its start page there is indexed.
+https://:worker.:subdomain.workers.dev/*
+  X-Robots-Tag: noindex

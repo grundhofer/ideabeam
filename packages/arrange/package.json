@@ -1,0 +1,22 @@
+{
+  "name": "@ideabeam/arrange",
+  "private": true,
+  "description": "IdeaBeam: arranging a wall's notes by meaning. The prompts, the check of every answer, the proposal and its layout. Plain functions, no I/O, no model.",
+  "license": "AGPL-3.0-or-later",
+  "type": "module",
+  "sideEffects": false,
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "scripts": {
+    "check": "tsc --noEmit",
+    "test": "vitest run"
+  },
+  "dependencies": {
+    "@ideabeam/shared": "workspace:*"
+  },
+  "devDependencies": {
+    "typescript": "6.0.3",
+    "vitest": "5.1.0"
+  }
+}

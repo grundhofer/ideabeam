@@ -1,0 +1,64 @@
+# ci: every push and pull request. Audit; then the worker and the shared rules (lint, format, type check, tests in
+# real workerd); then the web app as the sebaro starter checks it: lint, format, type check, the checks of the sebaro
+# copy, unit tests, build with the size budgets, end-to-end tests against the build with the Worker running. Once a
+# week it also asks whether a newer release of the sebaro copy exists; then update the copy with
+# `node apps/web/src/sebaro/checks/update-copy.mjs`, as one commit of its own.
+# Locally `pnpm checks` at the root runs the same, except the audit and the weekly question.
+name: ci
+on:
+  push:
+  pull_request:
+  schedule:
+    - cron: "17 5 * * 1"
+permissions:
+  contents: read
+jobs:
+  ci:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+      - uses: pnpm/action-setup@73e46992e05b19abd31f2f3c20e0e7370d762115 # v6.1.1, pnpm as package.json names it
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
+        with:
+          node-version: "22"
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - name: Audit (what the app and the Worker ship)
+        run: pnpm audit --prod --audit-level=high
+      - name: Worker and shared rules, lint (ESLint, with the bans that keep a Durable Object hibernating)
+        run: pnpm lint
+      - name: Worker and shared rules, format (Prettier)
+        run: pnpm format:check
+      - name: Worker and shared rules, type check (tsc --noEmit)
+        run: pnpm check
+      - name: Worker and shared rules, tests (Vitest; the Worker's in real workerd)
+        run: pnpm test
+      - name: Web app, lint (ESLint)
+        run: pnpm --filter @ideabeam/web lint
+      - name: Web app, format (Prettier)
+        run: pnpm --filter @ideabeam/web format:check
+      - name: Web app, type check (tsc --noEmit)
+        run: pnpm --filter @ideabeam/web check
+      - name: The sebaro copy is unchanged, the product's files are what its declaration gives
+        run: pnpm --filter @ideabeam/web sebaro:verify && pnpm --filter @ideabeam/web sebaro:product
+      - name: Copy check, weekly (a newer release of the sebaro copy exists)
+        if: github.event_name == 'schedule'
+        env:
+          SEBARO_FOUNDRY_TOKEN: ${{ secrets.SEBARO_FOUNDRY_TOKEN }} # the releases are private
+        run: node apps/web/src/sebaro/checks/update-copy.mjs --check
+      - name: Web app, unit tests (Vitest)
+        run: pnpm --filter @ideabeam/web test
+      - name: Build of the app and the Worker, with the size budgets
+        run: pnpm build
+      - name: The app's own CSS and the built page keep sebaro's rules (lint-web.sh)
+        run: pnpm --filter @ideabeam/web sebaro:lint
+      - run: pnpm --filter @ideabeam/web exec playwright install --with-deps chromium
+      - name: End-to-end tests against the build, the Worker running in workerd (Playwright, axe)
+        run: pnpm --filter @ideabeam/web test:e2e
+      - if: ${{ !cancelled() }}
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        with:
+          name: screens
+          path: apps/web/test-results/
+          retention-days: 7
+          if-no-files-found: ignore

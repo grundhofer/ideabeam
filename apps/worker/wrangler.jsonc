@@ -1,0 +1,148 @@
+{
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "ideabeam",
+  "main": "./src/index.ts",
+  // The product's own domain (PLAN.md 7.2, no. 25), as RetroBeam has retrobeam.de. ONE canonical host on purpose:
+  // every capability this app hands out lives in localStorage (session key, admin token), and localStorage is per
+  // ORIGIN: a moderation that made a wall on the apex and opened it on www would arrive as a stranger without its
+  // rights. So www is a redirect at the edge (a rule of the zone, set in the dashboard), never a second custom
+  // domain. The domain is not bought yet, and nothing is deployed before the owner says so
+  // (scripts/production-deploy.sh). The local runs and the tests read this file too and never reach a route.
+  "routes": [{ "pattern": "ideabeam.de", "custom_domain": true }],
+  // Load-bearing: declaring ANY route switches the workers.dev subdomain off by default, and at RetroBeam the first
+  // deploy of its route took the product down with it (the custom domain could not attach). Kept on, a failed or
+  // pending custom domain never leaves the product without an address; its pages there answer noindex
+  // (apps/web/static/_headers).
+  "workers_dev": true,
+  // The same date as RetroBeam and FokusBeam. The test pool (@cloudflare/vitest-pool-workers) brings a workerd of
+  // its own, older than wrangler's: the 0.23.0 one refuses any date after 2026-08-22, so a newer date here fails
+  // every worker test.
+  "compatibility_date": "2026-07-01",
+  "assets": {
+    // In dev/build the Vite plugin replaces this with the SPA client build;
+    // ./public only backs `wrangler dev` without Vite and the test pool.
+    "directory": "./public",
+    "not_found_handling": "single-page-application",
+    "run_worker_first": ["/api/*"],
+  },
+  "vars": {
+    // How many walls the product makes on one UTC day (PLAN.md 3.6). The free plan's allowance is the account's and
+    // shared with RetroBeam and FokusBeam; this keeps IdeaBeam's share below the edge. The Worker's tests name a
+    // number of their own (vitest.config.ts), local runs theirs in .dev.vars: a day of tests makes more walls.
+    // 25, not the 80 the shared rules name: the cost test measures some 1,230 rows written for a wall that is
+    // dragged a lot, and a wall's brake stops it after 1,500 stored changes on one day (WALL_DAILY_ROWS in
+    // packages/shared/src/domain/budget.ts; the owner's decision 11, PLAN.md 7.2). 25 walls at the brake are a good
+    // third of the account's 100,000 rows a day.
+    "DAILY_WALLS": "25",
+    // How many neurons the product spends at Workers AI in any 24 hours (PLAN.md 4.2): the account gets 10,000
+    // free, shared with every other product in it, and that allowance is a window of 24 hours, not a UTC day
+    // (measured, docs/messung-4a.md, section 9). The name is from the time the budget was counted per day. The
+    // Worker asks its counter before every run and calls the AI only when the budget holds the run
+    // (src/arrange.ts). "0" turns arranging by the AI off. Every deployment has a counter of its own: two
+    // deployments in one account (the preview and the product) each spend their own number: the product 8,000, the
+    // preview 1,000 (env.vorschau below; the owner's decision 27).
+    "DAILY_NEURONS": "8000",
+    // The model that arranges: a setting, because Cloudflare withdraws models at short notice (PLAN.md 4.3). What a
+    // model costs and what its request carries stands beside its id in packages/arrange/src/model.ts, for this one
+    // and for the two measured stand-ins.
+    "ARRANGE_MODEL": "@cf/google/gemma-4-26b-a4b-it",
+  },
+  // Workers AI, asked by the Worker alone and never by a Durable Object (PLAN.md 4.3). The binding has no local
+  // stand-in: left to itself, every local start of the Worker would connect to the account, need a login and could
+  // spend neurons. So the two places that start the Worker locally switch that off (`remoteBindings: false` in
+  // apps/web/vite.config.ts and in vitest.config.ts): there the binding exists and fails when it is called, and
+  // local runs ask a stand-in instead (ARRANGE_FAKE in .dev.vars). Only a deployment asks the real AI. A bare
+  // `wrangler dev` in this folder is not such a place: it would connect.
+  // `remote: true` turns nothing on: it says what this binding is anyway, and keeps wrangler from warning about it
+  // at every start and before every test file.
+  "ai": {
+    "binding": "AI",
+    "remote": true,
+  },
+  "durable_objects": {
+    "bindings": [
+      {
+        "name": "WALL_ROOM",
+        "class_name": "WallRoom",
+      },
+      {
+        "name": "RATE_LIMITER",
+        "class_name": "RateLimiter",
+      },
+    ],
+  },
+  // A per-IP brake on making walls: it is unauthenticated, and each wall is a Durable Object with storage and an
+  // alarm. Best effort only (src/index.ts explains why the RateLimiter object stands behind it). The namespace id
+  // is this product's own: the same id as in RetroBeam's config (1001, 1002) or FokusBeam's (2001) would share
+  // their counters.
+  "ratelimits": [
+    {
+      "name": "CREATE_LIMITER",
+      "namespace_id": "3001",
+      "simple": { "limit": 10, "period": 60 },
+    },
+  ],
+  "migrations": [
+    {
+      "tag": "v1",
+      // SQLite-backed is the only DO type available on the free plan; the
+      // limiter stores two rows, the day's count of walls and the AI's count of 24 hours (see rate-limiter.ts).
+      "new_sqlite_classes": ["WallRoom", "RateLimiter"],
+    },
+  ],
+  "observability": {
+    "enabled": true,
+    // Invocation logs retain the full request URL, and every wall URL IS the
+    // participant capability. Retaining them contradicts "no tracking".
+    // Explicit console.error output is unaffected and still reaches Workers Logs.
+    "logs": {
+      "invocation_logs": false,
+    },
+  },
+  "env": {
+    // The preview: the Worker `ideabeam-vorschau` at its workers.dev address, for trying a state on other devices
+    // (scripts/preview-deploy.sh builds it with CLOUDFLARE_ENV=vorschau). The top level above is the product,
+    // `ideabeam` (scripts/production-deploy.sh). The two are two Workers with two Durable Object namespaces: the
+    // preview's walls and counters stay the preview's, and none of them moves to the product. After RetroBeam's
+    // environment `preview` (docs/HERKUNFT.md).
+    "vorschau": {
+      // EMPTY ON PURPOSE, and load-bearing: `routes` is inherited by a named environment, so without this line the
+      // preview would claim the product's domain and answer it from its own, separate walls.
+      "routes": [],
+      // wrangler does NOT inherit vars and bindings into a named environment: each is repeated here, or it is
+      // missing. `migrations`, `observability`, `assets` and `workers_dev` are inherited.
+      "vars": {
+        // the preview's day's budget of walls: 5, the product keeps 25 (the owner's decision, 2026-11-26). The rows
+        // written per day are the account's, shared by the preview, the product, RetroBeam and FokusBeam (PLAN.md 3.6)
+        "DAILY_WALLS": "5",
+        // the owner's decision 27 (PLAN.md 7.2): the preview gets 1,000 of the account's 10,000 neurons, the product
+        // 8,000. It applies with the preview's next deploy.
+        "DAILY_NEURONS": "1000",
+        "ARRANGE_MODEL": "@cf/google/gemma-4-26b-a4b-it",
+      },
+      "ai": {
+        "binding": "AI",
+        "remote": true,
+      },
+      "durable_objects": {
+        "bindings": [
+          {
+            "name": "WALL_ROOM",
+            "class_name": "WallRoom",
+          },
+          {
+            "name": "RATE_LIMITER",
+            "class_name": "RateLimiter",
+          },
+        ],
+      },
+      "ratelimits": [
+        {
+          "name": "CREATE_LIMITER",
+          "namespace_id": "3001",
+          "simple": { "limit": 10, "period": 60 },
+        },
+      ],
+    },
+  },
+}

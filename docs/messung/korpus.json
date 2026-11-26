@@ -1,0 +1,2879 @@
+{
+  "version": 1,
+  "boards": [
+    {
+      "id": "onboarding",
+      "question": {
+        "de": "Wie machen wir die Einarbeitung neuer Kolleginnen und Kollegen besser?",
+        "en": "How do we make onboarding of new colleagues better?"
+      },
+      "themes": [
+        {
+          "id": "docs",
+          "label": {
+            "de": "Dokumentation und Wissen",
+            "en": "Documentation and knowledge"
+          },
+          "notes": [
+            {
+              "t": "Too much text, no examples",
+              "lang": "en"
+            },
+            {
+              "t": "README im Repo beschreibt einen Stand von vor zwei Jahren",
+              "lang": "de",
+              "pair": "docs-p5"
+            },
+            {
+              "t": "Kundenwissen steckt in den Postfächern einzelner Leute, wer neu ist, erfährt davon schlicht nichts",
+              "lang": "de"
+            },
+            {
+              "t": "document the weird exceptions, the normal cases I can guess",
+              "lang": "en"
+            },
+            {
+              "t": "API reference is generated, but nobody explains the concepts behind it",
+              "lang": "en"
+            },
+            {
+              "t": "Wiki has zero structure",
+              "lang": "en"
+            },
+            {
+              "t": "Suche findet nie was",
+              "lang": "de"
+            },
+            {
+              "t": "Ich habe am zweiten Tag eine Anleitung befolgt, die seit einem Jahr nicht mehr stimmt, und niemand hat es gemerkt",
+              "lang": "de"
+            },
+            {
+              "t": "Meeting-Protokolle schreibt keiner, also weiß hinterher auch keiner mehr was",
+              "lang": "de"
+            },
+            {
+              "t": "pages half German, half English",
+              "lang": "en"
+            },
+            {
+              "t": "Bitte ein FAQ mit den Fragen, die wirklich jeder stellt",
+              "lang": "de"
+            },
+            {
+              "t": "Doku einmal im Quartal aufräumen und Altes löschen",
+              "lang": "de"
+            },
+            {
+              "t": "cheat sheet for my desk",
+              "lang": "en"
+            },
+            {
+              "t": "Kurze Videos statt zwanzig Seiten Text für die wichtigsten Abläufe",
+              "lang": "de",
+              "pair": "docs-p4"
+            },
+            {
+              "t": "Jede Seite braucht ein Datum und einen Verantwortlichen",
+              "lang": "de",
+              "pair": "docs-p2"
+            },
+            {
+              "t": "Post-mortems were the best reading I found, but they sit in a folder nobody ever mentions to newcomers",
+              "lang": "en"
+            },
+            {
+              "t": "Can I just edit a page myself or do I have to ask?",
+              "lang": "en"
+            },
+            {
+              "t": "The guides say what to click but never why",
+              "lang": "en"
+            },
+            {
+              "t": "Handbuch als PDF, ernsthaft?",
+              "lang": "de"
+            },
+            {
+              "t": "handbook code samples don't compile",
+              "lang": "en"
+            },
+            {
+              "t": "too much lives only in a few people's heads",
+              "lang": "en",
+              "pair": "docs-p3"
+            },
+            {
+              "t": "a how-we-work page: branching, reviews, release rhythm",
+              "lang": "en"
+            },
+            {
+              "t": "The repo readme is two years out of date",
+              "lang": "en",
+              "pair": "docs-p5"
+            },
+            {
+              "t": "notes from the last few people who joined would be the most honest guide, why don't we collect them",
+              "lang": "en"
+            },
+            {
+              "t": "Urlaubsantrag, Reisekosten, Krankmeldung: musste ich mir alles zusammensuchen",
+              "lang": "de"
+            },
+            {
+              "t": "Architekturübersicht fehlt komplett",
+              "lang": "de"
+            },
+            {
+              "t": "Eine Startseite mit den zehn wichtigsten Links wäre Gold wert",
+              "lang": "de"
+            },
+            {
+              "t": "Drei verschiedene Ablagen und keiner weiß, welche gilt",
+              "lang": "de"
+            },
+            {
+              "t": "Zu viele veraltete Seiten",
+              "lang": "de"
+            },
+            {
+              "t": "no runbook for outages",
+              "lang": "en"
+            },
+            {
+              "t": "Vorlagen für Konzepte und Protokolle liegen überall verstreut",
+              "lang": "de"
+            },
+            {
+              "t": "Where are old training recordings?",
+              "lang": "en"
+            },
+            {
+              "t": "Everything is written for people who already know how it works",
+              "lang": "en"
+            },
+            {
+              "t": "half the links are dead",
+              "lang": "en"
+            },
+            {
+              "t": "every article should show who owns it and when somebody last checked that it is still true",
+              "lang": "en",
+              "pair": "docs-p2"
+            },
+            {
+              "t": "the comments under a page are often more useful than the page",
+              "lang": "en"
+            },
+            {
+              "t": "folder names on the shared drive make no sense to outsiders",
+              "lang": "en"
+            },
+            {
+              "t": "record short screencasts of the main workflows instead, because honestly nobody reads those endless pages",
+              "lang": "en",
+              "pair": "docs-p4"
+            },
+            {
+              "t": "Die Einarbeitungsmappe erklärt die Kaffeemaschine ausführlich, aber kein Wort dazu, wie ein Release bei uns abläuft",
+              "lang": "de"
+            },
+            {
+              "t": "Entscheidungen von früher sind nirgends aufgeschrieben, warum machen wir das so?",
+              "lang": "de"
+            },
+            {
+              "t": "I learned more from one photo of a whiteboard than from the entire handbook, so maybe draw more and write less",
+              "lang": "en"
+            },
+            {
+              "t": "Glossar für unsere Abkürzungen",
+              "lang": "de",
+              "pair": "docs-p1"
+            },
+            {
+              "t": "Wo steht eigentlich was?",
+              "lang": "de"
+            },
+            {
+              "t": "Wenn jemand im Chat eine Frage beantwortet, sollte die Antwort danach auch irgendwo dauerhaft stehen und nicht wieder verschwinden",
+              "lang": "de"
+            },
+            {
+              "t": "Screenshots in Anleitungen sind uralt",
+              "lang": "de"
+            },
+            {
+              "t": "a plain overview of what the product does for customers",
+              "lang": "en"
+            },
+            {
+              "t": "Die Seite zum Deployment ist so lang, dass ich nach der Hälfte aufgegeben habe, drei Absätze hätten gereicht",
+              "lang": "de"
+            },
+            {
+              "t": "Vieles existiert nur in den Köpfen von zwei, drei Leuten",
+              "lang": "de",
+              "pair": "docs-p3"
+            },
+            {
+              "t": "Neue sollen beim Lesen direkt Fehler in den Anleitungen korrigieren dürfen",
+              "lang": "de"
+            },
+            {
+              "t": "a list explaining all the acronyms people throw around",
+              "lang": "en",
+              "pair": "docs-p1"
+            }
+          ]
+        },
+        {
+          "id": "mentoring",
+          "label": {
+            "de": "Mentoring und Ansprechpersonen",
+            "en": "Mentoring and who to ask"
+          },
+          "notes": [
+            {
+              "t": "Feedback from peers too",
+              "lang": "en"
+            },
+            {
+              "t": "check-ins faded after week three",
+              "lang": "en"
+            },
+            {
+              "t": "Who gives me feedback when my manager sits in another country and has never seen a single thing I've done?",
+              "lang": "en"
+            },
+            {
+              "t": "people who start in the same month could share a mentor and meet as a small group every fortnight",
+              "lang": "en"
+            },
+            {
+              "t": "Ich wusste nie, wen ich bei welchem Thema fragen kann",
+              "lang": "de",
+              "pair": "mentoring-p2"
+            },
+            {
+              "t": "weekly one-to-one with my manager while I'm on probation",
+              "lang": "en",
+              "pair": "mentoring-p3"
+            },
+            {
+              "t": "Probezeitgespräch ohne jede Vorbereitung, das war für beide unangenehm",
+              "lang": "de"
+            },
+            {
+              "t": "Mein Pate war super, aber er hatte selbst so viel zu tun, dass ich mich jedes Mal schlecht gefühlt habe, wenn ich etwas wissen wollte",
+              "lang": "de"
+            },
+            {
+              "t": "Nach drei Monaten sollte es ein Gespräch geben, in dem beide Seiten offen sagen, was gut lief und was nicht",
+              "lang": "de"
+            },
+            {
+              "t": "Can I swap my buddy?",
+              "lang": "en"
+            },
+            {
+              "t": "Chef hat sich am ersten Tag fünf Minuten genommen, das war's",
+              "lang": "de"
+            },
+            {
+              "t": "one person for social stuff, a separate expert for technical questions",
+              "lang": "en"
+            },
+            {
+              "t": "someone to talk career with, not only who shows me the tools",
+              "lang": "en"
+            },
+            {
+              "t": "Pate bitte nicht der Chef",
+              "lang": "de"
+            },
+            {
+              "t": "Feste Sprechstunde für Neue",
+              "lang": "de"
+            },
+            {
+              "t": "Nach Probezeit weiter begleiten",
+              "lang": "de"
+            },
+            {
+              "t": "Kanal für Anfängerfragen, in dem garantiert jemand antwortet",
+              "lang": "de"
+            },
+            {
+              "t": "Vertretung für die Bezugsperson festlegen",
+              "lang": "de"
+            },
+            {
+              "t": "assign somebody for the first weeks whose own calendar isn't already full to the brim",
+              "lang": "en",
+              "pair": "mentoring-p1"
+            },
+            {
+              "t": "Wöchentliches Gespräch mit der Führungskraft während der Probezeit",
+              "lang": "de",
+              "pair": "mentoring-p3"
+            },
+            {
+              "t": "Mein Pate war in meiner ersten Woche im Urlaub",
+              "lang": "de",
+              "pair": "mentoring-p4"
+            },
+            {
+              "t": "put the feedback talks in my calendar before I even start",
+              "lang": "en"
+            },
+            {
+              "t": "Fragen sammeln, einmal täglich klären",
+              "lang": "de"
+            },
+            {
+              "t": "Zusätzlich jemand aus einem anderen Team, den man vertraulich fragen kann",
+              "lang": "de"
+            },
+            {
+              "t": "Zwischenfeedback schon nach zwei Wochen",
+              "lang": "de"
+            },
+            {
+              "t": "Betreuer werden bei uns einfach bestimmt, ohne zu fragen, ob sie Lust dazu haben, und das merkt man dann auch",
+              "lang": "de"
+            },
+            {
+              "t": "Ich hätte mir jemanden gewünscht, der regelmäßig von sich aus fragt, wie es läuft, statt darauf zu warten, dass ich mich melde",
+              "lang": "de"
+            },
+            {
+              "t": "My buddy was on holiday the week I started",
+              "lang": "en",
+              "pair": "mentoring-p4"
+            },
+            {
+              "t": "Feedback nach vier Wochen kam nie, ich musste selbst nachhaken",
+              "lang": "de",
+              "pair": "mentoring-p5"
+            },
+            {
+              "t": "Bei fachlichen Fragen wurde ich von einem zum nächsten geschickt, bis ich wieder bei der ersten Person gelandet bin",
+              "lang": "de"
+            },
+            {
+              "t": "Auch erfahrene Einsteiger brauchen jemanden, der ihnen den Laden erklärt",
+              "lang": "de"
+            },
+            {
+              "t": "written feedback, not corridor talk",
+              "lang": "en"
+            },
+            {
+              "t": "Feste Person für die ersten Wochen, die wirklich Zeit hat",
+              "lang": "de",
+              "pair": "mentoring-p1"
+            },
+            {
+              "t": "pairing sessions booked in advance, not a vague just ping me",
+              "lang": "en"
+            },
+            {
+              "t": "peer mentor who joined recently, they still remember the pain",
+              "lang": "en"
+            },
+            {
+              "t": "skip-level chat after two months",
+              "lang": "en"
+            },
+            {
+              "t": "contact in my own timezone",
+              "lang": "en"
+            },
+            {
+              "t": "Let new people pick their own go-to person after a few weeks",
+              "lang": "en"
+            },
+            {
+              "t": "The one-month review I was promised never happened until I chased it myself",
+              "lang": "en",
+              "pair": "mentoring-p5"
+            },
+            {
+              "t": "Kurzer Leitfaden für Betreuende: was wird von ihnen eigentlich erwartet?",
+              "lang": "de"
+            },
+            {
+              "t": "Our mentoring hour turned into a status report every time",
+              "lang": "en"
+            },
+            {
+              "t": "Mein Ansprechpartner hat nach zwei Wochen gewechselt, alles wieder von vorn",
+              "lang": "de"
+            },
+            {
+              "t": "Wer entscheidet über meine Probezeit?",
+              "lang": "de"
+            },
+            {
+              "t": "no idea who to go to for which topic",
+              "lang": "en",
+              "pair": "mentoring-p2"
+            },
+            {
+              "t": "Bei Remote-Start jeden Tag ein kurzer Anruf mit derselben Person",
+              "lang": "de"
+            },
+            {
+              "t": "the person assigned to me was brilliant technically but had never explained anything to a beginner, and it showed",
+              "lang": "en"
+            },
+            {
+              "t": "No surprises at review time",
+              "lang": "en"
+            },
+            {
+              "t": "a named on-call person for newcomer questions, rotating weekly",
+              "lang": "en"
+            },
+            {
+              "t": "my manager cancelled our first three catch-ups",
+              "lang": "en"
+            },
+            {
+              "t": "credit for whoever coaches newcomers",
+              "lang": "en"
+            }
+          ]
+        },
+        {
+          "id": "access",
+          "label": {
+            "de": "Zugänge und Ausstattung",
+            "en": "Access and equipment"
+          },
+          "notes": [
+            {
+              "t": "Laptop arrived without a charger",
+              "lang": "en"
+            },
+            {
+              "t": "container images wouldn't pull behind the corporate proxy and it took three people a whole afternoon to work out why",
+              "lang": "en"
+            },
+            {
+              "t": "camera and mic were blocked by some policy nobody could explain",
+              "lang": "en"
+            },
+            {
+              "t": "Alle Accounts sollten schon vor dem ersten Tag angelegt sein",
+              "lang": "de"
+            },
+            {
+              "t": "Zugriff aufs Repo fehlte",
+              "lang": "de"
+            },
+            {
+              "t": "My account was cloned from a colleague's, so I could suddenly see salary folders I really shouldn't have",
+              "lang": "en"
+            },
+            {
+              "t": "Betriebssystem hätte ich gern vorher selbst wählen dürfen",
+              "lang": "de"
+            },
+            {
+              "t": "Can I use my own device until the company one shows up?",
+              "lang": "en"
+            },
+            {
+              "t": "Ein Skript, das die Entwicklungsumgebung in einer Stunde aufsetzt",
+              "lang": "de",
+              "pair": "access-p4"
+            },
+            {
+              "t": "the software request form wants a cost centre I've never heard of",
+              "lang": "en"
+            },
+            {
+              "t": "half our build tools don't run on the machine I was given",
+              "lang": "en"
+            },
+            {
+              "t": "Zweiter Monitor fehlt",
+              "lang": "de"
+            },
+            {
+              "t": "VPN ging erst nach einer Woche",
+              "lang": "de",
+              "pair": "access-p5"
+            },
+            {
+              "t": "took a full week until the VPN worked",
+              "lang": "en",
+              "pair": "access-p5"
+            },
+            {
+              "t": "Diensthandy erst nach Nachfrage",
+              "lang": "de"
+            },
+            {
+              "t": "Laptop war am ersten Tag nicht da",
+              "lang": "de",
+              "pair": "access-p1"
+            },
+            {
+              "t": "one script that sets up the whole dev environment within an hour, instead of two days of fiddling",
+              "lang": "en",
+              "pair": "access-p4"
+            },
+            {
+              "t": "wrong keyboard layout",
+              "lang": "en"
+            },
+            {
+              "t": "Für jedes Tool ein eigenes Ticket, das dauert ewig",
+              "lang": "de",
+              "pair": "access-p2"
+            },
+            {
+              "t": "IT should hear about new starters at least two weeks ahead",
+              "lang": "en"
+            },
+            {
+              "t": "Die IT hat meinen Namen falsch geschrieben, deshalb passte danach kein einziger Login mehr zu meiner Mailadresse",
+              "lang": "de"
+            },
+            {
+              "t": "having to raise a separate request for every single tool means you wait for weeks",
+              "lang": "en",
+              "pair": "access-p2"
+            },
+            {
+              "t": "Lizenzen rechtzeitig bestellen",
+              "lang": "de"
+            },
+            {
+              "t": "Testdatenbank durfte ich erst nach drei Genehmigungen sehen",
+              "lang": "de"
+            },
+            {
+              "t": "three days on guest wifi",
+              "lang": "en"
+            },
+            {
+              "t": "ship the hardware to remote hires a week early so there is time to fix whatever arrives broken",
+              "lang": "en"
+            },
+            {
+              "t": "single sign-on for everything",
+              "lang": "en"
+            },
+            {
+              "t": "Beim Aufsetzen des Rechners bin ich an einem Zertifikat hängen geblieben, das angeblich jeder hat, nur ich eben nicht",
+              "lang": "de"
+            },
+            {
+              "t": "password manager from day one",
+              "lang": "en"
+            },
+            {
+              "t": "Needed a ticket to get into the ticket system",
+              "lang": "en"
+            },
+            {
+              "t": "Ich habe die ersten vier Tage nur daneben gesessen und zugeschaut, weil mein Benutzerkonto noch nicht freigeschaltet war",
+              "lang": "de"
+            },
+            {
+              "t": "Admin-Rechte auf dem eigenen Rechner, sonst kann ich nichts installieren",
+              "lang": "de",
+              "pair": "access-p3"
+            },
+            {
+              "t": "temporary password had expired before I could log in once",
+              "lang": "en"
+            },
+            {
+              "t": "Türkarte kam nach Wochen",
+              "lang": "de"
+            },
+            {
+              "t": "Drucker einrichten war Glückssache",
+              "lang": "de"
+            },
+            {
+              "t": "Zwei-Faktor-Einrichtung hat mich einen halben Tag gekostet",
+              "lang": "de"
+            },
+            {
+              "t": "Standardpaket pro Rolle: Entwickler bekommt automatisch diese zwanzig Freischaltungen",
+              "lang": "de"
+            },
+            {
+              "t": "Mailpostfach lief, Kalender nicht, Chat nur im Browser",
+              "lang": "de"
+            },
+            {
+              "t": "Wer eine Stelle übernimmt, sollte die Rechte des Vorgängers einfach erben können, statt alles einzeln neu zu beantragen",
+              "lang": "de"
+            },
+            {
+              "t": "Headset wäre nett gewesen",
+              "lang": "de"
+            },
+            {
+              "t": "Fürs Homeoffice gab es weder Dockingstation noch Bildschirm, ich habe drei Wochen am Küchentisch auf dreizehn Zoll gearbeitet",
+              "lang": "de"
+            },
+            {
+              "t": "Rechner viel zu langsam",
+              "lang": "de"
+            },
+            {
+              "t": "helpdesk closes at three",
+              "lang": "en"
+            },
+            {
+              "t": "Rechte kamen scheibchenweise, jeden Tag eine neue Fehlermeldung",
+              "lang": "de"
+            },
+            {
+              "t": "Proper chair and desk, please",
+              "lang": "en"
+            },
+            {
+              "t": "hand-me-down laptop, battery dies within an hour",
+              "lang": "en"
+            },
+            {
+              "t": "Without local admin rights I can't install anything I need",
+              "lang": "en",
+              "pair": "access-p3"
+            },
+            {
+              "t": "clear rule for when a newcomer gets production access",
+              "lang": "en"
+            },
+            {
+              "t": "permissions silently expire after ninety days and lock you out",
+              "lang": "en"
+            },
+            {
+              "t": "no laptop waiting for me on day one",
+              "lang": "en",
+              "pair": "access-p1"
+            }
+          ]
+        },
+        {
+          "id": "firsttasks",
+          "label": {
+            "de": "Erste Aufgaben und Einarbeitungsplan",
+            "en": "First tasks and onboarding plan"
+          },
+          "notes": [
+            {
+              "t": "Ich wusste nicht, was nach drei Monaten von mir erwartet wird",
+              "lang": "de",
+              "pair": "firsttasks-p2"
+            },
+            {
+              "t": "Ich habe mir selbst Arbeit gesucht, weil nichts vorbereitet war",
+              "lang": "de"
+            },
+            {
+              "t": "Nicht gleich drei Projekte parallel",
+              "lang": "de"
+            },
+            {
+              "t": "Zu früh ins Kundenprojekt",
+              "lang": "de"
+            },
+            {
+              "t": "Gut wäre eine Mischung aus Zuhören, Ausprobieren und einem eigenen kleinen Ergebnis, und zwar in jeder der ersten Wochen",
+              "lang": "de"
+            },
+            {
+              "t": "Homework before day one? No",
+              "lang": "en"
+            },
+            {
+              "t": "starter tasks ran out fast",
+              "lang": "en"
+            },
+            {
+              "t": "starter project that touches every layer of the stack once",
+              "lang": "en"
+            },
+            {
+              "t": "Die Liste der Einstiegstickets war zwei Jahre alt und die Hälfte davon längst erledigt oder gar nicht mehr relevant",
+              "lang": "de"
+            },
+            {
+              "t": "One learning goal per week",
+              "lang": "en"
+            },
+            {
+              "t": "Am dritten Tag sollte ich allein einen Fehler in der Abrechnung suchen, ohne das System je gesehen zu haben",
+              "lang": "de"
+            },
+            {
+              "t": "no deadlines in month one",
+              "lang": "en"
+            },
+            {
+              "t": "writing tests for old code is a decent way in",
+              "lang": "en"
+            },
+            {
+              "t": "Kein Wochenplan, nur Zuruf",
+              "lang": "de"
+            },
+            {
+              "t": "check the first-month plan halfway through and adjust it if things turn out too easy or too hard",
+              "lang": "en"
+            },
+            {
+              "t": "when is onboarding officially over? give it an end date",
+              "lang": "en"
+            },
+            {
+              "t": "A fortnight of nothing but reading is too much",
+              "lang": "en",
+              "pair": "firsttasks-p4"
+            },
+            {
+              "t": "Erster Tag: nur Formulare",
+              "lang": "de"
+            },
+            {
+              "t": "whether you get a plan at all depends on your manager, some people get a spreadsheet and others get nothing",
+              "lang": "en"
+            },
+            {
+              "t": "Übungsprojekt zum Kaputtmachen",
+              "lang": "de"
+            },
+            {
+              "t": "my calendar was packed with intro sessions from nine to five, leaving zero time to actually try anything myself",
+              "lang": "en"
+            },
+            {
+              "t": "Erster kleiner Bugfix schon in Woche eins",
+              "lang": "de",
+              "pair": "firsttasks-p1"
+            },
+            {
+              "t": "Mein Plan für den ersten Monat bestand aus einer einzigen Zeile, nämlich komm erst mal an, und dabei blieb es",
+              "lang": "de"
+            },
+            {
+              "t": "let me choose between two or three starter topics",
+              "lang": "en"
+            },
+            {
+              "t": "send me the timetable for week one before I start",
+              "lang": "en",
+              "pair": "firsttasks-p5"
+            },
+            {
+              "t": "Etwas zum Anfassen bauen statt nur Schulungen absitzen",
+              "lang": "de"
+            },
+            {
+              "t": "My goals were copied from the previous hire, who had a completely different role, and nobody noticed for weeks",
+              "lang": "en"
+            },
+            {
+              "t": "tasks that get harder gradually",
+              "lang": "en"
+            },
+            {
+              "t": "Wochenziele als Checkliste zum Abhaken",
+              "lang": "de"
+            },
+            {
+              "t": "pair two new starters on one small feature together",
+              "lang": "en"
+            },
+            {
+              "t": "starter project got reprioritised twice",
+              "lang": "en"
+            },
+            {
+              "t": "First assignment had no deadline and no definition of done",
+              "lang": "en"
+            },
+            {
+              "t": "backup ticket when I'm blocked",
+              "lang": "en"
+            },
+            {
+              "t": "Rufbereitschaft erst nach Monaten",
+              "lang": "de"
+            },
+            {
+              "t": "the schedule stopped after week one, then silence",
+              "lang": "en"
+            },
+            {
+              "t": "Mein erstes Ticket war riesig",
+              "lang": "de"
+            },
+            {
+              "t": "ship a tiny bug fix within the first week",
+              "lang": "en",
+              "pair": "firsttasks-p1"
+            },
+            {
+              "t": "Zwei Wochen nur lesen ist zu lang",
+              "lang": "de",
+              "pair": "firsttasks-p4"
+            },
+            {
+              "t": "Die Pflichtschulungen bitte verteilen, nicht alle am ersten Tag",
+              "lang": "de"
+            },
+            {
+              "t": "Nach einem Monat eine kleine Sache selbst vorstellen dürfen",
+              "lang": "de"
+            },
+            {
+              "t": "Lernziele gemeinsam festlegen statt von oben vorgeben",
+              "lang": "de"
+            },
+            {
+              "t": "Nobody ever spelled out what I was supposed to have achieved by the end of month three",
+              "lang": "en",
+              "pair": "firsttasks-p2"
+            },
+            {
+              "t": "label issues that are suitable for beginners",
+              "lang": "en",
+              "pair": "firsttasks-p3"
+            },
+            {
+              "t": "slower ramp-up for career changers",
+              "lang": "en"
+            },
+            {
+              "t": "Explain why this ticket matters, not just what to change",
+              "lang": "en"
+            },
+            {
+              "t": "Tickets markieren, die sich für Einsteiger eignen",
+              "lang": "de",
+              "pair": "firsttasks-p3"
+            },
+            {
+              "t": "Einsteigerthemen sollten echt sein, keine Beschäftigungstherapie",
+              "lang": "de"
+            },
+            {
+              "t": "Einmal alle Stationen durchlaufen: Support, Vertrieb, Entwicklung, je ein Tag",
+              "lang": "de"
+            },
+            {
+              "t": "Ich bekam zum Start ein Thema, das seit Monaten keiner anfassen wollte, und genau so hat es sich auch angefühlt",
+              "lang": "de"
+            },
+            {
+              "t": "Stundenplan für die erste Woche vorab per Mail",
+              "lang": "de",
+              "pair": "firsttasks-p5"
+            }
+          ]
+        },
+        {
+          "id": "team",
+          "label": {
+            "de": "Team und Kultur",
+            "en": "Team and culture"
+          },
+          "notes": [
+            {
+              "t": "Spieleabend oder Wandertag, irgendwas außerhalb der Arbeit",
+              "lang": "de"
+            },
+            {
+              "t": "All the social calls are at six in the evening my time, so I've been to exactly none of them",
+              "lang": "en"
+            },
+            {
+              "t": "Feste Tage, an denen das ganze Team vor Ort ist",
+              "lang": "de"
+            },
+            {
+              "t": "get matched with a random colleague for a coffee",
+              "lang": "en",
+              "pair": "team-p5"
+            },
+            {
+              "t": "no pressure to socialise, some of us are introverts",
+              "lang": "en"
+            },
+            {
+              "t": "What's the dress code?",
+              "lang": "en"
+            },
+            {
+              "t": "Insiderwitze, die keiner erklärt",
+              "lang": "de",
+              "pair": "team-p4"
+            },
+            {
+              "t": "When you work from home you feel left out fast",
+              "lang": "en",
+              "pair": "team-p2"
+            },
+            {
+              "t": "still don't feel I belong",
+              "lang": "en"
+            },
+            {
+              "t": "Alle essen am Schreibtisch",
+              "lang": "de"
+            },
+            {
+              "t": "don't let newcomers eat alone on their first day",
+              "lang": "en",
+              "pair": "team-p1"
+            },
+            {
+              "t": "Gemeinsames Mittagessen am ersten Tag",
+              "lang": "de",
+              "pair": "team-p1"
+            },
+            {
+              "t": "Video lunch is awkward and everyone knows it, but it is still better than never seeing each other at all",
+              "lang": "en"
+            },
+            {
+              "t": "Vorstellungsrunde mit Fotos, ich konnte mir keine Namen merken",
+              "lang": "de",
+              "pair": "team-p3"
+            },
+            {
+              "t": "group chat for everyone who joined in the same quarter",
+              "lang": "en"
+            },
+            {
+              "t": "Came in on my office day and the place was empty",
+              "lang": "en"
+            },
+            {
+              "t": "lunchtime running group",
+              "lang": "en"
+            },
+            {
+              "t": "An Bürotagen sitzt jeder mit Kopfhörern da, keiner redet",
+              "lang": "de"
+            },
+            {
+              "t": "Stammtisch einmal im Monat",
+              "lang": "de"
+            },
+            {
+              "t": "at my first all-hands nobody mentioned that there were new people on the team, we just sat there like visitors",
+              "lang": "en"
+            },
+            {
+              "t": "Humour here is pretty rough",
+              "lang": "en"
+            },
+            {
+              "t": "Kaffeepause mit zufällig ausgewählten Kolleginnen und Kollegen",
+              "lang": "de",
+              "pair": "team-p5"
+            },
+            {
+              "t": "Eine kurze Mail an alle, wer ich bin und was ich mache",
+              "lang": "de"
+            },
+            {
+              "t": "offsite in the first quarter",
+              "lang": "en"
+            },
+            {
+              "t": "Remote fühlt man sich schnell außen vor",
+              "lang": "de",
+              "pair": "team-p2"
+            },
+            {
+              "t": "Kamera aus in jedem Call",
+              "lang": "de"
+            },
+            {
+              "t": "visit the other office once in the first few months",
+              "lang": "en"
+            },
+            {
+              "t": "Bei uns wird viel über Werte geredet, aber wer um sechs geht, wird trotzdem schief angeschaut, das sollte man Neuen ehrlich sagen",
+              "lang": "de"
+            },
+            {
+              "t": "Die Alteingesessenen bleiben in der Kantine unter sich",
+              "lang": "de"
+            },
+            {
+              "t": "people mispronounce my name",
+              "lang": "en"
+            },
+            {
+              "t": "an intro round with faces attached, because I forgot every single name within about ten minutes",
+              "lang": "en",
+              "pair": "team-p3"
+            },
+            {
+              "t": "Niemand hat Hallo gesagt",
+              "lang": "de"
+            },
+            {
+              "t": "Duzen oder Siezen? Unklar",
+              "lang": "de"
+            },
+            {
+              "t": "Im Chat gibt es einen Plauderkanal, aber Neue werden nicht eingeladen",
+              "lang": "de"
+            },
+            {
+              "t": "Ich wusste wochenlang nicht, wer auf der anderen Etage arbeitet",
+              "lang": "de"
+            },
+            {
+              "t": "Ich bin seit zwei Monaten dabei und habe drei Leute aus meiner eigenen Abteilung noch nie persönlich gesehen",
+              "lang": "de"
+            },
+            {
+              "t": "people switch to German halfway through the meeting",
+              "lang": "en"
+            },
+            {
+              "t": "Wie laut darf man hier eigentlich widersprechen?",
+              "lang": "de"
+            },
+            {
+              "t": "Die Sommerfeier war zwei Wochen vor meinem Start, danach kam ein halbes Jahr lang nichts mehr, wo man sich hätte kennenlernen können",
+              "lang": "de"
+            },
+            {
+              "t": "so many running gags and nobody lets you in on them",
+              "lang": "en",
+              "pair": "team-p4"
+            },
+            {
+              "t": "Kleine Willkommenskarte am Platz",
+              "lang": "de"
+            },
+            {
+              "t": "Ich arbeite in Teilzeit und alle gemeinsamen Aktionen liegen auf Nachmittagen, an denen ich gar nicht da bin",
+              "lang": "de"
+            },
+            {
+              "t": "Geburtstage und Jubiläen feiern, das verbindet mehr als jedes Leitbild",
+              "lang": "de"
+            },
+            {
+              "t": "five minutes of small talk before meetings, I really liked that",
+              "lang": "en"
+            },
+            {
+              "t": "after-work drinks leave out everyone who doesn't drink",
+              "lang": "en"
+            },
+            {
+              "t": "A hoodie on day one sounds silly but it worked",
+              "lang": "en"
+            },
+            {
+              "t": "Schön wäre ein Steckbrief von jedem mit Hobbys und Lieblingsessen, dann hat man gleich einen Aufhänger fürs erste Gespräch",
+              "lang": "de"
+            },
+            {
+              "t": "only woman in the room",
+              "lang": "en"
+            },
+            {
+              "t": "seated far away from everyone",
+              "lang": "en"
+            },
+            {
+              "t": "so much unwritten stuff here, like who books which room and why nobody ever touches the blue mug",
+              "lang": "en"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "stadtteil",
+      "question": {
+        "de": "Was soll unsere Stadtteil-App können?",
+        "en": "What should our neighbourhood app be able to do?"
+      },
+      "themes": [
+        {
+          "id": "sharing",
+          "label": {
+            "de": "Nachbarschaftshilfe und Teilen",
+            "en": "Neighbours helping and sharing"
+          },
+          "notes": [
+            {
+              "t": "Hilfe beim Ausfüllen von Formularen und Anträgen anbieten",
+              "lang": "de"
+            },
+            {
+              "t": "Essensreste vom Fest einstellen können, bevor sie schlecht werden, mit Abholzeit und Hinweis auf Allergene",
+              "lang": "de"
+            },
+            {
+              "t": "I teach guitar, you fix my tap, that sort of swap",
+              "lang": "en"
+            },
+            {
+              "t": "pass on old laptops to kids who need one for school",
+              "lang": "en"
+            },
+            {
+              "t": "I've got a garden but no time for it, somebody without one could grow vegetables there and we split the harvest",
+              "lang": "en"
+            },
+            {
+              "t": "Hunde-Sitting gegen Kuchen",
+              "lang": "de"
+            },
+            {
+              "t": "why buy a drill when the guy next door has one",
+              "lang": "en",
+              "pair": "sharing-p1"
+            },
+            {
+              "t": "Who can shorten trousers?",
+              "lang": "en"
+            },
+            {
+              "t": "Tauschregal für Kinderkleidung",
+              "lang": "de"
+            },
+            {
+              "t": "Pakete annehmen füreinander",
+              "lang": "de"
+            },
+            {
+              "t": "do the weekly shop for older people on the street who can't get about so well any more",
+              "lang": "en",
+              "pair": "sharing-p3"
+            },
+            {
+              "t": "the digital version of borrowing a cup of sugar",
+              "lang": "en"
+            },
+            {
+              "t": "find a babysitter who lives just round the corner",
+              "lang": "en",
+              "pair": "sharing-p5"
+            },
+            {
+              "t": "Wer gießt meine Blumen, wenn ich im Urlaub bin?",
+              "lang": "de",
+              "pair": "sharing-p2"
+            },
+            {
+              "t": "Bei uns im Haus wohnen viele Alleinstehende, eine Funktion für kurzes Nachfragen, ob alles in Ordnung ist, wäre schön",
+              "lang": "de"
+            },
+            {
+              "t": "Free sofa, collect this week",
+              "lang": "en"
+            },
+            {
+              "t": "Bewertungen, damit man weiß, wem man seine Sachen anvertraut",
+              "lang": "de"
+            },
+            {
+              "t": "a locker in the stairwell for handovers, so lender and borrower don't have to be at home at the same time",
+              "lang": "en"
+            },
+            {
+              "t": "Jemand, der mir das Smartphone erklärt, ganz in Ruhe",
+              "lang": "de"
+            },
+            {
+              "t": "thank helpers, no money involved",
+              "lang": "en"
+            },
+            {
+              "t": "Verschenken-Ecke für Sachen, die zu schade für den Müll sind",
+              "lang": "de",
+              "pair": "sharing-p4"
+            },
+            {
+              "t": "a spot for giving away things that are far too good for the bin, so they find a new home",
+              "lang": "en",
+              "pair": "sharing-p4"
+            },
+            {
+              "t": "Zu verschenken: Umzugskartons",
+              "lang": "de"
+            },
+            {
+              "t": "Zeitkonto: eine Stunde helfen, eine Stunde Hilfe bekommen",
+              "lang": "de"
+            },
+            {
+              "t": "Babysitter aus der direkten Umgebung finden",
+              "lang": "de",
+              "pair": "sharing-p5"
+            },
+            {
+              "t": "leftover paint going spare",
+              "lang": "en"
+            },
+            {
+              "t": "My pressure washer is free to borrow, just ask",
+              "lang": "en"
+            },
+            {
+              "t": "shovel snow for the old couple at number twelve",
+              "lang": "en"
+            },
+            {
+              "t": "Schön wäre, wenn Angebote nur in meiner Straße sichtbar wären, bei den großen Kleinanzeigen fahren die Leute aus der halben Stadt an",
+              "lang": "de"
+            },
+            {
+              "t": "Einkaufen für ältere Nachbarn, die nicht mehr gut laufen können",
+              "lang": "de",
+              "pair": "sharing-p3"
+            },
+            {
+              "t": "spare key with a neighbour",
+              "lang": "en"
+            },
+            {
+              "t": "Anyone handy with a soldering iron? my radio died",
+              "lang": "en"
+            },
+            {
+              "t": "Ich hätte Äpfel vom Baum übrig, wer will welche?",
+              "lang": "de"
+            },
+            {
+              "t": "board games for a weekend",
+              "lang": "en"
+            },
+            {
+              "t": "Wer kann mir kurz beim Tragen der Waschmaschine helfen?",
+              "lang": "de"
+            },
+            {
+              "t": "remind me to return stuff",
+              "lang": "en"
+            },
+            {
+              "t": "cook an extra portion for a neighbour who is ill",
+              "lang": "en"
+            },
+            {
+              "t": "Bücherschrank digital: sehen, was gerade drinsteht",
+              "lang": "de"
+            },
+            {
+              "t": "Leiter gesucht, nur samstags",
+              "lang": "de"
+            },
+            {
+              "t": "someone to water my plants while I'm away",
+              "lang": "en",
+              "pair": "sharing-p2"
+            },
+            {
+              "t": "Pfand oder Kaution für teure Geräte, sonst traut sich keiner, die gute Kamera oder den Beamer herzugeben",
+              "lang": "de"
+            },
+            {
+              "t": "Gästebett für Besuch ausleihen",
+              "lang": "de"
+            },
+            {
+              "t": "post what I'm looking for and let offers come to me",
+              "lang": "en"
+            },
+            {
+              "t": "Our row of houses could easily own one lawnmower between us instead of eight that each run twice a month",
+              "lang": "en"
+            },
+            {
+              "t": "swap plant cuttings",
+              "lang": "en"
+            },
+            {
+              "t": "What happens when a borrowed item comes back broken?",
+              "lang": "en"
+            },
+            {
+              "t": "Nachhilfe von Schülern für Schüler",
+              "lang": "de"
+            },
+            {
+              "t": "Ich habe eine Nähmaschine, die nur herumsteht, und würde sie gern verleihen, wenn ich wüsste, an wen",
+              "lang": "de"
+            },
+            {
+              "t": "Bohrmaschine leihen statt kaufen",
+              "lang": "de",
+              "pair": "sharing-p1"
+            },
+            {
+              "t": "Raclette, Fondue, Bierbank: Dinge, die man einmal im Jahr braucht",
+              "lang": "de"
+            }
+          ]
+        },
+        {
+          "id": "events",
+          "label": {
+            "de": "Veranstaltungen und Vereine",
+            "en": "Events and clubs"
+          },
+          "notes": [
+            {
+              "t": "Language café idea: an hour of tea where people practise German or English with each other, no teacher needed",
+              "lang": "en"
+            },
+            {
+              "t": "Laternenumzug: Route und Uhrzeit",
+              "lang": "de"
+            },
+            {
+              "t": "Kurse der Volkshochschule, die bei uns um die Ecke stattfinden",
+              "lang": "de"
+            },
+            {
+              "t": "Is the venue step-free, and is there a hearing loop?",
+              "lang": "en"
+            },
+            {
+              "t": "Three things on the same Saturday again, please coordinate dates",
+              "lang": "en"
+            },
+            {
+              "t": "waiting list for full workshops",
+              "lang": "en"
+            },
+            {
+              "t": "the Scout group has spaces for under-tens and the allotment society has an open day next month, put both in",
+              "lang": "en"
+            },
+            {
+              "t": "filter: free entry only",
+              "lang": "en"
+            },
+            {
+              "t": "Bei Regen sofort Bescheid, ob das Fest ausfällt, nicht erst vor Ort",
+              "lang": "de"
+            },
+            {
+              "t": "one calendar showing everything going on around here this week",
+              "lang": "en",
+              "pair": "events-p1"
+            },
+            {
+              "t": "Youth teams at the sports club are desperate for coaches",
+              "lang": "en",
+              "pair": "events-p4"
+            },
+            {
+              "t": "Who do I even talk to if I want to put on a small gig in the square next summer?",
+              "lang": "en"
+            },
+            {
+              "t": "Kinderprogramm nach Alter filtern",
+              "lang": "de"
+            },
+            {
+              "t": "only notify me about concerts and kids' stuff, nothing else",
+              "lang": "en"
+            },
+            {
+              "t": "Vereine sollen ihre Termine selbst eintragen können",
+              "lang": "de"
+            },
+            {
+              "t": "Für Jugendliche gibt es abends nichts, vielleicht könnte man Skate-Sessions oder offene Proberäume gemeinsam auf die Beine stellen",
+              "lang": "de"
+            },
+            {
+              "t": "Sunday morning running group, meets nine o'clock at the bridge",
+              "lang": "en"
+            },
+            {
+              "t": "Flohmarkt im Hof, Termine rechtzeitig ankündigen",
+              "lang": "de",
+              "pair": "events-p5"
+            },
+            {
+              "t": "export to my own calendar",
+              "lang": "en"
+            },
+            {
+              "t": "things for kids to do during the school holidays",
+              "lang": "en"
+            },
+            {
+              "t": "Beim Hoffest im Frühjahr waren wir zu sechst, mit einer Einladung über die App wären es bestimmt fünfzig gewesen",
+              "lang": "de"
+            },
+            {
+              "t": "Kalender mit allem, was diese Woche im Viertel los ist",
+              "lang": "de",
+              "pair": "events-p1"
+            },
+            {
+              "t": "quick poll on which date suits most people for garden day",
+              "lang": "en"
+            },
+            {
+              "t": "Unser Schachclub trifft sich seit Jahren donnerstags im Hinterzimmer, und kaum jemand im Viertel weiß, dass es uns gibt",
+              "lang": "de"
+            },
+            {
+              "t": "Chor sucht Männerstimmen",
+              "lang": "de"
+            },
+            {
+              "t": "flea market in the courtyard: give people enough notice of the dates",
+              "lang": "en",
+              "pair": "events-p5"
+            },
+            {
+              "t": "Eintrittskarten gleich mitkaufen",
+              "lang": "de"
+            },
+            {
+              "t": "photos after the festival",
+              "lang": "en"
+            },
+            {
+              "t": "Erinnerung einen Tag vorher aufs Handy",
+              "lang": "de",
+              "pair": "events-p3"
+            },
+            {
+              "t": "Nachbarschaftstreff für Zugezogene, einmal im Monat im Gemeindehaus",
+              "lang": "de"
+            },
+            {
+              "t": "home fixtures of our local football side, with kick-off times",
+              "lang": "en"
+            },
+            {
+              "t": "push reminder the day before",
+              "lang": "en",
+              "pair": "events-p3"
+            },
+            {
+              "t": "Sportverein sucht dringend Trainer für die Jugend",
+              "lang": "de",
+              "pair": "events-p4"
+            },
+            {
+              "t": "Die Konzertplakate an der Litfaßsäule liest keiner mehr, und der Schaukasten vom Bürgerverein zeigt noch das Programm von Ostern",
+              "lang": "de"
+            },
+            {
+              "t": "Seniorencafé, jeden Dienstag",
+              "lang": "de"
+            },
+            {
+              "t": "book club wants new members",
+              "lang": "en"
+            },
+            {
+              "t": "Wann ist wieder Weinfest?",
+              "lang": "de"
+            },
+            {
+              "t": "I never open apps, so send me a short weekly email listing what's coming up near me",
+              "lang": "en"
+            },
+            {
+              "t": "map view of what's on",
+              "lang": "en"
+            },
+            {
+              "t": "Kinoabend im Park wiederholen!",
+              "lang": "de"
+            },
+            {
+              "t": "Straßenfest gemeinsam planen: wer bringt was mit?",
+              "lang": "de",
+              "pair": "events-p2"
+            },
+            {
+              "t": "Ich erfahre von Konzerten immer erst, wenn sie vorbei sind",
+              "lang": "de"
+            },
+            {
+              "t": "Pub quiz every other Thursday",
+              "lang": "en"
+            },
+            {
+              "t": "Anmeldung zum Kurs per Klick",
+              "lang": "de"
+            },
+            {
+              "t": "Man sollte selbst etwas Kleines eintragen dürfen, zum Beispiel einen Spieleabend im Hausflur oder gemeinsames Public Viewing",
+              "lang": "de"
+            },
+            {
+              "t": "Helfer fürs Sommerfest gesucht: Aufbau, Grill, Kuchenstand",
+              "lang": "de"
+            },
+            {
+              "t": "organise the street party together and sort out who brings what",
+              "lang": "en",
+              "pair": "events-p2"
+            },
+            {
+              "t": "show when the church hall is free to hire",
+              "lang": "en"
+            },
+            {
+              "t": "a guided walk where long-time residents tell what the streets looked like fifty years ago, I'd go to that",
+              "lang": "en"
+            },
+            {
+              "t": "Sehen, wer von meinen Bekannten auch hingeht",
+              "lang": "de"
+            }
+          ]
+        },
+        {
+          "id": "issues",
+          "label": {
+            "de": "Mängel melden",
+            "en": "Reporting problems to the city"
+          },
+          "notes": [
+            {
+              "t": "Öffentliche Toilette am Marktplatz ist dauernd verschlossen oder verdreckt, das müsste man mit zwei Klicks weitergeben können",
+              "lang": "de"
+            },
+            {
+              "t": "loose bolt on climbing frame",
+              "lang": "en"
+            },
+            {
+              "t": "Blocked drain floods the crossing whenever it rains hard",
+              "lang": "en"
+            },
+            {
+              "t": "Zebra crossing has faded",
+              "lang": "en"
+            },
+            {
+              "t": "sewer smell every summer",
+              "lang": "en"
+            },
+            {
+              "t": "playground bins are overflowing",
+              "lang": "en",
+              "pair": "issues-p5"
+            },
+            {
+              "t": "Der Brunnen auf dem Platz ist seit zwei Sommern trocken",
+              "lang": "de"
+            },
+            {
+              "t": "Laterne vor unserem Haus ist seit Wochen kaputt",
+              "lang": "de",
+              "pair": "issues-p1"
+            },
+            {
+              "t": "Street lamps burn all day and go off at night",
+              "lang": "en"
+            },
+            {
+              "t": "Ich habe die defekte Rutsche dreimal beim Amt gemeldet und nie eine Antwort bekommen, irgendwann gibt man einfach auf",
+              "lang": "de"
+            },
+            {
+              "t": "Welches Amt ist eigentlich zuständig, Grünflächen, Tiefbau oder Ordnungsamt? Die App soll das wissen, nicht ich",
+              "lang": "de"
+            },
+            {
+              "t": "Bei der Stadt anrufen bringt nichts, da geht nie einer ran",
+              "lang": "de"
+            },
+            {
+              "t": "the pothole on the corner gets bigger every winter",
+              "lang": "en",
+              "pair": "issues-p4"
+            },
+            {
+              "t": "Im Winter wird unser Gehweg nie geräumt, obwohl dort jeden Morgen die halbe Grundschule entlangläuft",
+              "lang": "de"
+            },
+            {
+              "t": "water has been running down our road from a leaking hydrant for five days and nobody seems bothered",
+              "lang": "en"
+            },
+            {
+              "t": "needles in the bushes near the primary school",
+              "lang": "en"
+            },
+            {
+              "t": "building site starts hammering at six in the morning",
+              "lang": "en"
+            },
+            {
+              "t": "show me if somebody is already on it after I flag something",
+              "lang": "en",
+              "pair": "issues-p3"
+            },
+            {
+              "t": "Rückmeldung, wenn der Schaden behoben ist, wäre ein Traum",
+              "lang": "de"
+            },
+            {
+              "t": "road sign flattened by a lorry, still lying there",
+              "lang": "en"
+            },
+            {
+              "t": "The council's own form has fourteen mandatory fields and wants my date of birth, please don't copy that",
+              "lang": "en"
+            },
+            {
+              "t": "Gehwegplatten stehen hoch, meine Mutter ist dort schon gestürzt",
+              "lang": "de"
+            },
+            {
+              "t": "big icons for lamp, hole, rubbish, so my gran can use it",
+              "lang": "en"
+            },
+            {
+              "t": "Wilde Müllkippe hinter den Garagen, jede Woche mehr",
+              "lang": "de"
+            },
+            {
+              "t": "Foto machen, Standort dazu, abschicken, fertig",
+              "lang": "de",
+              "pair": "issues-p2"
+            },
+            {
+              "t": "An overgrown hedge blocks half the footpath, so anyone with a buggy or a wheelchair has to go into the road",
+              "lang": "en"
+            },
+            {
+              "t": "Schaukel seit Monaten gesperrt",
+              "lang": "de"
+            },
+            {
+              "t": "Schäden anonym weitergeben können, ohne Konto und Passwort",
+              "lang": "de"
+            },
+            {
+              "t": "Bolzplatz voller Scherben",
+              "lang": "de"
+            },
+            {
+              "t": "Gullydeckel klappert nachts",
+              "lang": "de"
+            },
+            {
+              "t": "The lamp post by our front door hasn't worked for weeks",
+              "lang": "en",
+              "pair": "issues-p1"
+            },
+            {
+              "t": "shopping trolleys dumped in the canal again",
+              "lang": "en"
+            },
+            {
+              "t": "Äste hängen nach dem Sturm gefährlich tief über dem Weg",
+              "lang": "de"
+            },
+            {
+              "t": "weeds swallowing the pavement",
+              "lang": "en"
+            },
+            {
+              "t": "voice note about the damage",
+              "lang": "en"
+            },
+            {
+              "t": "make it obvious which things are urgent enough to phone someone right now and which can wait in a queue",
+              "lang": "en"
+            },
+            {
+              "t": "Wohin mit Hundekot-Beschwerden?",
+              "lang": "de"
+            },
+            {
+              "t": "Ampel fällt ständig aus",
+              "lang": "de"
+            },
+            {
+              "t": "no signal in the underpass, save the photo and submit later",
+              "lang": "en"
+            },
+            {
+              "t": "Schlagloch an der Ecke wird jeden Winter größer",
+              "lang": "de",
+              "pair": "issues-p4"
+            },
+            {
+              "t": "rats by the bottle bank",
+              "lang": "en"
+            },
+            {
+              "t": "Unterführung komplett beschmiert",
+              "lang": "de"
+            },
+            {
+              "t": "once a year publish the numbers, how many things were flagged, how many got fixed and how long it took",
+              "lang": "en"
+            },
+            {
+              "t": "Überquellende Mülleimer am Spielplatz",
+              "lang": "de",
+              "pair": "issues-p5"
+            },
+            {
+              "t": "take a photo, pin it on the map and you're done",
+              "lang": "en",
+              "pair": "issues-p2"
+            },
+            {
+              "t": "park bench rotten through",
+              "lang": "en"
+            },
+            {
+              "t": "Geländer an der Treppe wackelt",
+              "lang": "de"
+            },
+            {
+              "t": "Wenn zehn Leute dasselbe Loch melden, sollte das zusammengefasst werden und automatisch dringender eingestuft sein als eine Einzelmeldung",
+              "lang": "de"
+            },
+            {
+              "t": "Ich will sehen, ob sich nach meinem Hinweis schon jemand kümmert",
+              "lang": "de",
+              "pair": "issues-p3"
+            },
+            {
+              "t": "Vorschläge einreichen, wo Bänke oder Mülleimer fehlen",
+              "lang": "de"
+            }
+          ]
+        },
+        {
+          "id": "shops",
+          "label": {
+            "de": "Läden und Gastronomie",
+            "en": "Local shops and restaurants"
+          },
+          "notes": [
+            {
+              "t": "mark the independents so I can skip the chains",
+              "lang": "en"
+            },
+            {
+              "t": "Vorbestellen beim Metzger",
+              "lang": "de"
+            },
+            {
+              "t": "little portraits of the owners would be lovely, who runs the place, since when, and what they are proud of",
+              "lang": "en"
+            },
+            {
+              "t": "The butcher is retiring next year and nobody is taking over, could the app help find a successor?",
+              "lang": "en"
+            },
+            {
+              "t": "dog-friendly cafés nearby",
+              "lang": "en"
+            },
+            {
+              "t": "one map with every baker, chemist and corner shop within ten minutes of my door, sorted by what I need right now",
+              "lang": "en"
+            },
+            {
+              "t": "Cash only or card?",
+              "lang": "en"
+            },
+            {
+              "t": "Hofladen am Stadtrand: was ist gerade frisch?",
+              "lang": "de"
+            },
+            {
+              "t": "allergy info on menus",
+              "lang": "en"
+            },
+            {
+              "t": "Kids eat free on Mondays at the Italian, tell people!",
+              "lang": "en"
+            },
+            {
+              "t": "Gutscheine und Rabatte nur für Leute aus dem Viertel",
+              "lang": "de",
+              "pair": "shops-p4"
+            },
+            {
+              "t": "Abends um acht ist hier alles zu, eine Übersicht, wo man dann noch Milch oder Windeln bekommt, wäre hilfreich",
+              "lang": "de"
+            },
+            {
+              "t": "Brot von gestern zum halben Preis, kurz vor Ladenschluss",
+              "lang": "de"
+            },
+            {
+              "t": "Der kleine Gemüsehändler hat bessere Ware als der Supermarkt, aber online findet man ihn nicht einmal mit Adresse",
+              "lang": "de"
+            },
+            {
+              "t": "reviews of local restaurants written by neighbours, not tourists",
+              "lang": "en"
+            },
+            {
+              "t": "Friseur ohne Termin: wo geht das spontan?",
+              "lang": "de"
+            },
+            {
+              "t": "Der Buchhändler bestellt alles bis morgen, das weiß nur keiner",
+              "lang": "de"
+            },
+            {
+              "t": "Tisch im Lokal direkt über die App reservieren",
+              "lang": "de"
+            },
+            {
+              "t": "the fish van comes on Fridays, but where exactly does it stop?",
+              "lang": "en"
+            },
+            {
+              "t": "vouchers and discounts just for people who live here",
+              "lang": "en",
+              "pair": "shops-p4"
+            },
+            {
+              "t": "Öffnungszeiten, die wirklich stimmen",
+              "lang": "de",
+              "pair": "shops-p1"
+            },
+            {
+              "t": "Ich würde mehr vor Ort kaufen, wenn ich vorher nachschauen könnte, ob das Teil überhaupt vorrätig ist",
+              "lang": "de"
+            },
+            {
+              "t": "Neue Geschäfte vorstellen, wenn sie aufmachen",
+              "lang": "de",
+              "pair": "shops-p5"
+            },
+            {
+              "t": "happy hour times",
+              "lang": "en"
+            },
+            {
+              "t": "which pub garden gets the evening sun?",
+              "lang": "en"
+            },
+            {
+              "t": "Inhaber sollen ihren Eintrag selbst pflegen dürfen, also Fotos, Speisekarte und kurze Hinweise wie heute wegen Krankheit geschlossen",
+              "lang": "de"
+            },
+            {
+              "t": "Saturday help wanted at the greengrocer, that kind of small job ad never makes it onto the big sites",
+              "lang": "en"
+            },
+            {
+              "t": "opening hours I can rely on for once",
+              "lang": "en",
+              "pair": "shops-p1"
+            },
+            {
+              "t": "Viele Wirte haben nach dem Umbau der Straße Gäste verloren, eine Aktionswoche mit allen zusammen könnte helfen",
+              "lang": "de"
+            },
+            {
+              "t": "a café with wifi and sockets where working is OK",
+              "lang": "en"
+            },
+            {
+              "t": "Blumenladen liefert jetzt auch",
+              "lang": "de"
+            },
+            {
+              "t": "Which takeaways actually deliver to our street?",
+              "lang": "en"
+            },
+            {
+              "t": "Who sells Christmas trees?",
+              "lang": "en"
+            },
+            {
+              "t": "Mittagstisch der Woche von allen Lokalen auf einen Blick",
+              "lang": "de",
+              "pair": "shops-p2"
+            },
+            {
+              "t": "post office queue right now?",
+              "lang": "en"
+            },
+            {
+              "t": "Wo gibt's noch Schuster?",
+              "lang": "de"
+            },
+            {
+              "t": "somewhere to refill my own jars and bottles",
+              "lang": "en"
+            },
+            {
+              "t": "show me this week's lunch deals from all the cafés and pubs in one list, so I don't have to walk past every board",
+              "lang": "en",
+              "pair": "shops-p2"
+            },
+            {
+              "t": "Leerstand in der Hauptstraße, was kommt da rein?",
+              "lang": "de"
+            },
+            {
+              "t": "pubs showing the football",
+              "lang": "en"
+            },
+            {
+              "t": "Wo kann man hier abends noch gut vegetarisch essen?",
+              "lang": "de"
+            },
+            {
+              "t": "Which cafés and shops can I get into with a wheelchair?",
+              "lang": "en"
+            },
+            {
+              "t": "Welcher Bäcker hat sonntags auf?",
+              "lang": "de",
+              "pair": "shops-p3"
+            },
+            {
+              "t": "Wochenmarkt: welche Stände kommen?",
+              "lang": "de"
+            },
+            {
+              "t": "a short feature whenever a new business opens its doors",
+              "lang": "en",
+              "pair": "shops-p5"
+            },
+            {
+              "t": "Stempelkarte fürs ganze Viertel statt zehn einzelner im Portemonnaie",
+              "lang": "de"
+            },
+            {
+              "t": "which bakery opens on Sundays?",
+              "lang": "en",
+              "pair": "shops-p3"
+            },
+            {
+              "t": "Kiosk hat neuen Besitzer",
+              "lang": "de"
+            },
+            {
+              "t": "Urlaubszeiten der Geschäfte, ich stand schon dreimal vor verschlossener Tür",
+              "lang": "de"
+            },
+            {
+              "t": "Apotheken-Notdienst gleich anzeigen",
+              "lang": "de"
+            }
+          ]
+        },
+        {
+          "id": "mobility",
+          "label": {
+            "de": "Mobilität und Verkehr",
+            "en": "Mobility and transport"
+          },
+          "notes": [
+            {
+              "t": "Lastenrad für den Großeinkauf ausleihen",
+              "lang": "de",
+              "pair": "mobility-p1"
+            },
+            {
+              "t": "I'd cycle to work if someone experienced rode with me the first few times, the main road terrifies me",
+              "lang": "en"
+            },
+            {
+              "t": "Wer fährt samstags zum Baumarkt?",
+              "lang": "de"
+            },
+            {
+              "t": "walking times, not driving",
+              "lang": "en"
+            },
+            {
+              "t": "Welche Baustelle sperrt gerade welche Straße?",
+              "lang": "de"
+            },
+            {
+              "t": "Wenn die S-Bahn ausfällt, wäre es gut, sofort zu sehen, wer aus der Nachbarschaft mit dem Auto in die Stadt fährt",
+              "lang": "de"
+            },
+            {
+              "t": "register my bike's frame number in case it gets nicked",
+              "lang": "en"
+            },
+            {
+              "t": "Honest question for a poll: who would actually give up their second car if borrowing one were easy enough?",
+              "lang": "en"
+            },
+            {
+              "t": "Sichere Abstellplätze fürs Fahrrad am Bahnhof",
+              "lang": "de",
+              "pair": "mobility-p5"
+            },
+            {
+              "t": "Sichere Radroute zur Schule vorschlagen, abseits der Hauptstraße",
+              "lang": "de"
+            },
+            {
+              "t": "lift share to work, I drive the same route daily",
+              "lang": "en",
+              "pair": "mobility-p2"
+            },
+            {
+              "t": "Für Besucher gibt es abends keinen einzigen Parkplatz, ein Tagesausweis über die App würde vieles einfacher machen",
+              "lang": "de"
+            },
+            {
+              "t": "Freie Parkplätze in der Nähe anzeigen",
+              "lang": "de",
+              "pair": "mobility-p4"
+            },
+            {
+              "t": "The hire scooters all charge differently, compare them for me",
+              "lang": "en"
+            },
+            {
+              "t": "The bus never runs on time, give us live departures",
+              "lang": "en",
+              "pair": "mobility-p3"
+            },
+            {
+              "t": "try an e-bike for a weekend before spending three grand",
+              "lang": "en"
+            },
+            {
+              "t": "Unser Auto steht sechs Tage die Woche nur herum, privates Carsharing in der Straße würde sich für alle lohnen",
+              "lang": "de"
+            },
+            {
+              "t": "a bus to the hospital that doesn't involve changing twice and waiting twenty minutes in the cold each time",
+              "lang": "en"
+            },
+            {
+              "t": "Where are disabled bays?",
+              "lang": "en"
+            },
+            {
+              "t": "Rufbus bestellen, wenn kein Linienbus mehr fährt",
+              "lang": "de"
+            },
+            {
+              "t": "Tempo 30 vor der Schule, die Elterntaxis rasen",
+              "lang": "de"
+            },
+            {
+              "t": "train strike alerts",
+              "lang": "en"
+            },
+            {
+              "t": "Ladesäulen für E-Autos",
+              "lang": "de"
+            },
+            {
+              "t": "how full is the tram?",
+              "lang": "en"
+            },
+            {
+              "t": "Bus kommt nie pünktlich, Echtzeit-Anzeige bitte",
+              "lang": "de",
+              "pair": "mobility-p3"
+            },
+            {
+              "t": "they changed the timetable and I found out at the stop",
+              "lang": "en"
+            },
+            {
+              "t": "Is a monthly pass worth it for me? quick calculator",
+              "lang": "en"
+            },
+            {
+              "t": "Nachtbus am Wochenende",
+              "lang": "de"
+            },
+            {
+              "t": "Anwohnerparken endlich einführen",
+              "lang": "de"
+            },
+            {
+              "t": "Which cycle paths get gritted?",
+              "lang": "en"
+            },
+            {
+              "t": "Morgens stehen vor der Kita zwanzig Autos in zweiter Reihe, vielleicht ließe sich ein Laufbus mit wechselnden Eltern organisieren",
+              "lang": "de"
+            },
+            {
+              "t": "Mitfahrgelegenheit zur Arbeit, täglich dieselbe Strecke",
+              "lang": "de",
+              "pair": "mobility-p2"
+            },
+            {
+              "t": "show me where there's a free space to park right now",
+              "lang": "en",
+              "pair": "mobility-p4"
+            },
+            {
+              "t": "Carsharing-Station fehlt bei uns",
+              "lang": "de"
+            },
+            {
+              "t": "Die Linie 5 fährt abends nur noch stündlich",
+              "lang": "de"
+            },
+            {
+              "t": "Kurzzeitparken vor der Arztpraxis, zehn Minuten kostenlos",
+              "lang": "de"
+            },
+            {
+              "t": "Mit Kinderwagen komme ich in keine der alten Straßenbahnen, bitte anzeigen, welche Fahrt barrierefrei ist",
+              "lang": "de"
+            },
+            {
+              "t": "Is the ring road jammed?",
+              "lang": "en"
+            },
+            {
+              "t": "park and ride info",
+              "lang": "en"
+            },
+            {
+              "t": "somewhere safe to lock up my bike at the station",
+              "lang": "en",
+              "pair": "mobility-p5"
+            },
+            {
+              "t": "taxi rank at the station is always empty after eleven",
+              "lang": "en"
+            },
+            {
+              "t": "Mehr Stellflächen für E-Scooter",
+              "lang": "de"
+            },
+            {
+              "t": "Ticket für Bus und Leihrad in einem",
+              "lang": "de"
+            },
+            {
+              "t": "Fahrgemeinschaft für die Kinder zum Fußballtraining organisieren",
+              "lang": "de"
+            },
+            {
+              "t": "Öffentliche Luftpumpe fürs Rad",
+              "lang": "de"
+            },
+            {
+              "t": "My daughter is ten, and I would love to know whether other children take the same bus so they can travel together",
+              "lang": "en"
+            },
+            {
+              "t": "tell me the cheapest way into town for a family of four today: bus, tram, or just take the car and pay for parking",
+              "lang": "en"
+            },
+            {
+              "t": "split an early airport taxi",
+              "lang": "en"
+            },
+            {
+              "t": "the last tram leaves before the late film ends",
+              "lang": "en"
+            },
+            {
+              "t": "rent a cargo bike for the big weekly shop",
+              "lang": "en",
+              "pair": "mobility-p1"
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "duplicates": [
+    {
+      "a": "Laptop kam erst am dritten Tag",
+      "b": "Am dritten Tag kam erst der Laptop",
+      "kind": "de-de"
+    },
+    {
+      "a": "Das Wiki ist veraltet",
+      "b": "Das Wiki ist nicht mehr aktuell",
+      "kind": "de-de"
+    },
+    {
+      "a": "Neue haben keinen festen Ansprechpartner",
+      "b": "Es fehlt eine feste Ansprechperson für neue Leute",
+      "kind": "de-de"
+    },
+    {
+      "a": "Einarbeitungsplan fehlt komplett",
+      "b": "Es gibt überhaupt keinen Plan für die Einarbeitung",
+      "kind": "de-de"
+    },
+    {
+      "a": "Niemand hat mich den anderen vorgestellt",
+      "b": "Ich wurde den Kollegen nie vorgestellt",
+      "kind": "de-de"
+    },
+    {
+      "a": "Straßenlaterne ist defekt",
+      "b": "Strassenlaterne ist kaputt",
+      "kind": "de-de"
+    },
+    {
+      "a": "Werkzeug unter Nachbarn ausleihen",
+      "b": "Nachbarn leihen sich gegenseitig Werkzeug",
+      "kind": "de-de"
+    },
+    {
+      "a": "Kalender mit allen Terminen im Stadtteil",
+      "b": "Alle Veranstaltungen im Viertel in einem Kalender",
+      "kind": "de-de"
+    },
+    {
+      "a": "Wann haben die Geschäfte hier eigentlich offen?",
+      "b": "Öffnungszeiten der Läden im Viertel anzeigen",
+      "kind": "de-de"
+    },
+    {
+      "a": "Mitfahrgelegenheit in die Stadt gesucht",
+      "b": "Suche jemanden, der mich im Auto mit in die Innenstadt nimmt",
+      "kind": "de-de"
+    },
+    {
+      "a": "my monitor arrived two weeks late",
+      "b": "screen turned up a fortnight late",
+      "kind": "en-en"
+    },
+    {
+      "a": "the wiki is out of date",
+      "b": "wiki is outdated",
+      "kind": "en-en"
+    },
+    {
+      "a": "assign every new hire a buddy",
+      "b": "each newcomer should get a buddy assigned",
+      "kind": "en-en"
+    },
+    {
+      "a": "clear goals for the first 90 days",
+      "b": "clear goals for the first ninty days",
+      "kind": "en-en"
+    },
+    {
+      "a": "team lunch in week one",
+      "b": "lunch with the whole team during the first week",
+      "kind": "en-en"
+    },
+    {
+      "a": "report potholes with a photo",
+      "b": "send the council a picture of the pothole",
+      "kind": "en-en"
+    },
+    {
+      "a": "lend and borrow tools between neighbours",
+      "b": "neighbours lending tools to each other",
+      "kind": "en-en"
+    },
+    {
+      "a": "what's on this weekend?",
+      "b": "list of things happening at the weekend",
+      "kind": "en-en"
+    },
+    {
+      "a": "opening times for the local shops",
+      "b": "local shops and their opening times",
+      "kind": "en-en"
+    },
+    {
+      "a": "live bus departure times",
+      "b": "bus times in real time",
+      "kind": "en-en"
+    },
+    {
+      "a": "Der Laptop war am ersten Tag noch nicht eingerichtet",
+      "b": "my laptop hadn't been set up when I arrived on day one",
+      "kind": "de-en"
+    },
+    {
+      "a": "Keiner pflegt die Doku",
+      "b": "nobody maintains the docs",
+      "kind": "de-en"
+    },
+    {
+      "a": "Wer ist mein Ansprechpartner?",
+      "b": "who is my point of contact?",
+      "kind": "de-en"
+    },
+    {
+      "a": "Erste Aufgabe sollte klein und machbar sein",
+      "b": "the first task should be small and doable",
+      "kind": "de-en"
+    },
+    {
+      "a": "Team-Events auch für Remote-Leute",
+      "b": "social stuff that people working remotely can join as well",
+      "kind": "de-en"
+    },
+    {
+      "a": "Kaputte Spielgeräte melden",
+      "b": "report broken playground equipment",
+      "kind": "de-en"
+    },
+    {
+      "a": "Sachen verschenken statt wegwerfen",
+      "b": "give things away rather than bin them",
+      "kind": "de-en"
+    },
+    {
+      "a": "Stadtteilfest groß ankündigen",
+      "b": "make a big announcement for the neighbourhood festival",
+      "kind": "de-en"
+    },
+    {
+      "a": "Wochenmarkt: wann und wo?",
+      "b": "when and where is the weekly market?",
+      "kind": "de-en"
+    },
+    {
+      "a": "Leihfahrräder im Viertel finden",
+      "b": "where can I find a bike to rent around here?",
+      "kind": "de-en"
+    }
+  ],
+  "nearMisses": [
+    {
+      "a": "Laptop kam eine Woche zu spät",
+      "b": "Laptop war nach einer Woche kaputt",
+      "kind": "de-de"
+    },
+    {
+      "a": "Im Wiki steht zu wenig",
+      "b": "Im Wiki steht zu viel",
+      "kind": "de-de"
+    },
+    {
+      "a": "Mein Pate hatte keine Zeit für mich",
+      "b": "Ich hatte gar keinen Paten",
+      "kind": "de-de"
+    },
+    {
+      "a": "Die erste Aufgabe war zu schwer",
+      "b": "Die erste Aufgabe war zu leicht",
+      "kind": "de-de"
+    },
+    {
+      "a": "Alle sind im Büro, nur ich bin remote",
+      "b": "Alle sind remote, nur ich bin im Büro",
+      "kind": "de-de"
+    },
+    {
+      "a": "Straßenlaterne brennt nicht",
+      "b": "Straßenlaterne brennt auch tagsüber",
+      "kind": "de-de"
+    },
+    {
+      "a": "Bohrmaschine zu verleihen",
+      "b": "Bohrmaschine zu verkaufen",
+      "kind": "de-de"
+    },
+    {
+      "a": "Straßenfest dieses Jahr absagen",
+      "b": "Straßenfest dieses Jahr größer machen",
+      "kind": "de-de"
+    },
+    {
+      "a": "Bäcker hat sonntags geschlossen",
+      "b": "Bäcker hat sonntags geöffnet",
+      "kind": "de-de"
+    },
+    {
+      "a": "Mehr Parkplätze für Autos",
+      "b": "Weniger Parkplätze, mehr Platz für Räder",
+      "kind": "de-de"
+    },
+    {
+      "a": "account was created too late",
+      "b": "account was deleted too early",
+      "kind": "en-en"
+    },
+    {
+      "a": "can't find the docs",
+      "b": "can't understand the docs",
+      "kind": "en-en"
+    },
+    {
+      "a": "buddy from my own team",
+      "b": "buddy from a different team",
+      "kind": "en-en"
+    },
+    {
+      "a": "first task took too long to arrive",
+      "b": "first task took too long to finish",
+      "kind": "en-en"
+    },
+    {
+      "a": "more days in the office",
+      "b": "fewer days in the office",
+      "kind": "en-en"
+    },
+    {
+      "a": "the bin is overflowing",
+      "b": "the bin has been removed",
+      "kind": "en-en"
+    },
+    {
+      "a": "lend tools for free",
+      "b": "rent out tools for a fee",
+      "kind": "en-en"
+    },
+    {
+      "a": "events for children",
+      "b": "events without children",
+      "kind": "en-en"
+    },
+    {
+      "a": "the café opens earlier now",
+      "b": "the café closes earlier now",
+      "kind": "en-en"
+    },
+    {
+      "a": "cheaper parking for residents",
+      "b": "cheaper parking for visitors",
+      "kind": "en-en"
+    },
+    {
+      "a": "VPN funktioniert im Homeoffice nicht",
+      "b": "VPN only works from home",
+      "kind": "de-en"
+    },
+    {
+      "a": "Doku gibt es nur auf Englisch",
+      "b": "docs exist only in German",
+      "kind": "de-en"
+    },
+    {
+      "a": "Wöchentliches Feedback ist zu viel",
+      "b": "weekly feedback is not enough",
+      "kind": "de-en"
+    },
+    {
+      "a": "Zu viele Aufgaben am Anfang",
+      "b": "too few tasks at the start",
+      "kind": "de-en"
+    },
+    {
+      "a": "Das Team trifft sich nur online",
+      "b": "the team only meets in person",
+      "kind": "de-en"
+    },
+    {
+      "a": "Spielplatz wurde repariert",
+      "b": "playground needs repair",
+      "kind": "de-en"
+    },
+    {
+      "a": "Kinderwagen zu verschenken",
+      "b": "looking for a free pram",
+      "kind": "de-en"
+    },
+    {
+      "a": "Konzert im Park abgesagt",
+      "b": "concert in the park confirmed",
+      "kind": "de-en"
+    },
+    {
+      "a": "Markt ist jetzt mittwochs",
+      "b": "market is no longer on Wednesdays",
+      "kind": "de-en"
+    },
+    {
+      "a": "Fahrrad am Bahnhof gestohlen",
+      "b": "bike found at the station",
+      "kind": "de-en"
+    }
+  ],
+  "dirty": [
+    {
+      "t": "Doku???",
+      "lang": "de",
+      "board": "onboarding",
+      "theme": "docs"
+    },
+    {
+      "t": "wiki = friedhof 💀",
+      "lang": "de",
+      "board": "onboarding",
+      "theme": "docs"
+    },
+    {
+      "t": "Glosar fuer Abkuerzungen pls",
+      "lang": "de",
+      "board": "onboarding",
+      "theme": "docs"
+    },
+    {
+      "t": "RTFM doesnt work w/o an M",
+      "lang": "en",
+      "board": "onboarding",
+      "theme": "docs"
+    },
+    {
+      "t": "docs outdated af",
+      "lang": "en",
+      "board": "onboarding",
+      "theme": "docs"
+    },
+    {
+      "t": "READMEs!!",
+      "lang": "en",
+      "board": "onboarding",
+      "theme": "docs"
+    },
+    {
+      "t": "ANSPRECHPARTNER!!!",
+      "lang": "de",
+      "board": "onboarding",
+      "theme": "mentoring"
+    },
+    {
+      "t": "feedbak gespraech kam nie",
+      "lang": "de",
+      "board": "onboarding",
+      "theme": "mentoring"
+    },
+    {
+      "t": "buddy war nie available lol",
+      "lang": "de",
+      "board": "onboarding",
+      "theme": "mentoring"
+    },
+    {
+      "t": "mentor pls 🙏",
+      "lang": "en",
+      "board": "onboarding",
+      "theme": "mentoring"
+    },
+    {
+      "t": "1:1s w/ mgr, weekly",
+      "lang": "en",
+      "board": "onboarding",
+      "theme": "mentoring"
+    },
+    {
+      "t": "who 2 ask??",
+      "lang": "en",
+      "board": "onboarding",
+      "theme": "mentoring"
+    },
+    {
+      "t": "Zugaenge!!!",
+      "lang": "de",
+      "board": "onboarding",
+      "theme": "access"
+    },
+    {
+      "t": "kein laptop, kein vpn 🤷",
+      "lang": "de",
+      "board": "onboarding",
+      "theme": "access"
+    },
+    {
+      "t": "Adminrechte asap",
+      "lang": "de",
+      "board": "onboarding",
+      "theme": "access"
+    },
+    {
+      "t": "pw reset x3",
+      "lang": "en",
+      "board": "onboarding",
+      "theme": "access"
+    },
+    {
+      "t": "LAPTOP MISSING",
+      "lang": "en",
+      "board": "onboarding",
+      "theme": "access"
+    },
+    {
+      "t": "no acces to repo for 2 wks",
+      "lang": "en",
+      "board": "onboarding",
+      "theme": "access"
+    },
+    {
+      "t": "ertse woche nix zu tun 😴",
+      "lang": "de",
+      "board": "onboarding",
+      "theme": "firsttasks"
+    },
+    {
+      "t": "Starter-Tickets fehlen, backlog ist chaos",
+      "lang": "de",
+      "board": "onboarding",
+      "theme": "firsttasks"
+    },
+    {
+      "t": "ZIELE UNKLAR",
+      "lang": "de",
+      "board": "onboarding",
+      "theme": "firsttasks"
+    },
+    {
+      "t": "30/60/90??",
+      "lang": "en",
+      "board": "onboarding",
+      "theme": "firsttasks"
+    },
+    {
+      "t": "good first issues pls",
+      "lang": "en",
+      "board": "onboarding",
+      "theme": "firsttasks"
+    },
+    {
+      "t": "bored by wed tbh, gimme a ticket",
+      "lang": "en",
+      "board": "onboarding",
+      "theme": "firsttasks"
+    },
+    {
+      "t": "Mittagspause allein 😢",
+      "lang": "de",
+      "board": "onboarding",
+      "theme": "team"
+    },
+    {
+      "t": "kollegn kennenlernen, aber wie",
+      "lang": "de",
+      "board": "onboarding",
+      "theme": "team"
+    },
+    {
+      "t": "Teamevent wann endlich??",
+      "lang": "de",
+      "board": "onboarding",
+      "theme": "team"
+    },
+    {
+      "t": "LUNCH TOGETHER",
+      "lang": "en",
+      "board": "onboarding",
+      "theme": "team"
+    },
+    {
+      "t": "ppl dont rly talk here",
+      "lang": "en",
+      "board": "onboarding",
+      "theme": "team"
+    },
+    {
+      "t": "offsite 🎉 soon?",
+      "lang": "en",
+      "board": "onboarding",
+      "theme": "team"
+    },
+    {
+      "t": "Bohrmaschiene leihen",
+      "lang": "de",
+      "board": "stadtteil",
+      "theme": "sharing"
+    },
+    {
+      "t": "wer hat ne leiter",
+      "lang": "de",
+      "board": "stadtteil",
+      "theme": "sharing"
+    },
+    {
+      "t": "sofa for free, selbstabholer",
+      "lang": "de",
+      "board": "stadtteil",
+      "theme": "sharing"
+    },
+    {
+      "t": "free stuff 🎁",
+      "lang": "en",
+      "board": "stadtteil",
+      "theme": "sharing"
+    },
+    {
+      "t": "borow a ladder?",
+      "lang": "en",
+      "board": "stadtteil",
+      "theme": "sharing"
+    },
+    {
+      "t": "swap > buy",
+      "lang": "en",
+      "board": "stadtteil",
+      "theme": "sharing"
+    },
+    {
+      "t": "Strassenfest 🎉",
+      "lang": "de",
+      "board": "stadtteil",
+      "theme": "events"
+    },
+    {
+      "t": "flomarkt wann",
+      "lang": "de",
+      "board": "stadtteil",
+      "theme": "events"
+    },
+    {
+      "t": "was geht am WE",
+      "lang": "de",
+      "board": "stadtteil",
+      "theme": "events"
+    },
+    {
+      "t": "whats on 2nite",
+      "lang": "en",
+      "board": "stadtteil",
+      "theme": "events"
+    },
+    {
+      "t": "street party!!!",
+      "lang": "en",
+      "board": "stadtteil",
+      "theme": "events"
+    },
+    {
+      "t": "calender plz",
+      "lang": "en",
+      "board": "stadtteil",
+      "theme": "events"
+    },
+    {
+      "t": "SCHLAGLOCH!!!",
+      "lang": "de",
+      "board": "stadtteil",
+      "theme": "issues"
+    },
+    {
+      "t": "muell ueberall 🤮",
+      "lang": "de",
+      "board": "stadtteil",
+      "theme": "issues"
+    },
+    {
+      "t": "laterne kaput seit wochen",
+      "lang": "de",
+      "board": "stadtteil",
+      "theme": "issues"
+    },
+    {
+      "t": "pothole 🕳️",
+      "lang": "en",
+      "board": "stadtteil",
+      "theme": "issues"
+    },
+    {
+      "t": "bins!!",
+      "lang": "en",
+      "board": "stadtteil",
+      "theme": "issues"
+    },
+    {
+      "t": "streetlite out agian",
+      "lang": "en",
+      "board": "stadtteil",
+      "theme": "issues"
+    },
+    {
+      "t": "Oeffnungszeiten",
+      "lang": "de",
+      "board": "stadtteil",
+      "theme": "shops"
+    },
+    {
+      "t": "baecker sonntags?",
+      "lang": "de",
+      "board": "stadtteil",
+      "theme": "shops"
+    },
+    {
+      "t": "Angebote d. Woche vom markt",
+      "lang": "de",
+      "board": "stadtteil",
+      "theme": "shops"
+    },
+    {
+      "t": "opening hrs",
+      "lang": "en",
+      "board": "stadtteil",
+      "theme": "shops"
+    },
+    {
+      "t": "best coffee?? ☕",
+      "lang": "en",
+      "board": "stadtteil",
+      "theme": "shops"
+    },
+    {
+      "t": "LOCAL DEALS",
+      "lang": "en",
+      "board": "stadtteil",
+      "theme": "shops"
+    },
+    {
+      "t": "Lastenrad",
+      "lang": "de",
+      "board": "stadtteil",
+      "theme": "mobility"
+    },
+    {
+      "t": "parkplaetze!!!",
+      "lang": "de",
+      "board": "stadtteil",
+      "theme": "mobility"
+    },
+    {
+      "t": "bus kommt nie 😡",
+      "lang": "de",
+      "board": "stadtteil",
+      "theme": "mobility"
+    },
+    {
+      "t": "cargo bike 🚲",
+      "lang": "en",
+      "board": "stadtteil",
+      "theme": "mobility"
+    },
+    {
+      "t": "carpool 2 work",
+      "lang": "en",
+      "board": "stadtteil",
+      "theme": "mobility"
+    },
+    {
+      "t": "PARKING",
+      "lang": "en",
+      "board": "stadtteil",
+      "theme": "mobility"
+    }
+  ]
+}

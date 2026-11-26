@@ -1,0 +1,1954 @@
+{
+ "measured": "2026-11-23",
+ "model": "@cf/google/gemma-4-26b-a4b-it",
+ "how": "the product's own run (packages/arrange, bundled) against accounts/<id>/ai/run/<model>, the endpoint the binding AI reaches; invented notes of docs/messung/korpus.json, shuffled as scripts/measure-arrange.mjs shuffles them",
+ "recipe_as_measured_in_stage_0b": {
+  "what": "themes 3 to 6, merge call 4 to 8, assignment by exact title, batches of 50 side by side, 60 s per call, no second call",
+  "runs": [
+   {
+    "board": "onboarding",
+    "lang": "de",
+    "limit": 0,
+    "dirty": "none",
+    "seed": 1,
+    "model": "@cf/google/gemma-4-26b-a4b-it",
+    "notes": 250,
+    "question": "Wie machen wir die Einarbeitung neuer Kolleginnen und Kollegen besser?",
+    "ok": true,
+    "seconds": 24.2,
+    "calls": 7,
+    "failed": 0,
+    "neurons": 204.63,
+    "inputTokens": 9909,
+    "outputTokens": 4200,
+    "perCall": [
+     "themes:5310ms",
+     "merge:3305ms",
+     "assign:10646ms",
+     "assign:13236ms",
+     "assign:14264ms",
+     "assign:15609ms",
+     "assign:15611ms"
+    ],
+    "unanswered": 0,
+    "groups": [
+     {
+      "title": "IT-Setup und technische Ausstattung",
+      "notes": 50
+     },
+     {
+      "title": "Strukturierter Onboarding-Prozess",
+      "notes": 51
+     },
+     {
+      "title": "Wissensmanagement und Dokumentation",
+      "notes": 53
+     },
+     {
+      "title": "Soziale Integration und Teamkultur",
+      "notes": 49
+     },
+     {
+      "title": "Mentoring und Feedbackkultur",
+      "notes": 47
+     }
+    ],
+    "score": {
+     "notes": 250,
+     "ari": 0.9313,
+     "purity": 0.972,
+     "withoutGroup": 0
+    },
+    "file": "run-onboarding-de.json"
+   },
+   {
+    "board": "stadtteil",
+    "lang": "de",
+    "limit": 0,
+    "dirty": "none",
+    "seed": 1,
+    "model": "@cf/google/gemma-4-26b-a4b-it",
+    "notes": 250,
+    "question": "Was soll unsere Stadtteil-App können?",
+    "ok": true,
+    "seconds": 22.6,
+    "calls": 7,
+    "failed": 0,
+    "neurons": 191.81,
+    "inputTokens": 9837,
+    "outputTokens": 3754,
+    "perCall": [
+     "themes:4671ms",
+     "merge:4620ms",
+     "assign:8997ms",
+     "assign:12467ms",
+     "assign:12591ms",
+     "assign:12637ms",
+     "assign:13315ms"
+    ],
+    "unanswered": 0,
+    "groups": [
+     {
+      "title": "Lokales Gewerbe & Gastronomie",
+      "notes": 49
+     },
+     {
+      "title": "Mobilität & Verkehr",
+      "notes": 40
+     },
+     {
+      "title": "Nachbarschaft & Gemeinschaft",
+      "notes": 67
+     },
+     {
+      "title": "Veranstaltungen & Freizeit",
+      "notes": 43
+     },
+     {
+      "title": "Mängel & Stadtverwaltung",
+      "notes": 51
+     }
+    ],
+    "score": {
+     "notes": 250,
+     "ari": 0.8035,
+     "purity": 0.916,
+     "withoutGroup": 0
+    },
+    "file": "run-stadtteil-de.json"
+   },
+   {
+    "board": "onboarding",
+    "lang": "en",
+    "limit": 0,
+    "dirty": "none",
+    "seed": 1,
+    "model": "@cf/google/gemma-4-26b-a4b-it",
+    "notes": 250,
+    "question": "How do we make onboarding of new colleagues better?",
+    "ok": true,
+    "seconds": 45.9,
+    "calls": 7,
+    "failed": 0,
+    "neurons": 179.94,
+    "inputTokens": 9683,
+    "outputTokens": 3370,
+    "perCall": [
+     "themes:4562ms",
+     "merge:4888ms",
+     "assign:12203ms",
+     "assign:12256ms",
+     "assign:14827ms",
+     "assign:15503ms",
+     "assign:36433ms"
+    ],
+    "unanswered": 0,
+    "groups": [
+     {
+      "title": "IT and Technical Setup",
+      "notes": 50
+     },
+     {
+      "title": "Social Integration and Culture",
+      "notes": 50
+     },
+     {
+      "title": "Knowledge and Documentation",
+      "notes": 51
+     },
+     {
+      "title": "Mentoring and Support",
+      "notes": 34
+     },
+     {
+      "title": "Structured Onboarding Process",
+      "notes": 65
+     }
+    ],
+    "score": {
+     "notes": 250,
+     "ari": 0.8571,
+     "purity": 0.932,
+     "withoutGroup": 0
+    },
+    "file": "run-onboarding-en.json"
+   },
+   {
+    "board": "onboarding",
+    "lang": "de",
+    "limit": 0,
+    "dirty": "mixed",
+    "seed": 1,
+    "model": "@cf/google/gemma-4-26b-a4b-it",
+    "notes": 280,
+    "question": "Wie machen wir die Einarbeitung neuer Kolleginnen und Kollegen besser?",
+    "ok": true,
+    "seconds": 38.2,
+    "calls": 8,
+    "failed": 0,
+    "neurons": 220.8,
+    "inputTokens": 10842,
+    "outputTokens": 4482,
+    "perCall": [
+     "themes:4505ms",
+     "merge:7491ms",
+     "assign:9567ms",
+     "assign:15084ms",
+     "assign:15987ms",
+     "assign:16381ms",
+     "assign:22180ms",
+     "assign:26208ms"
+    ],
+    "unanswered": 0,
+    "groups": [
+     {
+      "title": "IT und technische Ausstattung",
+      "notes": 57
+     },
+     {
+      "title": "Wissensmanagement und Dokumentation",
+      "notes": 59
+     },
+     {
+      "title": "Soziale Integration und Mentoring",
+      "notes": 89
+     },
+     {
+      "title": "Strukturierter Einarbeitungsplan",
+      "notes": 49
+     },
+     {
+      "title": "Feedback und Erwartungsmanagement",
+      "notes": 26
+     }
+    ],
+    "score": {
+     "notes": 280,
+     "ari": 0.7235,
+     "purity": 0.8393,
+     "withoutGroup": 0
+    },
+    "scoreDirty": {
+     "notes": 30,
+     "ari": 0.706,
+     "purity": 0.8333,
+     "withoutGroup": 0
+    },
+    "file": "m-onboarding_dirty_mixed.json"
+   },
+   {
+    "board": "onboarding",
+    "lang": "de",
+    "limit": 0,
+    "dirty": "only",
+    "seed": 1,
+    "model": "@cf/google/gemma-4-26b-a4b-it",
+    "notes": 30,
+    "question": "Wie machen wir die Einarbeitung neuer Kolleginnen und Kollegen besser?",
+    "ok": true,
+    "seconds": 21.5,
+    "calls": 3,
+    "failed": 0,
+    "neurons": 36.15,
+    "inputTokens": 1268,
+    "outputTokens": 903,
+    "perCall": [
+     "themes:7317ms",
+     "merge:4173ms",
+     "assign:10033ms"
+    ],
+    "unanswered": 0,
+    "groups": [
+     {
+      "title": "Technik und IT-Setup",
+      "notes": 6
+     },
+     {
+      "title": "Wissensmanagement und Dokumentation",
+      "notes": 6
+     },
+     {
+      "title": "Struktur und Onboarding-Planung",
+      "notes": 6
+     },
+     {
+      "title": "Soziale Integration und Teamkultur",
+      "notes": 6
+     },
+     {
+      "title": "Mentoring und Begleitung",
+      "notes": 6
+     }
+    ],
+    "score": {
+     "notes": 30,
+     "ari": 1,
+     "purity": 1,
+     "withoutGroup": 0
+    },
+    "file": "m-onboarding_dirty_only.json"
+   },
+   {
+    "board": "onboarding",
+    "lang": "de",
+    "limit": 12,
+    "dirty": "none",
+    "seed": 1,
+    "model": "@cf/google/gemma-4-26b-a4b-it",
+    "notes": 12,
+    "question": "Wie machen wir die Einarbeitung neuer Kolleginnen und Kollegen besser?",
+    "ok": true,
+    "seconds": 15.8,
+    "calls": 3,
+    "failed": 0,
+    "neurons": 23.82,
+    "inputTokens": 1006,
+    "outputTokens": 538,
+    "perCall": [
+     "themes:4127ms",
+     "merge:3948ms",
+     "assign:7732ms"
+    ],
+    "unanswered": 0,
+    "groups": [
+     {
+      "title": "Wissensmanagement und Dokumentation",
+      "notes": 4
+     },
+     {
+      "title": "Technische Prozesse und Infrastruktur",
+      "notes": 2
+     },
+     {
+      "title": "Soziale Integration und Feedback",
+      "notes": 4
+     },
+     {
+      "title": "Aufgabenplanung und Arbeitslast",
+      "notes": 2
+     }
+    ],
+    "score": {
+     "notes": 12,
+     "ari": 0.6557,
+     "purity": 0.75,
+     "withoutGroup": 0
+    },
+    "file": "m-onboarding_limit_12.json"
+   },
+   {
+    "board": "onboarding",
+    "lang": "de",
+    "limit": 8,
+    "dirty": "none",
+    "seed": 1,
+    "model": "@cf/google/gemma-4-26b-a4b-it",
+    "notes": 8,
+    "question": "Wie machen wir die Einarbeitung neuer Kolleginnen und Kollegen besser?",
+    "ok": true,
+    "seconds": 11.2,
+    "calls": 3,
+    "failed": 0,
+    "neurons": 15.99,
+    "inputTokens": 781,
+    "outputTokens": 326,
+    "perCall": [
+     "themes:2355ms",
+     "merge:2175ms",
+     "assign:6665ms"
+    ],
+    "unanswered": 0,
+    "groups": [
+     {
+      "title": "Prozesse und technische Infrastruktur",
+      "notes": 5
+     },
+     {
+      "title": "Soziale Integration und Onboarding",
+      "notes": 3
+     }
+    ],
+    "score": {
+     "notes": 8,
+     "ari": 0.4011,
+     "purity": 0.625,
+     "withoutGroup": 0
+    },
+    "file": "m-onboarding_limit_8.json"
+   },
+   {
+    "board": "stadtteil",
+    "lang": "de",
+    "limit": 0,
+    "dirty": "mixed",
+    "seed": 1,
+    "model": "@cf/google/gemma-4-26b-a4b-it",
+    "notes": 280,
+    "question": "Was soll unsere Stadtteil-App können?",
+    "ok": true,
+    "seconds": 26.8,
+    "calls": 8,
+    "failed": 0,
+    "neurons": 214.32,
+    "inputTokens": 10861,
+    "outputTokens": 4238,
+    "perCall": [
+     "themes:7494ms",
+     "merge:3710ms",
+     "assign:8562ms",
+     "assign:12976ms",
+     "assign:13744ms",
+     "assign:14956ms",
+     "assign:15333ms",
+     "assign:15634ms"
+    ],
+    "unanswered": 0,
+    "groups": [
+     {
+      "title": "Nachbarschaft & Gemeinschaft",
+      "notes": 65
+     },
+     {
+      "title": "Events & Lokales Leben",
+      "notes": 51
+     },
+     {
+      "title": "Mobilität & Verkehr",
+      "notes": 45
+     },
+     {
+      "title": "Einkaufen & Gastronomie",
+      "notes": 56
+     },
+     {
+      "title": "Stadtpflege & Mängel",
+      "notes": 54
+     },
+     {
+      "title": "Inklusion & Barrierefreiheit",
+      "notes": 9
+     }
+    ],
+    "score": {
+     "notes": 280,
+     "ari": 0.8479,
+     "purity": 0.9286,
+     "withoutGroup": 0
+    },
+    "scoreDirty": {
+     "notes": 30,
+     "ari": 0.9119,
+     "purity": 0.9667,
+     "withoutGroup": 0
+    },
+    "file": "m-stadtteil_dirty_mixed.json"
+   },
+   {
+    "board": "stadtteil",
+    "lang": "de",
+    "limit": 15,
+    "dirty": "none",
+    "seed": 1,
+    "model": "@cf/google/gemma-4-26b-a4b-it",
+    "notes": 15,
+    "question": "Was soll unsere Stadtteil-App können?",
+    "ok": true,
+    "seconds": 15,
+    "calls": 3,
+    "failed": 0,
+    "neurons": 26.12,
+    "inputTokens": 1151,
+    "outputTokens": 574,
+    "perCall": [
+     "themes:5677ms",
+     "merge:4703ms",
+     "assign:4586ms"
+    ],
+    "unanswered": 0,
+    "groups": [
+     {
+      "title": "Nachbarschaft und Sharing",
+      "notes": 5
+     },
+     {
+      "title": "Lokales Leben und Freizeit",
+      "notes": 7
+     },
+     {
+      "title": "Kommunikation und Verwaltung",
+      "notes": 3
+     }
+    ],
+    "score": {
+     "notes": 15,
+     "ari": 0.445,
+     "purity": 0.6,
+     "withoutGroup": 0
+    },
+    "file": "m-stadtteil_limit_15.json"
+   },
+   {
+    "board": "both",
+    "lang": "de",
+    "limit": 0,
+    "dirty": "none",
+    "seed": 1,
+    "model": "@cf/google/gemma-4-26b-a4b-it",
+    "notes": 500,
+    "question": "Wie machen wir die Einarbeitung neuer Kolleginnen und Kollegen besser?",
+    "ok": true,
+    "seconds": 49.5,
+    "calls": 12,
+    "failed": 0,
+    "neurons": 386.38,
+    "inputTokens": 19546,
+    "outputTokens": 7652,
+    "perCall": [
+     "themes:6619ms",
+     "merge:6373ms",
+     "assign:16370ms",
+     "assign:16841ms",
+     "assign:17657ms",
+     "assign:18082ms",
+     "assign:18165ms",
+     "assign:18328ms",
+     "assign:20732ms",
+     "assign:29101ms",
+     "assign:30306ms",
+     "assign:36470ms"
+    ],
+    "unanswered": 0,
+    "groups": [
+     {
+      "title": "IT und Arbeitsmittel",
+      "notes": 54
+     },
+     {
+      "title": "Mentoring und soziale Integration",
+      "notes": 117
+     },
+     {
+      "title": "Wissensmanagement und Dokumentation",
+      "notes": 59
+     },
+     {
+      "title": "Onboarding-Prozesse und Feedback",
+      "notes": 82
+     },
+     {
+      "title": "Lokale Infrastruktur und Umfeld",
+      "notes": 188
+     }
+    ],
+    "score": {
+     "notes": 500,
+     "ari": 0.336,
+     "purity": 0.48,
+     "withoutGroup": 0
+    },
+    "file": "v-both.json"
+   },
+   {
+    "board": "onboarding",
+    "lang": "de",
+    "limit": 0,
+    "dirty": "none",
+    "seed": 1,
+    "model": "@cf/google/gemma-4-26b-a4b-it",
+    "notes": 250,
+    "question": "Wie machen wir die Einarbeitung neuer Kolleginnen und Kollegen besser?",
+    "ok": true,
+    "seconds": 33.4,
+    "calls": 7,
+    "failed": 0,
+    "neurons": 202,
+    "inputTokens": 9884,
+    "outputTokens": 4112,
+    "perCall": [
+     "themes:5690ms",
+     "merge:7078ms",
+     "assign:12860ms",
+     "assign:14774ms",
+     "assign:17525ms",
+     "assign:20350ms",
+     "assign:20677ms"
+    ],
+    "unanswered": 0,
+    "groups": [
+     {
+      "title": "IT-Setup und Infrastruktur",
+      "notes": 52
+     },
+     {
+      "title": "Strukturierter Onboarding-Prozess",
+      "notes": 47
+     },
+     {
+      "title": "Wissensmanagement und Dokumentation",
+      "notes": 53
+     },
+     {
+      "title": "Soziale Integration und Mentoring",
+      "notes": 71
+     },
+     {
+      "title": "Feedback und Führungskultur",
+      "notes": 27
+     }
+    ],
+    "score": {
+     "notes": 250,
+     "ari": 0.714,
+     "purity": 0.844,
+     "withoutGroup": 0
+    },
+    "file": "v-onboarding_lang_de.json"
+   },
+   {
+    "board": "onboarding",
+    "lang": "de",
+    "limit": 0,
+    "dirty": "none",
+    "seed": 2,
+    "model": "@cf/google/gemma-4-26b-a4b-it",
+    "notes": 250,
+    "question": "Wie machen wir die Einarbeitung neuer Kolleginnen und Kollegen besser?",
+    "ok": true,
+    "seconds": 67.1,
+    "calls": 7,
+    "failed": 0,
+    "neurons": 199.69,
+    "inputTokens": 9960,
+    "outputTokens": 4002,
+    "perCall": [
+     "themes:6616ms",
+     "merge:4143ms",
+     "assign:8466ms",
+     "assign:10852ms",
+     "assign:14595ms",
+     "assign:55792ms",
+     "assign:56333ms"
+    ],
+    "unanswered": 0,
+    "groups": [
+     {
+      "title": "IT und Arbeitsumgebung",
+      "notes": 51
+     },
+     {
+      "title": "Wissensmanagement und Dokumentation",
+      "notes": 54
+     },
+     {
+      "title": "Mentoring und soziale Integration",
+      "notes": 73
+     },
+     {
+      "title": "Strukturierter Onboarding-Prozess",
+      "notes": 24
+     },
+     {
+      "title": "Kommunikation und Feedback",
+      "notes": 22
+     },
+     {
+      "title": "Aufgaben und Projektstart",
+      "notes": 26
+     }
+    ],
+    "score": {
+     "notes": 250,
+     "ari": 0.6848,
+     "purity": 0.856,
+     "withoutGroup": 0
+    },
+    "file": "v-onboarding_seed_2.json"
+   },
+   {
+    "board": "onboarding",
+    "lang": "de",
+    "limit": 0,
+    "dirty": "none",
+    "seed": 3,
+    "model": "@cf/google/gemma-4-26b-a4b-it",
+    "notes": 250,
+    "question": "Wie machen wir die Einarbeitung neuer Kolleginnen und Kollegen besser?",
+    "ok": true,
+    "seconds": 50.4,
+    "calls": 7,
+    "failed": 0,
+    "neurons": 196.67,
+    "inputTokens": 9892,
+    "outputTokens": 3914,
+    "perCall": [
+     "themes:7340ms",
+     "merge:5695ms",
+     "assign:15164ms",
+     "assign:15296ms",
+     "assign:15514ms",
+     "assign:18453ms",
+     "assign:37395ms"
+    ],
+    "unanswered": 0,
+    "groups": [
+     {
+      "title": "IT und technische Ausstattung",
+      "notes": 50
+     },
+     {
+      "title": "Wissensmanagement und Dokumentation",
+      "notes": 53
+     },
+     {
+      "title": "Mentoring und soziale Integration",
+      "notes": 76
+     },
+     {
+      "title": "Strukturierter Onboarding-Prozess",
+      "notes": 48
+     },
+     {
+      "title": "Feedback und Kommunikation",
+      "notes": 23
+     }
+    ],
+    "score": {
+     "notes": 250,
+     "ari": 0.7528,
+     "purity": 0.856,
+     "withoutGroup": 0
+    },
+    "file": "v-onboarding_seed_3.json"
+   },
+   {
+    "board": "stadtteil",
+    "lang": "de",
+    "limit": 0,
+    "dirty": "none",
+    "seed": 2,
+    "model": "@cf/google/gemma-4-26b-a4b-it",
+    "notes": 250,
+    "question": "Was soll unsere Stadtteil-App können?",
+    "ok": true,
+    "seconds": 88.5,
+    "calls": 9,
+    "failed": 2,
+    "neurons": 193.29,
+    "inputTokens": 9910,
+    "outputTokens": 3784,
+    "perCall": [
+     "themes:4606ms",
+     "merge:6874ms",
+     "assign:15801ms",
+     "assign:16666ms",
+     "assign:19997ms",
+     "assign:16766ms",
+     "assign:16958ms"
+    ],
+    "unanswered": 0,
+    "groups": [
+     {
+      "title": "Lokales Gewerbe & Gastronomie",
+      "notes": 49
+     },
+     {
+      "title": "Events & Gemeinschaft",
+      "notes": 51
+     },
+     {
+      "title": "Nachbarschaftshilfe & Teilen",
+      "notes": 55
+     },
+     {
+      "title": "Mobilität & Verkehr",
+      "notes": 44
+     },
+     {
+      "title": "Mängel & Stadtplanung",
+      "notes": 51
+     }
+    ],
+    "score": {
+     "notes": 250,
+     "ari": 0.8756,
+     "purity": 0.948,
+     "withoutGroup": 0
+    },
+    "file": "v-stadtteil_seed_2.json"
+   },
+   {
+    "board": "stadtteil",
+    "lang": "de",
+    "limit": 0,
+    "dirty": "none",
+    "seed": 3,
+    "model": "@cf/google/gemma-4-26b-a4b-it",
+    "notes": 250,
+    "question": "Was soll unsere Stadtteil-App können?",
+    "ok": true,
+    "seconds": 63.8,
+    "calls": 7,
+    "failed": 0,
+    "neurons": 192.95,
+    "inputTokens": 9792,
+    "outputTokens": 3811,
+    "perCall": [
+     "themes:14943ms",
+     "merge:5196ms",
+     "assign:15753ms",
+     "assign:16059ms",
+     "assign:16854ms",
+     "assign:19806ms",
+     "assign:43674ms"
+    ],
+    "unanswered": 0,
+    "groups": [
+     {
+      "title": "Nachbarschaft und Gemeinschaft",
+      "notes": 72
+     },
+     {
+      "title": "Lokales Gewerbe und Events",
+      "notes": 78
+     },
+     {
+      "title": "Mobilität und Verkehr",
+      "notes": 48
+     },
+     {
+      "title": "Stadtteil-Management und Meldungen",
+      "notes": 52
+     }
+    ],
+    "score": {
+     "notes": 250,
+     "ari": 0.6872,
+     "purity": 0.788,
+     "withoutGroup": 0
+    },
+    "file": "v-stadtteil_seed_3.json"
+   }
+  ]
+ },
+ "experiments": {
+  "what": "T1 = themes of the first call, T2 = T1 after the merge call, T3 = themes asked for 4 to 8 at once; assignment by title, by letter, by letter on a single line (compact)",
+  "runs": [
+   {
+    "board": "onboarding",
+    "seed": 2,
+    "lang": "de",
+    "hedgeMs": 0,
+    "notes": 250,
+    "themes": {
+     "T1": [
+      "IT-Infrastruktur und Hardware",
+      "Wissensmanagement und Dokumentation",
+      "Soziale Integration und Kultur",
+      "Mentoring und Betreuung",
+      "Strukturierter Onboarding-Plan",
+      "Feedback und Kommunikation"
+     ],
+     "T2": [
+      "IT und technische Ausstattung",
+      "Wissensmanagement und Dokumentation",
+      "Soziale Integration und Kultur",
+      "Mentoring und persönliche Betreuung",
+      "Strukturierter Onboarding-Prozess",
+      "Kommunikation und Feedback"
+     ],
+     "T3": [
+      "IT-Infrastruktur und Hardware",
+      "Wissensmanagement und Dokumentation",
+      "Mentoring und soziale Integration",
+      "Strukturierter Onboarding-Plan",
+      "Kommunikation und Feedback",
+      "Arbeitsaufgaben und Projekte",
+      "Unternehmenskultur und Prozesse"
+     ]
+    },
+    "sets": {
+     "title:T2": {
+      "seconds": 26.837,
+      "ari": 0.8626,
+      "purity": 0.964,
+      "withoutGroup": 0,
+      "groups": [
+       "51 IT und technische Ausstattung",
+       "52 Wissensmanagement und Dokumentation",
+       "47 Soziale Integration und Kultur",
+       "33 Mentoring und persönliche Betreuung",
+       "46 Strukturierter Onboarding-Prozess",
+       "21 Kommunikation und Feedback"
+      ],
+      "calls": [
+       "14893ms/690tok",
+       "26836ms/702tok",
+       "14503ms/683tok",
+       "17748ms/691tok",
+       "14498ms/683tok"
+      ],
+      "outTokens": 3449,
+      "inTokens": 5253,
+      "neurons": 141.8182,
+      "failedBatches": 0
+     },
+     "letter:T2": {
+      "seconds": 11.429,
+      "ari": 0.8762,
+      "purity": 0.972,
+      "withoutGroup": 0,
+      "groups": [
+       "50 IT und technische Ausstattung",
+       "52 Wissensmanagement und Dokumentation",
+       "47 Soziale Integration und Kultur",
+       "30 Mentoring und persönliche Betreuung",
+       "50 Strukturierter Onboarding-Prozess",
+       "21 Kommunikation und Feedback"
+      ],
+      "calls": [
+       "11428ms/445tok",
+       "10983ms/445tok",
+       "10910ms/445tok",
+       "11261ms/445tok",
+       "10455ms/445tok"
+      ],
+      "outTokens": 2225,
+      "inTokens": 5277,
+      "neurons": 108.6545,
+      "failedBatches": 0
+     },
+     "letter:T1": {
+      "seconds": 11.475,
+      "ari": 0.8979,
+      "purity": 0.98,
+      "withoutGroup": 0,
+      "groups": [
+       "50 IT-Infrastruktur und Hardware",
+       "51 Wissensmanagement und Dokumentation",
+       "50 Soziale Integration und Kultur",
+       "34 Mentoring und Betreuung",
+       "48 Strukturierter Onboarding-Plan",
+       "17 Feedback und Kommunikation"
+      ],
+      "calls": [
+       "11475ms/445tok",
+       "10994ms/445tok",
+       "9961ms/445tok",
+       "9985ms/445tok",
+       "10851ms/445tok"
+      ],
+      "outTokens": 2225,
+      "inTokens": 5577,
+      "neurons": 111.3818,
+      "failedBatches": 0
+     },
+     "letter:T3": {
+      "seconds": 20.552,
+      "ari": 0.6657,
+      "purity": 0.864,
+      "withoutGroup": 0,
+      "groups": [
+       "50 IT-Infrastruktur und Hardware",
+       "52 Wissensmanagement und Dokumentation",
+       "62 Mentoring und soziale Integration",
+       "30 Strukturierter Onboarding-Plan",
+       "19 Kommunikation und Feedback",
+       "24 Arbeitsaufgaben und Projekte",
+       "13 Unternehmenskultur und Prozesse"
+      ],
+      "calls": [
+       "10160ms/445tok",
+       "5533ms/445tok",
+       "11375ms/445tok",
+       "20547ms/445tok",
+       "9491ms/445tok"
+      ],
+      "outTokens": 2225,
+      "inTokens": 5703,
+      "neurons": 112.5273,
+      "failedBatches": 0
+     }
+    },
+    "themeCalls": {
+     "themes": {
+      "ms": 9219,
+      "out": 325,
+      "in": 4331,
+      "neurons": 48.2364
+     },
+     "merge": {
+      "ms": 5090,
+      "out": 269,
+      "in": 369,
+      "neurons": 10.6909
+     },
+     "direct": {
+      "ms": 8693,
+      "out": 370,
+      "in": 4331,
+      "neurons": 49.4636
+     },
+     "themesThenMergeMs": 14311
+    },
+    "agreementTitleLetterT2": 0.952,
+    "neuronsSpent": 582.7727,
+    "file": "e-onboarding-2.json"
+   },
+   {
+    "board": "onboarding",
+    "seed": 1,
+    "lang": "de",
+    "hedgeMs": 0,
+    "notes": 250,
+    "themes": {
+     "T1": [
+      "IT-Infrastruktur und Hardware",
+      "Wissensmanagement und Dokumentation",
+      "Soziale Integration und Kultur",
+      "Mentoring und Betreuung",
+      "Strukturierter Onboarding-Plan",
+      "Feedback und Kommunikation"
+     ],
+     "T2": [
+      "IT und technische Ausstattung",
+      "Wissensmanagement und Dokumentation",
+      "Soziale Integration und Teamkultur",
+      "Mentoring und persönliche Begleitung",
+      "Strukturierter Onboarding-Prozess",
+      "Kommunikation und Feedbackkultur"
+     ],
+     "T3": []
+    },
+    "sets": {
+     "letter:T1": {
+      "seconds": 30.886,
+      "ari": 0.888,
+      "purity": 0.976,
+      "withoutGroup": 0,
+      "groups": [
+       "50 IT-Infrastruktur und Hardware",
+       "50 Wissensmanagement und Dokumentation",
+       "49 Soziale Integration und Kultur",
+       "34 Mentoring und Betreuung",
+       "50 Strukturierter Onboarding-Plan",
+       "17 Feedback und Kommunikation"
+      ],
+      "calls": [
+       "9051ms/445tok",
+       "11008ms/445tok",
+       "10835ms/445tok",
+       "9698ms/445tok",
+       "30884ms/445tok"
+      ],
+      "outTokens": 2225,
+      "inTokens": 5519,
+      "neurons": 110.8545,
+      "failedBatches": 0
+     },
+     "letter:T2": {
+      "seconds": 16.781,
+      "ari": 0.8759,
+      "purity": 0.972,
+      "withoutGroup": 0,
+      "groups": [
+       "49 IT und technische Ausstattung",
+       "53 Wissensmanagement und Dokumentation",
+       "49 Soziale Integration und Teamkultur",
+       "31 Mentoring und persönliche Begleitung",
+       "49 Strukturierter Onboarding-Prozess",
+       "19 Kommunikation und Feedbackkultur"
+      ],
+      "calls": [
+       "9031ms/445tok",
+       "16779ms/445tok",
+       "9750ms/445tok",
+       "9986ms/445tok",
+       "8118ms/445tok"
+      ],
+      "outTokens": 2225,
+      "inTokens": 5418,
+      "neurons": 109.9364,
+      "failedBatches": 0
+     },
+     "compact:T1": {
+      "seconds": 7.252,
+      "ari": 0.888,
+      "purity": 0.976,
+      "withoutGroup": 0,
+      "groups": [
+       "50 IT-Infrastruktur und Hardware",
+       "50 Wissensmanagement und Dokumentation",
+       "50 Soziale Integration und Kultur",
+       "32 Mentoring und Betreuung",
+       "51 Strukturierter Onboarding-Plan",
+       "17 Feedback und Kommunikation"
+      ],
+      "calls": [
+       "7250ms/243tok",
+       "4680ms/243tok",
+       "7220ms/243tok",
+       "5193ms/243tok",
+       "4577ms/243tok"
+      ],
+      "outTokens": 1215,
+      "inTokens": 5587,
+      "neurons": 83.9273,
+      "failedBatches": 0
+     }
+    },
+    "themeCalls": {
+     "themes": {
+      "ms": 7987,
+      "out": 314,
+      "in": 4332,
+      "neurons": 47.9455
+     },
+     "merge": {
+      "ms": 6226,
+      "out": 296,
+      "in": 357,
+      "neurons": 11.3182
+     },
+     "direct": null,
+     "themesThenMergeMs": 14213
+    },
+    "neuronsSpent": 363.9818,
+    "file": "e2-onboarding_seed_1.json"
+   },
+   {
+    "board": "stadtteil",
+    "seed": 1,
+    "lang": "de",
+    "hedgeMs": 0,
+    "notes": 250,
+    "themes": {
+     "T1": [
+      "Lokale Geschäfte & Gastronomie",
+      "Mobilität & Verkehr",
+      "Nachbarschaftshilfe & Gemeinschaft",
+      "Mängel & Stadtverwaltung",
+      "Veranstaltungen & Freizeit"
+     ],
+     "T2": [
+      "Lokales Gewerbe & Gastronomie",
+      "Mobilität & Verkehr",
+      "Nachbarschaft & Gemeinschaft",
+      "Stadtverwaltung & Infrastruktur",
+      "Events & Freizeit"
+     ],
+     "T3": []
+    },
+    "sets": {
+     "letter:T1": {
+      "seconds": 28.468,
+      "ari": 0.8648,
+      "purity": 0.944,
+      "withoutGroup": 0,
+      "groups": [
+       "48 Lokale Geschäfte & Gastronomie",
+       "46 Mobilität & Verkehr",
+       "59 Nachbarschaftshilfe & Gemeinschaft",
+       "51 Mängel & Stadtverwaltung",
+       "46 Veranstaltungen & Freizeit"
+      ],
+      "calls": [
+       "9422ms/445tok",
+       "10350ms/445tok",
+       "28464ms/445tok",
+       "8915ms/445tok",
+       "10185ms/445tok"
+      ],
+      "outTokens": 2225,
+      "inTokens": 5213,
+      "neurons": 108.0727,
+      "failedBatches": 0
+     },
+     "letter:T2": {
+      "seconds": 10.886,
+      "ari": 0.8004,
+      "purity": 0.916,
+      "withoutGroup": 0,
+      "groups": [
+       "46 Lokales Gewerbe & Gastronomie",
+       "42 Mobilität & Verkehr",
+       "64 Nachbarschaft & Gemeinschaft",
+       "53 Stadtverwaltung & Infrastruktur",
+       "45 Events & Freizeit"
+      ],
+      "calls": [
+       "9002ms/445tok",
+       "6844ms/445tok",
+       "10884ms/445tok",
+       "7082ms/445tok",
+       "9942ms/445tok"
+      ],
+      "outTokens": 2225,
+      "inTokens": 5191,
+      "neurons": 107.8727,
+      "failedBatches": 0
+     },
+     "compact:T1": {
+      "seconds": 6.256,
+      "ari": 0.8392,
+      "purity": 0.932,
+      "withoutGroup": 0,
+      "groups": [
+       "48 Lokale Geschäfte & Gastronomie",
+       "43 Mobilität & Verkehr",
+       "62 Nachbarschaftshilfe & Gemeinschaft",
+       "51 Mängel & Stadtverwaltung",
+       "46 Veranstaltungen & Freizeit"
+      ],
+      "calls": [
+       "5363ms/243tok",
+       "5409ms/243tok",
+       "6255ms/243tok",
+       "5725ms/243tok",
+       "5039ms/243tok"
+      ],
+      "outTokens": 1215,
+      "inTokens": 5282,
+      "neurons": 80.2818,
+      "failedBatches": 0
+     }
+    },
+    "themeCalls": {
+     "themes": {
+      "ms": 5426,
+      "out": 236,
+      "in": 4365,
+      "neurons": 46.1182
+     },
+     "merge": {
+      "ms": 4143,
+      "out": 229,
+      "in": 289,
+      "neurons": 8.8727
+     },
+     "direct": null,
+     "themesThenMergeMs": 9572
+    },
+    "neuronsSpent": 351.2182,
+    "file": "e2-stadtteil_seed_1.json"
+   },
+   {
+    "board": "stadtteil",
+    "seed": 3,
+    "lang": "de",
+    "hedgeMs": 0,
+    "notes": 250,
+    "themes": {
+     "T1": [
+      "Nachbarschaftshilfe und Teilen",
+      "Lokales Gewerbe und Gastronomie",
+      "Mängel melden und Infrastruktur",
+      "Mobilität und Verkehr",
+      "Veranstaltungen und Gemeinschaft"
+     ],
+     "T2": [
+      "Nachbarschaft und Gemeinschaft",
+      "Lokales Gewerbe und Gastronomie",
+      "Mobilität und Verkehr",
+      "Stadtteil-Management und Infrastruktur",
+      "Veranstaltungen und Kultur"
+     ],
+     "T3": []
+    },
+    "sets": {
+     "letter:T1": {
+      "seconds": 9.514,
+      "ari": 0.9501,
+      "purity": 0.98,
+      "withoutGroup": 0,
+      "groups": [
+       "54 Nachbarschaftshilfe und Teilen",
+       "49 Lokales Gewerbe und Gastronomie",
+       "50 Mängel melden und Infrastruktur",
+       "47 Mobilität und Verkehr",
+       "50 Veranstaltungen und Gemeinschaft"
+      ],
+      "calls": [
+       "9165ms/445tok",
+       "9511ms/445tok",
+       "9058ms/445tok",
+       "9486ms/445tok",
+       "8746ms/445tok"
+      ],
+      "outTokens": 2225,
+      "inTokens": 5302,
+      "neurons": 108.8818,
+      "failedBatches": 0
+     },
+     "letter:T2": {
+      "seconds": 10.2,
+      "ari": 0.7873,
+      "purity": 0.908,
+      "withoutGroup": 0,
+      "groups": [
+       "71 Nachbarschaft und Gemeinschaft",
+       "48 Lokales Gewerbe und Gastronomie",
+       "43 Mobilität und Verkehr",
+       "51 Stadtteil-Management und Infrastruktur",
+       "37 Veranstaltungen und Kultur"
+      ],
+      "calls": [
+       "9492ms/445tok",
+       "7754ms/445tok",
+       "10192ms/445tok",
+       "9172ms/445tok",
+       "9760ms/445tok"
+      ],
+      "outTokens": 2225,
+      "inTokens": 5278,
+      "neurons": 108.6636,
+      "failedBatches": 0
+     },
+     "compact:T1": {
+      "seconds": 9.758,
+      "ari": 0.9404,
+      "purity": 0.976,
+      "withoutGroup": 0,
+      "groups": [
+       "54 Nachbarschaftshilfe und Teilen",
+       "49 Lokales Gewerbe und Gastronomie",
+       "50 Mängel melden und Infrastruktur",
+       "46 Mobilität und Verkehr",
+       "51 Veranstaltungen und Gemeinschaft"
+      ],
+      "calls": [
+       "5152ms/243tok",
+       "9371ms/243tok",
+       "5565ms/243tok",
+       "6591ms/243tok",
+       "9751ms/243tok"
+      ],
+      "outTokens": 1215,
+      "inTokens": 5373,
+      "neurons": 81.9818,
+      "failedBatches": 0
+     }
+    },
+    "themeCalls": {
+     "themes": {
+      "ms": 5920,
+      "out": 253,
+      "in": 4365,
+      "neurons": 46.5818
+     },
+     "merge": {
+      "ms": 5558,
+      "out": 250,
+      "in": 306,
+      "neurons": 9.6
+     },
+     "direct": null,
+     "themesThenMergeMs": 11479
+    },
+    "neuronsSpent": 355.7091,
+    "file": "e2-stadtteil_seed_3.json"
+   }
+  ]
+ },
+ "recipe_as_built": {
+  "what": "themes 3 to 6 in one call, no merge call, assignment by letter on a single line, batches of 50 side by side, a slow call asked a second time after 15 s (themes) or 12 s (assignment), 30 s per call",
+  "runs": [
+   {
+    "board": "onboarding",
+    "lang": "de",
+    "limit": 0,
+    "dirty": "none",
+    "seed": 1,
+    "model": "@cf/google/gemma-4-26b-a4b-it",
+    "notes": 250,
+    "question": "Wie machen wir die Einarbeitung neuer Kolleginnen und Kollegen besser?",
+    "ok": true,
+    "seconds": 16.3,
+    "calls": 6,
+    "failed": 0,
+    "hedged": 0,
+    "neurons": 129.33,
+    "inputTokens": 9768,
+    "outputTokens": 1486,
+    "perCall": [
+     "themes:8575ms/271tok",
+     "assign:5856ms/243tok",
+     "assign:6437ms/243tok",
+     "assign:6447ms/243tok",
+     "assign:6650ms/243tok",
+     "assign:7724ms/243tok"
+    ],
+    "unanswered": 0,
+    "groups": [
+     {
+      "title": "IT-Setup und Hardware",
+      "notes": 50
+     },
+     {
+      "title": "Strukturierter Onboarding-Plan",
+      "notes": 51
+     },
+     {
+      "title": "Wissen und Dokumentation",
+      "notes": 52
+     },
+     {
+      "title": "Soziale Integration und Kultur",
+      "notes": 51
+     },
+     {
+      "title": "Mentoring und Feedback",
+      "notes": 46
+     }
+    ],
+    "score": {
+     "notes": 250,
+     "ari": 0.9408,
+     "purity": 0.976,
+     "withoutGroup": 0
+    },
+    "file": "n-onboarding_seed_1.json"
+   },
+   {
+    "board": "onboarding",
+    "lang": "de",
+    "limit": 0,
+    "dirty": "none",
+    "seed": 2,
+    "model": "@cf/google/gemma-4-26b-a4b-it",
+    "notes": 250,
+    "question": "Wie machen wir die Einarbeitung neuer Kolleginnen und Kollegen besser?",
+    "ok": true,
+    "seconds": 16.5,
+    "calls": 6,
+    "failed": 0,
+    "hedged": 0,
+    "neurons": 129.75,
+    "inputTokens": 9803,
+    "outputTokens": 1490,
+    "perCall": [
+     "themes:7449ms/275tok",
+     "assign:5297ms/243tok",
+     "assign:5934ms/243tok",
+     "assign:6064ms/243tok",
+     "assign:6231ms/243tok",
+     "assign:9082ms/243tok"
+    ],
+    "unanswered": 0,
+    "groups": [
+     {
+      "title": "IT-Infrastruktur und Hardware",
+      "notes": 50
+     },
+     {
+      "title": "Wissensmanagement und Dokumentation",
+      "notes": 51
+     },
+     {
+      "title": "Soziale Integration und Kultur",
+      "notes": 51
+     },
+     {
+      "title": "Mentoring und Betreuung",
+      "notes": 34
+     },
+     {
+      "title": "Strukturierter Onboarding-Plan",
+      "notes": 64
+     }
+    ],
+    "score": {
+     "notes": 250,
+     "ari": 0.8421,
+     "purity": 0.924,
+     "withoutGroup": 0
+    },
+    "file": "n-onboarding_seed_2.json"
+   },
+   {
+    "board": "stadtteil",
+    "lang": "de",
+    "limit": 0,
+    "dirty": "none",
+    "seed": 1,
+    "model": "@cf/google/gemma-4-26b-a4b-it",
+    "notes": 250,
+    "question": "Was soll unsere Stadtteil-App können?",
+    "ok": true,
+    "seconds": 27.6,
+    "calls": 7,
+    "failed": 0,
+    "hedged": 1,
+    "neurons": 179.29,
+    "inputTokens": 14265,
+    "outputTokens": 1819,
+    "perCall": [
+     "themes:20446ms/302tok",
+     "themes:6652ms/236tok",
+     "assign:4675ms/243tok",
+     "assign:5438ms/243tok",
+     "assign:6250ms/243tok",
+     "assign:6706ms/243tok",
+     "assign:7186ms/243tok"
+    ],
+    "unanswered": 0,
+    "groups": [
+     {
+      "title": "Lokale Geschäfte & Gastronomie",
+      "notes": 46
+     },
+     {
+      "title": "Mobilität & Verkehr",
+      "notes": 40
+     },
+     {
+      "title": "Nachbarschaftshilfe & Gemeinschaft",
+      "notes": 63
+     },
+     {
+      "title": "Mängel melden & Stadtplanung",
+      "notes": 51
+     },
+     {
+      "title": "Veranstaltungen & Freizeit",
+      "notes": 43
+     },
+     {
+      "title": "Barrierefreiheit & Inklusion",
+      "notes": 7
+     }
+    ],
+    "score": {
+     "notes": 250,
+     "ari": 0.7666,
+     "purity": 0.896,
+     "withoutGroup": 0
+    },
+    "file": "n-stadtteil_seed_1.json"
+   },
+   {
+    "board": "stadtteil",
+    "lang": "de",
+    "limit": 0,
+    "dirty": "none",
+    "seed": 3,
+    "model": "@cf/google/gemma-4-26b-a4b-it",
+    "notes": 250,
+    "question": "Was soll unsere Stadtteil-App können?",
+    "ok": true,
+    "seconds": 22.9,
+    "calls": 9,
+    "failed": 0,
+    "hedged": 3,
+    "neurons": 177.65,
+    "inputTokens": 12960,
+    "outputTokens": 2194,
+    "perCall": [
+     "themes:6602ms/250tok",
+     "assign:7342ms/243tok",
+     "assign:8326ms/243tok",
+     "assign:12231ms/243tok",
+     "assign:12397ms/243tok",
+     "assign:16256ms/243tok"
+    ],
+    "unanswered": 0,
+    "groups": [
+     {
+      "title": "Nachbarschaftshilfe und Teilen",
+      "notes": 52
+     },
+     {
+      "title": "Lokales Gewerbe und Gastronomie",
+      "notes": 48
+     },
+     {
+      "title": "Mobilität und Verkehr",
+      "notes": 50
+     },
+     {
+      "title": "Mängel melden und Stadtplanung",
+      "notes": 51
+     },
+     {
+      "title": "Veranstaltungen und Gemeinschaft",
+      "notes": 49
+     }
+    ],
+    "score": {
+     "notes": 250,
+     "ari": 0.9501,
+     "purity": 0.98,
+     "withoutGroup": 0
+    },
+    "file": "n-stadtteil_seed_3.json"
+   },
+   {
+    "board": "both",
+    "lang": "de",
+    "limit": 0,
+    "dirty": "none",
+    "seed": 1,
+    "model": "@cf/google/gemma-4-26b-a4b-it",
+    "notes": 500,
+    "question": "Wie machen wir die Einarbeitung neuer Kolleginnen und Kollegen besser?",
+    "ok": true,
+    "seconds": 11,
+    "calls": 11,
+    "failed": 0,
+    "hedged": 0,
+    "neurons": 251.85,
+    "inputTokens": 19606,
+    "outputTokens": 2699,
+    "perCall": [
+     "themes:2260ms/269tok",
+     "assign:3650ms/243tok",
+     "assign:4330ms/243tok",
+     "assign:5369ms/243tok",
+     "assign:5744ms/243tok",
+     "assign:5945ms/243tok",
+     "assign:6404ms/243tok",
+     "assign:6403ms/243tok",
+     "assign:6434ms/243tok",
+     "assign:6555ms/243tok",
+     "assign:8691ms/243tok"
+    ],
+    "unanswered": 0,
+    "groups": [
+     {
+      "title": "IT-Infrastruktur und Hardware",
+      "notes": 56
+     },
+     {
+      "title": "Mentoring und soziale Integration",
+      "notes": 85
+     },
+     {
+      "title": "Wissensmanagement und Dokumentation",
+      "notes": 57
+     },
+     {
+      "title": "Onboarding-Prozesse und Feedback",
+      "notes": 80
+     },
+     {
+      "title": "Lokale Infrastruktur und Nachbarschaft",
+      "notes": 222
+     }
+    ],
+    "score": {
+     "notes": 500,
+     "ari": 0.3211,
+     "purity": 0.472,
+     "withoutGroup": 0
+    },
+    "file": "k-both.json"
+   },
+   {
+    "board": "onboarding",
+    "lang": "de",
+    "limit": 0,
+    "dirty": "mixed",
+    "seed": 1,
+    "model": "@cf/google/gemma-4-26b-a4b-it",
+    "notes": 280,
+    "question": "Wie machen wir die Einarbeitung neuer Kolleginnen und Kollegen besser?",
+    "ok": true,
+    "seconds": 14.9,
+    "calls": 7,
+    "failed": 0,
+    "hedged": 0,
+    "neurons": 143.48,
+    "inputTokens": 10830,
+    "outputTokens": 1651,
+    "perCall": [
+     "themes:4099ms/293tok",
+     "assign:1290ms/143tok",
+     "assign:5180ms/243tok",
+     "assign:5637ms/243tok",
+     "assign:5641ms/243tok",
+     "assign:6029ms/243tok",
+     "assign:10778ms/243tok"
+    ],
+    "unanswered": 0,
+    "groups": [
+     {
+      "title": "IT-Infrastruktur und Hardware",
+      "notes": 57
+     },
+     {
+      "title": "Dokumentation und Wissenstransfer",
+      "notes": 58
+     },
+     {
+      "title": "Mentoring und soziale Integration",
+      "notes": 87
+     },
+     {
+      "title": "Strukturierter Onboarding-Plan",
+      "notes": 48
+     },
+     {
+      "title": "Arbeitsaufgaben und Projekte",
+      "notes": 30
+     }
+    ],
+    "score": {
+     "notes": 280,
+     "ari": 0.6676,
+     "purity": 0.7857,
+     "withoutGroup": 0
+    },
+    "scoreDirty": {
+     "notes": 30,
+     "ari": 0.6667,
+     "purity": 0.8,
+     "withoutGroup": 0
+    },
+    "file": "k-onboarding_dirty_mixed.json"
+   },
+   {
+    "board": "onboarding",
+    "lang": "de",
+    "limit": 0,
+    "dirty": "only",
+    "seed": 1,
+    "model": "@cf/google/gemma-4-26b-a4b-it",
+    "notes": 30,
+    "question": "Wie machen wir die Einarbeitung neuer Kolleginnen und Kollegen besser?",
+    "ok": true,
+    "seconds": 10.6,
+    "calls": 2,
+    "failed": 0,
+    "hedged": 0,
+    "neurons": 19.29,
+    "inputTokens": 991,
+    "outputTokens": 377,
+    "perCall": [
+     "themes:6040ms/234tok",
+     "assign:4560ms/143tok"
+    ],
+    "unanswered": 0,
+    "groups": [
+     {
+      "title": "Technik und IT-Setup",
+      "notes": 6
+     },
+     {
+      "title": "Dokumentation und Wissen",
+      "notes": 6
+     },
+     {
+      "title": "Struktur und Aufgaben",
+      "notes": 6
+     },
+     {
+      "title": "Soziale Integration",
+      "notes": 6
+     },
+     {
+      "title": "Mentoring und Kommunikation",
+      "notes": 6
+     }
+    ],
+    "score": {
+     "notes": 30,
+     "ari": 1,
+     "purity": 1,
+     "withoutGroup": 0
+    },
+    "file": "k-onboarding_dirty_only.json"
+   },
+   {
+    "board": "onboarding",
+    "lang": "en",
+    "limit": 0,
+    "dirty": "none",
+    "seed": 1,
+    "model": "@cf/google/gemma-4-26b-a4b-it",
+    "notes": 250,
+    "question": "How do we make onboarding of new colleagues better?",
+    "ok": true,
+    "seconds": 11.9,
+    "calls": 6,
+    "failed": 0,
+    "hedged": 0,
+    "neurons": 126.28,
+    "inputTokens": 9559,
+    "outputTokens": 1444,
+    "perCall": [
+     "themes:3353ms/229tok",
+     "assign:5762ms/243tok",
+     "assign:5762ms/243tok",
+     "assign:6437ms/243tok",
+     "assign:6487ms/243tok",
+     "assign:8497ms/243tok"
+    ],
+    "unanswered": 0,
+    "groups": [
+     {
+      "title": "IT and Hardware Setup",
+      "notes": 50
+     },
+     {
+      "title": "Social Integration and Culture",
+      "notes": 52
+     },
+     {
+      "title": "Documentation and Knowledge Transfer",
+      "notes": 52
+     },
+     {
+      "title": "Mentoring and Support Systems",
+      "notes": 31
+     },
+     {
+      "title": "Structured Onboarding and Planning",
+      "notes": 65
+     }
+    ],
+    "score": {
+     "notes": 250,
+     "ari": 0.8206,
+     "purity": 0.912,
+     "withoutGroup": 0
+    },
+    "file": "k-onboarding_lang_en.json"
+   },
+   {
+    "board": "onboarding",
+    "lang": "de",
+    "limit": 12,
+    "dirty": "none",
+    "seed": 1,
+    "model": "@cf/google/gemma-4-26b-a4b-it",
+    "notes": 12,
+    "question": "Wie machen wir die Einarbeitung neuer Kolleginnen und Kollegen besser?",
+    "ok": true,
+    "seconds": 4.1,
+    "calls": 2,
+    "failed": 0,
+    "hedged": 0,
+    "neurons": 13.25,
+    "inputTokens": 753,
+    "outputTokens": 235,
+    "perCall": [
+     "themes:3056ms/182tok",
+     "assign:1005ms/53tok"
+    ],
+    "unanswered": 0,
+    "groups": [
+     {
+      "title": "Dokumentation und Wissenstransfer",
+      "notes": 4
+     },
+     {
+      "title": "Technische Onboarding-Prozesse",
+      "notes": 2
+     },
+     {
+      "title": "Feedback und Kommunikation",
+      "notes": 4
+     },
+     {
+      "title": "Arbeitsweise und Erwartungen",
+      "notes": 2
+     }
+    ],
+    "score": {
+     "notes": 12,
+     "ari": 0.7541,
+     "purity": 0.8333,
+     "withoutGroup": 0
+    },
+    "file": "k-onboarding_limit_12.json"
+   },
+   {
+    "board": "onboarding",
+    "lang": "de",
+    "limit": 8,
+    "dirty": "none",
+    "seed": 1,
+    "model": "@cf/google/gemma-4-26b-a4b-it",
+    "notes": 8,
+    "question": "Wie machen wir die Einarbeitung neuer Kolleginnen und Kollegen besser?",
+    "ok": true,
+    "seconds": 4.7,
+    "calls": 2,
+    "failed": 0,
+    "hedged": 0,
+    "neurons": 9.03,
+    "inputTokens": 579,
+    "outputTokens": 138,
+    "perCall": [
+     "themes:2756ms/104tok",
+     "assign:1917ms/34tok"
+    ],
+    "unanswered": 0,
+    "groups": [
+     {
+      "title": "Prozesse und technische Berechtigungen",
+      "notes": 5
+     },
+     {
+      "title": "Kultur und soziale Integration",
+      "notes": 3
+     }
+    ],
+    "score": {
+     "notes": 8,
+     "ari": 0.4011,
+     "purity": 0.625,
+     "withoutGroup": 0
+    },
+    "file": "k-onboarding_limit_8.json"
+   },
+   {
+    "board": "stadtteil",
+    "lang": "de",
+    "limit": 15,
+    "dirty": "none",
+    "seed": 1,
+    "model": "@cf/google/gemma-4-26b-a4b-it",
+    "notes": 15,
+    "question": "Was soll unsere Stadtteil-App können?",
+    "ok": true,
+    "seconds": 6.9,
+    "calls": 2,
+    "failed": 0,
+    "hedged": 0,
+    "neurons": 15.55,
+    "inputTokens": 916,
+    "outputTokens": 265,
+    "perCall": [
+     "themes:4643ms/197tok",
+     "assign:2252ms/68tok"
+    ],
+    "unanswered": 0,
+    "groups": [
+     {
+      "title": "Nachbarschaftshilfe und Sharing",
+      "notes": 5
+     },
+     {
+      "title": "Lokale Events und Freizeit",
+      "notes": 4
+     },
+     {
+      "title": "Lokale Geschäfte und Gastronomie",
+      "notes": 3
+     },
+     {
+      "title": "Mängel melden und Verwaltung",
+      "notes": 3
+     }
+    ],
+    "score": {
+     "notes": 15,
+     "ari": 0.6805,
+     "purity": 0.8,
+     "withoutGroup": 0
+    },
+    "file": "k-stadtteil_limit_15.json"
+   }
+  ]
+ }
+}

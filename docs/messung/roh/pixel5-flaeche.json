@@ -1,0 +1,370 @@
+{
+ "measured": "2026-11-23",
+ "device": "Pixel 5 (redfin), Android 14, Chrome 153.0.8010.36",
+ "viewport_css_px": [
+  392,
+  721
+ ],
+ "device_pixel_ratio": 2.75,
+ "surface_frame_css_px": [
+  359,
+  224
+ ],
+ "runs": [
+  {
+   "label": "A-alle-im-bild-zwei-finger-schieben",
+   "kind": "pan2",
+   "gestures": 16,
+   "noStartPoint": 0,
+   "before": {
+    "inView": 498,
+    "scale": 0.05
+   },
+   "after": {
+    "inView": 498,
+    "scale": 0.05
+   },
+   "inViewBetween": [
+    498,
+    498
+   ],
+   "notesMoved": 0,
+   "seconds": 10.7,
+   "frames": 943,
+   "fps": 88.1,
+   "frameMs": {
+    "median": 11.1,
+    "p95": 11.2,
+    "p99": 22.2,
+    "worst": 44.5
+   },
+   "over33ms": 1,
+   "over50ms": 0,
+   "over100ms": 0,
+   "frame": {
+    "w": 359,
+    "h": 224
+   },
+   "file": "px-A-pan2.json"
+  },
+  {
+   "label": "A-alle-im-bild-zoomen",
+   "kind": "zoom",
+   "gestures": 32,
+   "noStartPoint": 0,
+   "before": {
+    "inView": 498,
+    "scale": 0.05
+   },
+   "after": {
+    "inView": 30,
+    "scale": 0.306467
+   },
+   "inViewBetween": [
+    30,
+    196
+   ],
+   "notesMoved": 0,
+   "seconds": 8.1,
+   "frames": 543,
+   "fps": 67.1,
+   "frameMs": {
+    "median": 11.2,
+    "p95": 22.4,
+    "p99": 55.6,
+    "worst": 88.8
+   },
+   "over33ms": 14,
+   "over50ms": 6,
+   "over100ms": 0,
+   "frame": {
+    "w": 359,
+    "h": 224
+   },
+   "file": "px-A-zoom.json"
+  },
+  {
+   "label": "B-mittel-zwei-finger-schieben",
+   "kind": "pan2",
+   "gestures": 16,
+   "noStartPoint": 0,
+   "before": {
+    "inView": 42,
+    "scale": 0.238419
+   },
+   "after": {
+    "inView": 49,
+    "scale": 0.238419
+   },
+   "inViewBetween": [
+    42,
+    49
+   ],
+   "notesMoved": 0,
+   "seconds": 10.8,
+   "frames": 961,
+   "fps": 88.5,
+   "frameMs": {
+    "median": 11.1,
+    "p95": 11.2,
+    "p99": 22.2,
+    "worst": 44.4
+   },
+   "over33ms": 2,
+   "over50ms": 0,
+   "over100ms": 0,
+   "frame": {
+    "w": 359,
+    "h": 224
+   },
+   "file": "px-B-pan2.json"
+  },
+  {
+   "label": "B-mittel-zoomen",
+   "kind": "zoom",
+   "gestures": 32,
+   "noStartPoint": 0,
+   "before": {
+    "inView": 49,
+    "scale": 0.238419
+   },
+   "after": {
+    "inView": 9,
+    "scale": 0.776125
+   },
+   "inViewBetween": [
+    9,
+    35
+   ],
+   "notesMoved": 0,
+   "seconds": 8,
+   "frames": 526,
+   "fps": 65.6,
+   "frameMs": {
+    "median": 11.2,
+    "p95": 22.4,
+    "p99": 44.7,
+    "worst": 66.7
+   },
+   "over33ms": 14,
+   "over50ms": 5,
+   "over100ms": 0,
+   "frame": {
+    "w": 359,
+    "h": 224
+   },
+   "file": "px-B-zoom.json"
+  },
+  {
+   "label": "B-mittel-zettel-ziehen",
+   "kind": "note",
+   "gestures": 28,
+   "noStartPoint": 0,
+   "before": {
+    "inView": 49,
+    "scale": 0.238419
+   },
+   "after": {
+    "inView": 49,
+    "scale": 0.238419
+   },
+   "inViewBetween": [
+    49,
+    49
+   ],
+   "notesMoved": 3,
+   "seconds": 8.7,
+   "frames": 435,
+   "fps": 50.2,
+   "frameMs": {
+    "median": 16.7,
+    "p95": 50,
+    "p99": 66.7,
+    "worst": 66.7
+   },
+   "over33ms": 47,
+   "over50ms": 10,
+   "over100ms": 0,
+   "frame": {
+    "w": 359,
+    "h": 224
+   },
+   "file": "px-B-note.json"
+  },
+  {
+   "label": "C-nah-zwei-finger-schieben",
+   "kind": "pan2",
+   "gestures": 16,
+   "noStartPoint": 0,
+   "before": {
+    "inView": 6,
+    "scale": 0.909495
+   },
+   "after": {
+    "inView": 9,
+    "scale": 0.909495
+   },
+   "inViewBetween": [
+    6,
+    9
+   ],
+   "notesMoved": 0,
+   "seconds": 11.1,
+   "frames": 980,
+   "fps": 88.3,
+   "frameMs": {
+    "median": 11.1,
+    "p95": 11.2,
+    "p99": 22.3,
+    "worst": 33.2
+   },
+   "over33ms": 0,
+   "over50ms": 0,
+   "over100ms": 0,
+   "frame": {
+    "w": 359,
+    "h": 224
+   },
+   "file": "px-C-pan2.json"
+  },
+  {
+   "label": "C-nah-zettel-ziehen",
+   "kind": "note",
+   "gestures": 20,
+   "noStartPoint": 0,
+   "before": {
+    "inView": 9,
+    "scale": 0.909495
+   },
+   "after": {
+    "inView": 9,
+    "scale": 0.909495
+   },
+   "inViewBetween": [
+    9,
+    9
+   ],
+   "notesMoved": 0,
+   "seconds": 8.7,
+   "frames": 457,
+   "fps": 52.3,
+   "frameMs": {
+    "median": 16.7,
+    "p95": 50,
+    "p99": 55.6,
+    "worst": 133.5
+   },
+   "over33ms": 39,
+   "over50ms": 19,
+   "over100ms": 1,
+   "frame": {
+    "w": 359,
+    "h": 224
+   },
+   "file": "px-C-note.json"
+  },
+  {
+   "label": "Gruppen-Wand-mittel-zwei-finger",
+   "kind": "pan2",
+   "gestures": 16,
+   "noStartPoint": 0,
+   "before": {
+    "inView": 32,
+    "scale": 0.238419
+   },
+   "after": {
+    "inView": 39,
+    "scale": 0.238419
+   },
+   "inViewBetween": [
+    39,
+    39
+   ],
+   "notesMoved": 0,
+   "seconds": 10.6,
+   "frames": 934,
+   "fps": 88.2,
+   "frameMs": {
+    "median": 11.1,
+    "p95": 11.2,
+    "p99": 22.2,
+    "worst": 33.4
+   },
+   "over33ms": 1,
+   "over50ms": 0,
+   "over100ms": 0,
+   "frame": {
+    "w": 359,
+    "h": 224
+   },
+   "file": "px-G-pan2.json"
+  },
+  {
+   "label": "Gruppen-Wand-mittel-zoomen",
+   "kind": "zoom",
+   "gestures": 32,
+   "noStartPoint": 0,
+   "before": {
+    "inView": 39,
+    "scale": 0.238419
+   },
+   "after": {
+    "inView": 2,
+    "scale": 2
+   },
+   "inViewBetween": [
+    2,
+    14
+   ],
+   "notesMoved": 3,
+   "seconds": 8.2,
+   "frames": 502,
+   "fps": 61.2,
+   "frameMs": {
+    "median": 11.1,
+    "p95": 55.7,
+    "p99": 89,
+    "worst": 155.6
+   },
+   "over33ms": 38,
+   "over50ms": 30,
+   "over100ms": 4,
+   "frame": {
+    "w": 359,
+    "h": 224
+   },
+   "file": "px-G-zoom.json"
+  },
+  {
+   "label": "A-alle-500-schieben",
+   "kind": "pan",
+   "gestures": 30,
+   "noStartPoint": 0,
+   "before": {
+    "inView": 500,
+    "scale": 0.0504587
+   },
+   "after": {
+    "inView": 1,
+    "scale": 0.0504587
+   },
+   "seconds": 10.6,
+   "frames": 644,
+   "fps": 60.5,
+   "frameMs": {
+    "median": 11.1,
+    "p95": 44.6,
+    "p99": 66.7,
+    "worst": 89.1
+   },
+   "over33ms": 66,
+   "over50ms": 28,
+   "over100ms": 0,
+   "frame": {
+    "w": 359,
+    "h": 224
+   },
+   "file": "pixel-A-pan.json"
+  }
+ ]
+}

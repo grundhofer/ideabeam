@@ -1,0 +1,572 @@
+{
+  "app": {
+    "title": "{{view}} · {{app}}",
+    "skip": "Skip to content"
+  },
+  "nav": {
+    "label": "Pages",
+    "start": "Start",
+    "walls": "My walls",
+    "settings": "Settings"
+  },
+  "common": {
+    "back": "Back",
+    "cancel": "Cancel",
+    "close": "Close",
+    "undo": "Undo",
+    "missing": "{{label}} is missing.",
+    "tooLong": "{{label}} is too long. At most {{max}}\u00a0characters.",
+    "retry": "Try again",
+    "discard": "Discard",
+    "optional": "(optional)",
+    "yourName": "Your name",
+    "yourNameHelp": "This is how the others on the wall see you. A first name or a pseudonym is enough.",
+    "toServer": "Goes to the server of {{app}} in the EU. Everyone on the wall sees it.",
+    "toServerHidden": "Goes to the server of {{app}} in the EU. The others see it only once the notes are revealed."
+  },
+  "more": {
+    "label": "More",
+    "theme": "Light or dark",
+    "system": "As the system",
+    "light": "Light",
+    "dark": "Dark",
+    "systemIsOn": "Light or dark follows the system.",
+    "lightIsOn": "Light is on.",
+    "darkIsOn": "Dark is on.",
+    "tone": "Tone",
+    "cool": "Cool",
+    "warm": "Warm",
+    "coolIsOn": "Cool tone is on.",
+    "warmIsOn": "Warm tone is on.",
+    "language": "Language"
+  },
+  "commands": {
+    "label": "Commands",
+    "search": "Search a command or setting",
+    "places": "Places",
+    "look": "Look",
+    "warm": "Warm tone",
+    "move": "move",
+    "run": "run",
+    "close": "close",
+    "none": "No command matches “{{query}}”.",
+    "keys": {
+      "shown": {
+        "Mod": "Ctrl",
+        "Enter": "Enter",
+        "Escape": "Esc"
+      },
+      "spoken": {
+        "Mod": "Command",
+        "Enter": "Return",
+        "Escape": "Escape",
+        "Up": "Up arrow",
+        "Down": "Down arrow"
+      },
+      "spokenOther": {
+        "Mod": "Control"
+      }
+    }
+  },
+  "start": {
+    "title": "Start",
+    "continue": "Continue to “{{question}}”",
+    "all": "All walls on this device"
+  },
+  "landing": {
+    "tab": "Everyone writes notes, an AI groups them",
+    "claim": "Everyone writes notes, an AI groups them.",
+    "lede": "One person creates a wall with a question and shares the link. Everyone writes their ideas on notes, hidden at first, then visible to all. At the press of a button an AI proposes groups with headings. Free, no account.",
+    "ctaHint": "No account needed. You ask a question and share the link.",
+    "description": "A wall is a question and a surface for notes. First everyone writes on their own, without reading the others’ notes. Then the facilitator reveals them and has the AI propose groups. The facilitator sees the proposal before it applies, and can take it back.",
+    "trust": {
+      "account": "No account, not even for the facilitator",
+      "where": "Stored in the EU",
+      "ai": "According to Cloudflare, the AI stores nothing and does not learn from it",
+      "tracking": "No analytics scripts, no cookies"
+    },
+    "preview": {
+      "label": "Example: a wall that has been grouped",
+      "caption": "Sample data",
+      "question": "What slows us down?",
+      "state": "12 notes in 3 groups",
+      "group1": "Coordination",
+      "note1": "Too many meetings without a result",
+      "note2": "Unclear who decides",
+      "group2": "Tools",
+      "note3": "The build takes too long",
+      "note4": "Two ticket systems side by side"
+    },
+    "howTitle": "How a brainstorming goes",
+    "howRoles": "One person facilitates, everyone else comes in through the link.",
+    "steps": {
+      "open": {
+        "title": "1. Ask a question and share the link",
+        "text": "You create a wall with your question and share the link or its QR code. Whoever opens it types a first name or a pseudonym."
+      },
+      "write": {
+        "title": "2. Write, then reveal",
+        "text": "Everyone writes their notes, hidden at first: nobody reads along until the facilitator reveals them."
+      },
+      "arrange": {
+        "title": "3. Let it group",
+        "text": "At the press of a button the AI proposes groups with headings. The facilitator applies the proposal or discards it; grouping by hand always works. At the end everyone can save the wall as a Markdown file."
+      }
+    },
+    "whyTitle": "Why {{app}}",
+    "why": {
+      "equal": {
+        "title": "Every idea counts the same",
+        "text": "Whoever writes hidden is not steered by the first idea in the room."
+      },
+      "fast": {
+        "title": "Grouped, not pushed around",
+        "text": "The AI sorts what somebody would otherwise move by hand, note by note."
+      },
+      "data": {
+        "title": "Sparing with data",
+        "text": "No account, no e-mail address. A wall deletes itself 30\u00a0days after the last visit."
+      },
+      "languages": {
+        "title": "German and English",
+        "text": "Each person chooses their own language. The AI writes its headings in the facilitator’s language."
+      }
+    },
+    "faqTitle": "Questions and answers",
+    "faqGroups": {
+      "basics": "Basics",
+      "privacy": "Privacy"
+    },
+    "faq": {
+      "cost": {
+        "q": "What does it cost?",
+        "a": "Nothing. {{app}} is a private, non-commercial project with no way to pay."
+      },
+      "account": {
+        "q": "Do I need an account?",
+        "a": "No. The link is the access: whoever has it can join the wall. So pass it on to your team only."
+      },
+      "admin": {
+        "q": "Who facilitates?",
+        "a": "The person who created the wall. With the facilitator link they take that right to a second device or share it with someone."
+      },
+      "limits": {
+        "q": "Are there limits?",
+        "a": "Up to {{online}}\u00a0people at once and up to {{notes}}\u00a0notes on a wall. The AI groups a wall at most {{runs}}\u00a0times in 24\u00a0hours; by hand it always works."
+      },
+      "ai": {
+        "q": "What happens to the notes when they are grouped?",
+        "a": "The question and the texts of the notes go to Cloudflare Workers AI, the service the wall is hosted with anyway; names do not go with them. According to Cloudflare nothing is stored there and nothing is trained on them. The computing is not certain to happen in the EU. Whoever does not want that groups by hand."
+      },
+      "where": {
+        "q": "Where is the data?",
+        "a": "At Cloudflare, stored in data centres in the EU. The encrypted connection ends at Cloudflare’s nearest location, also outside the EU."
+      },
+      "howLong": {
+        "q": "How long does anything stay stored?",
+        "a": "A wall deletes itself 30\u00a0days after the last visit. The facilitator can delete it at once."
+      },
+      "tracking": {
+        "q": "Is there tracking?",
+        "a": "No. No analytics scripts, no cookies, nothing from other servers. Your browser remembers the walls you were on and your name. This list stays on your device; your name goes to a wall only when you join it."
+      }
+    },
+    "closingTitle": "Try it with a real question",
+    "closingText": "Create a wall and share the link with your team.",
+    "notice": "{{app}} is a private, non-commercial project. There is no promise of availability."
+  },
+  "walls": {
+    "title": "My walls",
+    "emptyTitle": "No walls yet",
+    "emptyText": "A wall appears here once you have created it or been on it.",
+    "onDevice_one": "1 wall on this device.",
+    "onDevice_other": "{{count}} walls on this device.",
+    "visitedAs": "Last on {{date}} as {{name}}",
+    "made": "Created on {{date}}",
+    "more": "More for “{{question}}”",
+    "remove": "Remove from the list",
+    "removeTitle": "Remove wall from the list?",
+    "removeText": "“{{question}}” is removed from the list on this device. The wall itself stays as it is; this device then no longer knows who you were there.",
+    "removeTextAdmin": "“{{question}}” is removed from the list on this device. The wall itself stays as it is; this device then no longer knows who you were there, and no longer facilitates the wall.",
+    "removeConfirm": "Remove"
+  },
+  "new": {
+    "title": "New wall",
+    "submit": "Create wall",
+    "question": "Question",
+    "questionHelp": "For example “What slows us down?”. It is the title of the wall.",
+    "hidden": "Hidden writing",
+    "hiddenHelp": "Everyone writes on their own, and nobody reads along until the facilitator reveals the notes. Switched off, everyone sees every note at once.",
+    "making": "Creating the wall …",
+    "limited": "Too many walls were just created from here. Your question is still there; try again in a minute.",
+    "spent": "All of today’s walls are taken. New walls can be made again at {{time}}. Your question is still there.",
+    "failed": "The wall could not be created. Your question is still there; check the connection and try again.",
+    "unsavedTitle": "Discard the question?",
+    "unsavedText": "The wall is not created yet. If you leave now, the question is gone."
+  },
+  "join": {
+    "title": "Join",
+    "joining": "Joining …",
+    "taken": "Someone on the wall already has this name. Pick another, for example with the start of your last name.",
+    "full": "The wall is full. Try again later."
+  },
+  "wall": {
+    "title": "Wall",
+    "opening": "Opening the wall …",
+    "unknownTitle": "Unknown wall",
+    "unknownText": "This wall does not exist. It may have been deleted, or the link is incomplete.",
+    "failedText": "The wall could not be opened. Check the connection.",
+    "deletedTitle": "Wall deleted",
+    "deletedText": "This wall was deleted. What was on it is removed.",
+    "people": "On the wall",
+    "you": "(you)",
+    "admin": "Facilitator",
+    "here": "here",
+    "away": "away",
+    "count_one": "1 person is here.",
+    "count_other": "{{count}} people are here.",
+    "summary": "{{notes}} {{people}}",
+    "noNotes": "No notes yet.",
+    "notes_one": "1 note.",
+    "notes_other": "{{count}} notes.",
+    "noteCount_one": "1 note",
+    "noteCount_other": "{{count}} notes",
+    "groupCount_one": "1 group",
+    "groupCount_other": "{{count}} groups",
+    "emptyGroupCount_one": "1 empty group",
+    "emptyGroupCount_other": "{{count}} empty groups",
+    "allGrouped": "{{notes}} in {{groups}}.",
+    "someGrouped": "{{notes}}, {{grouped}} of them in {{groups}}.",
+    "noneGrouped": "{{notes}} and {{groups}}.",
+    "noNotesGroups": "No notes yet, {{groups}}.",
+    "hiddenNone": "Hidden writing: no notes yet.",
+    "hiddenNotes_one": "Hidden writing: 1 note.",
+    "hiddenNotes_other": "Hidden writing: {{count}} notes.",
+    "hiddenOthersNone": "No note of the others lies on the wall yet.",
+    "hiddenOthers_one": "1 note of the others lies hidden on the wall.",
+    "hiddenOthers_other": "{{count}} notes of the others lie hidden on the wall.",
+    "reconnecting": "Connection lost. Reconnecting …",
+    "outdated": "There is a new version. Reload the page.",
+    "copyLink": "Copy link",
+    "copied": "Copied",
+    "copyFailed": "Copying failed",
+    "copyAdminLink": "Copy facilitator link",
+    "export": "Save as Markdown",
+    "exporting": "Saving …",
+    "exportHint": "Without names. The file stays on this device.",
+    "exported": "Saved as “{{name}}”.",
+    "exportFailed": "The wall could not be fetched as a file. Check the connection and try again.",
+    "exportStranger": "This browser is no longer on the wall. Reload the page and join again.",
+    "qrShow": "Show QR code",
+    "qrTitle": "The wall’s QR code",
+    "qrText": "Whoever scans it with a phone opens the wall and joins with a name. Below it stands the same link as text. The right to moderate is not in it.",
+    "qrLabel": "QR code with the wall’s link",
+    "qrFailed": "The QR code could not be drawn. The link below works.",
+    "reveal": "Reveal",
+    "revealTitle": "Reveal the notes?",
+    "revealTextNone": "There is no note on the wall yet. Once revealed, everyone sees every note as soon as it is written.",
+    "revealText_one": "There is 1 note on the wall. Once revealed, everyone sees every note, also every note that is written later.",
+    "revealText_other": "There are {{count}} notes on the wall. Once revealed, everyone sees every note, also every note that is written later.",
+    "revealClock": "The clock ends with it.",
+    "revealFinal": "This cannot be undone.",
+    "revealedNone": "Revealed. There is no note on the wall yet.",
+    "revealed_one": "Revealed: 1 note is now there for everyone to see.",
+    "revealed_other": "Revealed: {{count}} notes are now there for everyone to see.",
+    "clock": {
+      "left_one": "1 minute left to write.",
+      "left_other": "{{count}} minutes left to write.",
+      "paused_one": "The clock is paused: 1 minute left to write.",
+      "paused_other": "The clock is paused: {{count}} minutes left to write.",
+      "over": "The time is up.",
+      "min": "min",
+      "tab": {
+        "left": "{{left}} left · {{question}}",
+        "paused": "Paused · {{question}}",
+        "over": "Time is up · {{question}}"
+      },
+      "controls": "Clock",
+      "length": "Time to write",
+      "minutes_one": "1 minute",
+      "minutes_other": "{{count}} minutes",
+      "usual": "Usual",
+      "other": "Other lengths",
+      "start": "Start clock",
+      "pause": "Pause clock",
+      "resume": "Resume clock",
+      "extend": "{{count}} more minutes",
+      "clear": "Turn clock off"
+    },
+    "delete": "Delete wall",
+    "deleteTitle": "Delete wall?",
+    "deleteText": "“{{question}}” is deleted for everyone, with all names on it. This cannot be undone.",
+    "deleteConfirm": "Delete",
+    "erase": "Delete my details",
+    "eraseTitle": "Delete your details?",
+    "eraseText": "Your name is removed from the wall, and the wall disappears from the list on this device.",
+    "eraseNotes_one": "Your note stays on the wall, without your name: you can no longer change or delete it afterwards. If it should go, delete it first.",
+    "eraseNotes_other": "Your {{count}} notes stay on the wall, without your name: you can no longer change or delete them afterwards. If they should go, delete them first.",
+    "eraseAdmin": "You facilitate: afterwards you facilitate this wall only with the facilitator link. Copy it first if you still need it.",
+    "eraseFinal": "This cannot be undone.",
+    "eraseConfirm": "Delete",
+    "erasedTitle": "Details deleted",
+    "erasedText": "Your name is removed from the wall, and the wall is no longer in the list on this device. What you wrote stays on the wall, without your name.",
+    "state": "State of the wall",
+    "view": "View",
+    "viewSurface": "Surface",
+    "viewList": "List",
+    "guide": {
+      "adminAloneEmpty": "You facilitate: send the link to your team, then all of you write your ideas on notes.",
+      "adminAloneNotes": "You facilitate: send the link to your team, so everyone can write along.",
+      "adminEmpty": "You facilitate: now everyone writes their ideas on notes, you too.",
+      "adminNotes": "You facilitate: everyone keeps writing. What belongs together goes into a frame with “New group”.",
+      "adminSorting": "You facilitate: move together what belongs together, and give every group a name.",
+      "adminSorted": "You facilitate: every note lies in a named group. Keep writing if something is still missing.",
+      "adminArrange": "You facilitate: when everyone is done, “Group notes” proposes groups with headings. By hand works just as well: what belongs together goes into a frame with “New group”.",
+      "adminArrangeRest": "You facilitate: “Group notes” proposes groups for the notes that lie in no group made or renamed by hand. By hand works just as well: move together what belongs together.",
+      "adminArrangedFresh": "You facilitate: the AI has grouped the notes. If it does not fit, “Undo” takes it back at once. Otherwise move and rename whatever is not right.",
+      "adminArranged": "You facilitate: the AI has grouped the notes. Move and rename whatever is not right. The grouping can still be undone under “More”.",
+      "memberAlone": "Write your ideas on notes, and pass the link on if somebody is still missing.",
+      "memberEmpty": "Write your ideas on notes.",
+      "memberNotes": "Write more ideas on notes. What belongs together goes into a frame with “New group”.",
+      "memberSorting": "Move together what belongs together, and give every group a name.",
+      "memberSorted": "Every note lies in a named group. Keep writing if something is still missing.",
+      "adminHiddenAlone": "You facilitate: send the link to your team. Everyone writes on their own, and nobody reads along until you reveal the notes.",
+      "adminHiddenEmpty": "You facilitate: now everyone writes their ideas on notes, you too. Nobody reads along until you reveal the notes.",
+      "adminHiddenNotes": "You facilitate: everyone writes on their own, nobody reads along. When everyone is done, “Reveal” shows every note to everyone.",
+      "adminHiddenOver": "You facilitate: nothing is locked, everyone can keep writing. Reveal the notes when everyone is done, or give five more minutes.",
+      "memberHiddenAlone": "Write your ideas on notes, and pass the link on if somebody is still missing. Nobody reads along until the facilitator reveals the notes.",
+      "memberHidden": "Write your ideas on notes. Nobody reads along until the facilitator reveals the notes.",
+      "memberHiddenOver": "You can keep writing until the facilitator reveals the notes."
+    },
+    "adminLinkCopied": "Facilitator link copied. Anyone who has it facilitates this wall and can delete it: share it only if someone should facilitate with you."
+  },
+  "surface": {
+    "label": "Surface",
+    "notes": "Notes on the surface",
+    "tools": "Surface tools",
+    "zoomIn": "Zoom in",
+    "zoomOut": "Zoom out",
+    "fit": "Show all",
+    "empty": "“New note” puts a note on the surface. Everyone on the wall sees it at once.",
+    "emptyHidden": "“New note” puts a note on the surface. The others see it only once the notes are revealed.",
+    "keysName": "Keys",
+    "keys": "Keys: the arrow keys go to the nearest note. G goes to the next group. Enter changes the text or the title, Delete deletes, M moves, V moves into a group, N writes a new note. Space selects a note, Shift with the arrow keys selects more, Esc clears the selection. Plus and minus zoom, 0 shows all.",
+    "moving": "Moving: the arrow keys move the note. Enter drops it, Esc cancels.",
+    "movingSeveral": "Moving: the arrow keys move the {{count}} notes. Enter drops them, Esc cancels.",
+    "movingGroup": "Moving: the arrow keys move the group with its notes, with Shift they change its size. Enter drops it, Esc cancels.",
+    "moved": "Note dropped.",
+    "movedSeveral": "{{count}} notes dropped.",
+    "movedGroup": "Group dropped.",
+    "moveCancelled": "Moving cancelled. The note is back where it was.",
+    "moveCancelledAll": "Moving cancelled. Everything is back where it was.",
+    "selected_one": "1 note selected",
+    "selected_other": "{{count}} notes selected",
+    "clear": "Clear selection",
+    "cleared": "Selection cleared.",
+    "choose": "Select",
+    "choosing": "Selecting is on: a press on a note selects it, or takes it out again.",
+    "chooseOff": "Selecting is off.",
+    "dismiss": "Close notice"
+  },
+  "note": {
+    "new": "New note",
+    "edit": "Edit",
+    "delete": "Delete",
+    "save": "Save",
+    "text": "Text of the note",
+    "placeholder": "Your idea",
+    "length": "{{used}} of {{max}} characters",
+    "own": "Yours",
+    "deleteTitle": "Delete note?",
+    "deleteText": "“{{text}}” is deleted for everyone. This cannot be undone.",
+    "move": "Move to …",
+    "inGroup": "in “{{group}}”",
+    "more": "More for “{{text}}”"
+  },
+  "move": {
+    "text_one": "Where should the note go?",
+    "text_other": "Where should the {{count}} notes go?",
+    "target": "Target",
+    "none": "No group",
+    "confirm": "Move",
+    "into_one": "Note moved to “{{group}}”.",
+    "into_other": "{{count}} notes moved to “{{group}}”.",
+    "out_one": "The note is now without a group.",
+    "out_other": "{{count}} notes are now without a group."
+  },
+  "group": {
+    "new": "New group",
+    "untitled": "Untitled",
+    "title": "Title of the group",
+    "placeholder": "Title",
+    "titleHelp": "At most {{max}} characters. The title may be missing.",
+    "rename": "Rename",
+    "delete": "Delete group",
+    "deleteTitle": "Delete group?",
+    "deleteText_one": "“{{title}}” is deleted for everyone. The note in it stays on the wall, without a group. This cannot be undone.",
+    "deleteText_other": "“{{title}}” is deleted for everyone. The {{count}} notes in it stay on the wall, without a group. This cannot be undone.",
+    "deleteTextEmpty": "“{{title}}” is deleted for everyone. There are no notes in it. This cannot be undone.",
+    "option": "Group “{{title}}”, {{notes}}",
+    "made": "Group made.",
+    "madeAround_one": "Group made around 1 note.",
+    "madeAround_other": "Group made around {{count}} notes.",
+    "deleted": "Group deleted.",
+    "deletedNotes_one": "Group deleted. Its note is now without a group.",
+    "deletedNotes_other": "Group deleted. Its {{count}} notes are now without a group.",
+    "more": "More for “{{title}}”",
+    "empty": "No notes in this group yet."
+  },
+  "list": {
+    "label": "List",
+    "ungrouped": "Without a group",
+    "notes": "Notes",
+    "own": "Your notes",
+    "empty": "No notes yet. “New note” writes the first one, and everyone on the wall sees it at once.",
+    "emptyHidden": "No notes of yours yet. “New note” writes the first one; the others see it only once the notes are revealed."
+  },
+  "arrange": {
+    "start": "Group notes",
+    "running": "Grouping …",
+    "apply": "Apply",
+    "applying": "Applying …",
+    "where": "“Group notes” sends the question and the texts of the notes, without names, to Cloudflare’s AI service Workers AI: according to Cloudflare without storing them or training on them, but not certainly in the EU. More under <privacy>Privacy</privacy>.",
+    "whereNote": "A new note goes to the server of {{app}} in the EU. Everyone on the wall sees it.",
+    "runningState_one": "The AI is grouping 1 note. This usually takes less than half a minute.",
+    "runningState_other": "The AI is grouping {{count}} notes. This usually takes less than half a minute.",
+    "elapsed_one": "1 second so far.",
+    "elapsed_other": "{{count}} seconds so far.",
+    "cancelHint": "“Cancel” only ends the waiting. The attempt still counts: a wall can be grouped {{runs}} times in 24\u00a0hours.",
+    "proposal": "The AI’s proposal: {{groups}}. Only you see it.",
+    "proposalLoose": "The AI’s proposal: {{groups}}, {{loose}} without a group. Only you see it.",
+    "partial": "A part of the notes got no answer from the AI and lies without a group.",
+    "previewNote": "“Apply” arranges the wall like this for everyone, “Discard” leaves it as it was. While the proposal stands you change nothing on the wall; the others keep working.",
+    "applyHint": "“Apply” stores the arrangement on the server of {{app}} in the EU. Everyone on the wall sees it.",
+    "runsLeft_one": "This wall can be grouped {{runs}} times in 24\u00a0hours, 1 more time now.",
+    "runsLeft_other": "This wall can be grouped {{runs}} times in 24\u00a0hours, {{count}} more times now.",
+    "runsNone": "This wall can be grouped {{runs}} times in 24\u00a0hours: that was the last time for now.",
+    "undoName": "Undo grouping",
+    "undoTitle": "Undo grouping?",
+    "undoText": "The notes then lie again where they lay before grouping, and the AI’s groups go. Groups that were renamed stay, with their notes. What was moved since is lost. This cannot be undone.",
+    "undoConfirm": "Undo",
+    "saidApplied_one": "Grouped: 1 group.",
+    "saidApplied_other": "Grouped: {{count}} groups.",
+    "saidUndone": "The grouping was undone.",
+    "saidDiscarded": "Proposal discarded. The wall is as it was.",
+    "saidCancelled": "Stopped waiting.",
+    "whereKey": "“Group notes” sends the question and the texts of the notes, without names, with your key straight from this browser to {{provider}}: {{facts}}. More under <privacy>Privacy</privacy>.",
+    "keyOn": "“Group notes” asks {{provider}}, with your key. Remove it under “More”, and Cloudflare groups again.",
+    "runningStateKey_one": "{{provider}} is grouping 1 note, with your key.",
+    "runningStateKey_other": "{{provider}} is grouping {{count}} notes, with your key.",
+    "cancelHintKey": "“Cancel” ends the requests to {{provider}}. {{provider}} may still bill your account for what was computed until then.",
+    "saidCancelledKey": "Cancelled: the requests to {{provider}} have ended."
+  },
+  "reject": {
+    "notAuthorEdit": "Only the person who wrote a note can change its text.",
+    "notAuthorDelete": "Only the person who wrote a note, or the facilitator, can delete it.",
+    "notFound": "This note no longer exists: somebody has deleted it.",
+    "notFoundGroup": "This group no longer exists: somebody has deleted it.",
+    "limit": "The wall is full: it holds no more than {{max}} notes. Delete one to make room.",
+    "limitGroups": "A wall holds no more than {{max}} groups. Delete one to make room.",
+    "conflict": "The note could not be added. Write it again.",
+    "invalid": "The wall did not take the change. Try again.",
+    "phaseGroups": "Groups come once the notes are revealed.",
+    "phaseClock": "The notes are revealed already: the clock is there only while writing is hidden.",
+    "staleClock": "The clock was changed at the same moment: your step was not taken. It shows what holds now.",
+    "daySpent": "The wall has stored as much today as a wall may in one day: your change was not taken. It goes on at {{time}}.",
+    "notAdmin": "Only the facilitator can do that.",
+    "rateLimit": "Those were too many changes at once: the last one was not taken. Wait a moment and make it again.",
+    "lost": "Too many changes piled up without a connection: the oldest one was taken back.",
+    "phaseArrange": "Grouping comes once the notes are revealed.",
+    "staleUndo": "The wall has been grouped anew meanwhile: only the last grouping can be undone. The wall shows what holds now.",
+    "applyChanged": "The wall changed twice while applying, and the arrangement was not taken. The proposal still stands: try again.",
+    "arrangeNothing": "There are too few notes to group: the AI needs at least {{min}} that lie in no group made or renamed by hand.",
+    "arrangeBudget": "The AI’s allowance is used up, for all walls. It goes on {{when}}. Grouping by hand always works.",
+    "arrangeBudgetNoTime": "The AI’s allowance at Cloudflare is used up, for all walls. The app cannot say when it goes on: in 24\u00a0hours at the latest. Grouping by hand always works.",
+    "arrangeRuns": "The AI has been asked to group this wall {{runs}} times in 24\u00a0hours, and more is not possible. It works again {{when}}. Grouping by hand always works.",
+    "arrangeFailed": "The AI gave no usable answer. Try again, or group by hand.",
+    "arrangeUnavailable": "No AI is connected to this server. Group by hand.",
+    "arrangeNetwork": "The request did not reach the server. Check the connection and try again.",
+    "arrangeTimeout": "No answer came from the AI within two minutes, and the waiting has ended. Try again, or group by hand.",
+    "arrangeUnknown": "Grouping did not work: the server gave an unexpected answer. Try again, or group by hand.",
+    "arrangeNothingLeft": "Nothing is left of the proposal: its notes were deleted meanwhile, or lie in groups that were made or renamed by hand.",
+    "whenToday": "at {{time}}",
+    "whenTomorrow": "tomorrow at {{time}}",
+    "keyRefused": "{{provider}} refused the key. Enter it again under “More”: it may be copied incompletely, expired, or not allowed to use this service.",
+    "keyRefusedBrowser": "{{provider}} refused the key. Enter it again under “More”: it may be copied incompletely, expired, or not allowed to use this service. {{provider}} does not let accounts with “zero data retention” ask from a browser.",
+    "keyNoCredit": "{{provider}} did not compute: the account has no credit left, or a spending limit is reached. Add credit there or raise the limit. Grouping by hand always works.",
+    "keyRateLimited": "{{provider}} is taking no further requests right now: too many in a short time, or the service is overloaded. Wait a moment and try again.",
+    "keyRejected": "{{provider}} turned the request down, not the key. The cause may be the model, the form of the request, or a limit of your account there. Group by hand, or remove the key under “More”: then Cloudflare groups again.",
+    "keyDeclined": "{{provider}} gave no answer: the model declined the request, for the provider’s own reasons. Group by hand, or remove the key under “More”: then Cloudflare groups again.",
+    "keyUnreachable": "{{provider}} could not be reached, or the browser was not allowed to read the answer. Check the connection and try again.",
+    "keyUnusable": "{{provider}} gave no usable answer. Try again, or group by hand.",
+    "keyTimeout": "After two minutes {{provider}} was not done: the requests were cancelled. Try again, or group by hand.",
+    "keyLoad": "The part of the app that groups with your key could not be loaded. Check the connection and try again."
+  },
+  "key": {
+    "entry": "Own AI key …",
+    "title": "Own AI key",
+    "text": "With a key of your own, “Group notes” asks your AI provider straight from this browser, not Cloudflare. The key stays in this tab: after a reload it is gone, and it never reaches the server of {{app}}. What grouping costs is billed by the provider to your account there.",
+    "provider": "Provider",
+    "line": "Notes: {{facts}}. Cost: by the price list about {{cents}}\u00a0US cents for a wall of 250 notes.",
+    "facts": "{{place}}, {{kept}}, {{training}}",
+    "place": {
+      "eu": "in data centers in the EU and EFTA, according to {{provider}}",
+      "anywhere": "no place promised"
+    },
+    "kept": "stored there for up to {{days}}\u00a0days",
+    "keptLonger": "stored there for up to {{days}}\u00a0days (flagged content longer)",
+    "training": {
+      "no": "not used for training, according to {{provider}}",
+      "account": "training depends on your account’s setting there"
+    },
+    "unmeasured": "How well {{provider}} groups notes has not been measured yet.",
+    "set": "A key is set for {{provider}}.",
+    "remove": "Remove key",
+    "field": "Key",
+    "replaces": "A new key replaces the one that is set.",
+    "malformed": "The key contains spaces or characters that no key has. Copy it again.",
+    "page": "Create a key at {{provider}}",
+    "take": "Use key",
+    "stays": "Stays in this tab.",
+    "saidTaken": "Key taken. “Group notes” now asks {{provider}}.",
+    "saidRemoved": "Key removed. “Group notes” asks Cloudflare again."
+  },
+  "settings": {
+    "title": "Settings",
+    "motion": "Always reduce motion",
+    "motionHelp": "New things then appear without motion, they only fade in. Applies even when the device allows motion.",
+    "about": "About",
+    "version": "Version",
+    "sender": "A tool by",
+    "senderName": "sebaro",
+    "storage": "Storage",
+    "storageValue": "Walls you have been on, your name, your facilitator rights and whether you chose the surface or the list: in the browser's storage on this device. What is on a wall: on the server of {{app}} in the EU, until 30 days after the last join"
+  },
+  "licences": {
+    "title": "Licences",
+    "text": "{{app}} contains this free software and these fonts.",
+    "texts": "All licence texts as a text file"
+  },
+  "legal": {
+    "imprint": "Imprint",
+    "privacy": "Privacy",
+    "accessibility": "Accessibility",
+    "draft": "Draft: marked details are still missing, and the operator has not released this version yet.",
+    "asOf": "As of {{date}}"
+  },
+  "footer": {
+    "copyright": "© {{year}} {{app}}",
+    "github": "GitHub",
+    "source": "Source code of the running version"
+  },
+  "notFound": {
+    "title": "Unknown address",
+    "text": "Nothing is at this address.",
+    "link": "To the start"
+  },
+  "error": {
+    "title": "Error",
+    "text": "This view could not be shown. Load the page again.",
+    "retry": "Try again"
+  }
+}

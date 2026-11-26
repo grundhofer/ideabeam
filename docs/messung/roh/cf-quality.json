@@ -1,0 +1,1107 @@
+{
+ "models": {
+  "@cf/google/gemma-4-26b-a4b-it": {
+   "boards": {
+    "onboarding": {
+     "seed": 1,
+     "A": {
+      "calls": 2,
+      "wall_s": 10.76,
+      "out_tokens": 520,
+      "out_tok_s": null,
+      "in_tokens": 4628,
+      "cut_by_length": 0,
+      "errors": 0,
+      "error_messages": [],
+      "max_tokens_in_one_call": 4590
+     },
+     "A_info": {
+      "mode": "chunks",
+      "chunk_themes": [
+       6
+      ],
+      "chunks_failed": 0,
+      "themes_raw": 6,
+      "cjk_in_themes": false
+     },
+     "themes": [
+      {
+       "title": "Technical Setup and Access",
+       "description": "Ensuring hardware, software permissions, VPN, and development environments are ready from day one."
+      },
+      {
+       "title": "Documentation and Knowledge Management",
+       "description": "Providing structured, up-to-date wikis and clear technical context for company processes."
+      },
+      {
+       "title": "Social Integration and Culture",
+       "description": "Fostering belonging through social events and helping new hires understand company culture and humor."
+      },
+      {
+       "title": "Mentorship and Support Systems",
+       "description": "Providing reliable buddies and mentors to act as designated points of contact for questions."
+      },
+      {
+       "title": "Onboarding Structure and Goals",
+       "description": "Defining clear learning objectives, onboarding plans, and expectations for the probation period."
+      },
+      {
+       "title": "Task Management and Workload",
+       "description": "Assigning meaningful starter projects with gradual complexity to avoid overwhelming new hires."
+      }
+     ],
+     "n_themes": 6,
+     "B": {
+      "calls": 5,
+      "wall_s": 69.54,
+      "out_tokens": 3075,
+      "out_tok_s": null,
+      "in_tokens": 5178,
+      "cut_by_length": 0,
+      "errors": 0,
+      "error_messages": [],
+      "max_tokens_in_one_call": 1696
+     },
+     "ari": 0.8044,
+     "purity": 0.92,
+     "invalid_share": 0.0,
+     "groups_used": 6,
+     "largest_group_share": 0.204,
+     "lang_ari": -0.0061,
+     "total_s": 80.3,
+     "parallel_s": 26.26,
+     "neurons": 187.2,
+     "reasoning_tokens": 0
+    },
+    "stadtteil": {
+     "seed": 1,
+     "A": {
+      "calls": 2,
+      "wall_s": 11.83,
+      "out_tokens": 514,
+      "out_tok_s": null,
+      "in_tokens": 4667,
+      "cut_by_length": 0,
+      "errors": 0,
+      "error_messages": [],
+      "max_tokens_in_one_call": 4630
+     },
+     "A_info": {
+      "mode": "chunks",
+      "chunk_themes": [
+       6
+      ],
+      "chunks_failed": 0,
+      "themes_raw": 6,
+      "cjk_in_themes": false
+     },
+     "themes": [
+      {
+       "title": "Local Commerce and Services",
+       "description": "Information on shop hours, local businesses, food deals, and professional services."
+      },
+      {
+       "title": "Community Sharing and Socializing",
+       "description": "Peer-to-peer lending, item swapping, neighborly help, and organizing social gatherings."
+      },
+      {
+       "title": "Public Infrastructure and Reporting",
+       "description": "Reporting damage like potholes and communicating with local authorities regarding street maintenance."
+      },
+      {
+       "title": "Mobility and Transport",
+       "description": "Real-time updates on public transit, parking, cycling routes, and carpooling."
+      },
+      {
+       "title": "Events and Neighborhood Life",
+       "description": "A central calendar for local festivals, club meetings, workshops, and community activities."
+      },
+      {
+       "title": "Accessibility and Inclusion",
+       "description": "Information on barrier-free transport and support for elderly or vulnerable residents."
+      }
+     ],
+     "n_themes": 6,
+     "B": {
+      "calls": 5,
+      "wall_s": 60.81,
+      "out_tokens": 3017,
+      "out_tok_s": null,
+      "in_tokens": 5188,
+      "cut_by_length": 0,
+      "errors": 0,
+      "error_messages": [],
+      "max_tokens_in_one_call": 1746
+     },
+     "ari": 0.8637,
+     "purity": 0.94,
+     "invalid_share": 0.0,
+     "groups_used": 6,
+     "largest_group_share": 0.204,
+     "lang_ari": -0.0038,
+     "total_s": 72.64,
+     "parallel_s": 25.44,
+     "neurons": 185.9,
+     "reasoning_tokens": 0
+    }
+   },
+   "date": "2026-11-22 14:00",
+   "prices_neurons_per_m": [
+    9091,
+    27273
+   ],
+   "format": "schema_wrapped",
+   "extras_sent": {
+    "chat_template_kwargs": {
+     "enable_thinking": false
+    }
+   },
+   "extras_dropped": []
+  },
+  "@cf/openai/gpt-oss-20b": {
+   "boards": {
+    "onboarding": {
+     "seed": 1,
+     "A": {
+      "calls": 2,
+      "wall_s": 3.1,
+      "out_tokens": 324,
+      "out_tok_s": null,
+      "in_tokens": 4184,
+      "cut_by_length": 0,
+      "errors": 0,
+      "error_messages": [],
+      "max_tokens_in_one_call": 4031
+     },
+     "A_info": {
+      "mode": "chunks",
+      "chunk_themes": [
+       6
+      ],
+      "chunks_failed": 0,
+      "themes_raw": 6,
+      "cjk_in_themes": false
+     },
+     "themes": [
+      {
+       "title": "Onboarding Structure",
+       "description": "Clear plans, schedules, and documentation guiding new hires through their first weeks."
+      },
+      {
+       "title": "Technical Setup",
+       "description": "Provisioning of accounts, VPN, hardware, and tool access to enable immediate work."
+      },
+      {
+       "title": "Mentorship & Support",
+       "description": "Buddy systems, mentors, and regular check‑ins to provide guidance and answer questions."
+      },
+      {
+       "title": "Social Integration",
+       "description": "Team bonding, introductions, and inclusive social activities to foster belonging."
+      },
+      {
+       "title": "Knowledge Sharing",
+       "description": "Up‑to‑date, well‑structured documentation and easy access to information."
+      },
+      {
+       "title": "Feedback & Evaluation",
+       "description": "Regular reviews, goal setting, and performance feedback to track progress."
+      }
+     ],
+     "n_themes": 6,
+     "B": {
+      "calls": 5,
+      "wall_s": 43.85,
+      "out_tokens": 3090,
+      "out_tok_s": null,
+      "in_tokens": 5012,
+      "cut_by_length": 0,
+      "errors": 0,
+      "error_messages": [],
+      "max_tokens_in_one_call": 1924
+     },
+     "ari": 0.7444,
+     "purity": 0.9,
+     "invalid_share": 0.004,
+     "groups_used": 6,
+     "largest_group_share": 0.224,
+     "lang_ari": -0.0052,
+     "total_s": 46.95,
+     "parallel_s": 15.58,
+     "neurons": 260.3,
+     "reasoning_tokens": 0
+    },
+    "stadtteil": {
+     "seed": 1,
+     "A": {
+      "calls": 2,
+      "wall_s": 4.7,
+      "out_tokens": 428,
+      "out_tok_s": null,
+      "in_tokens": 4271,
+      "cut_by_length": 0,
+      "errors": 0,
+      "error_messages": [],
+      "max_tokens_in_one_call": 4116
+     },
+     "A_info": {
+      "mode": "chunks",
+      "chunk_themes": [
+       6
+      ],
+      "chunks_failed": 0,
+      "themes_raw": 6,
+      "cjk_in_themes": false
+     },
+     "themes": [
+      {
+       "title": "Community Services",
+       "description": "Features that enable residents to offer, request, or coordinate help such as borrowing tools, babysitting, volunteer tasks, and local support networks."
+      },
+      {
+       "title": "Local Business & Events",
+       "description": "Information about new shops, opening hours, promotions, and community events like festivals, concerts, and workshops."
+      },
+      {
+       "title": "Public Safety & Maintenance",
+       "description": "Reporting and tracking infrastructure issues, hazards, emergency updates, and maintenance of streets, lighting, and public transport."
+      },
+      {
+       "title": "Accessibility & Mobility",
+       "description": "Tools for navigating the neighbourhood, including wheelchair‑friendly routes, parking, bike storage, and real‑time transit schedules."
+      },
+      {
+       "title": "Neighborhood Interaction",
+       "description": "Social features that foster connection, such as local meet‑ups, language cafés, shared interests, and community discussions."
+      },
+      {
+       "title": "Resource Sharing & Sustainability",
+       "description": "Systems for sharing goods, food, or space, and for managing waste, recycling, and local environmental concerns."
+      }
+     ],
+     "n_themes": 6,
+     "B": {
+      "calls": 5,
+      "wall_s": 23.17,
+      "out_tokens": 2631,
+      "out_tok_s": null,
+      "in_tokens": 5305,
+      "cut_by_length": 0,
+      "errors": 0,
+      "error_messages": [],
+      "max_tokens_in_one_call": 1948
+     },
+     "ari": 0.435,
+     "purity": 0.732,
+     "invalid_share": 0.0,
+     "groups_used": 6,
+     "largest_group_share": 0.24,
+     "lang_ari": -0.0009,
+     "total_s": 27.87,
+     "parallel_s": 11.37,
+     "neurons": 257.5,
+     "reasoning_tokens": 0
+    }
+   },
+   "date": "2026-11-22 14:06",
+   "prices_neurons_per_m": [
+    18182,
+    27273
+   ],
+   "format": "schema_wrapped",
+   "extras_sent": {
+    "reasoning_effort": "low"
+   },
+   "extras_dropped": []
+  },
+  "@cf/openai/gpt-oss-120b": {
+   "boards": {
+    "onboarding": {
+     "seed": 1,
+     "A": {
+      "calls": 2,
+      "wall_s": 21.02,
+      "out_tokens": 715,
+      "out_tok_s": null,
+      "in_tokens": 4262,
+      "cut_by_length": 0,
+      "errors": 0,
+      "error_messages": [],
+      "max_tokens_in_one_call": 4174
+     },
+     "A_info": {
+      "mode": "chunks",
+      "chunk_themes": [
+       6
+      ],
+      "chunks_failed": 0,
+      "themes_raw": 6,
+      "cjk_in_themes": false
+     },
+     "themes": [
+      {
+       "title": "Pre‑Start Setup",
+       "description": "All practical arrangements needed before day one – hardware, software, accounts, VPN, permissions, and any logistical details to ensure a smooth first day."
+      },
+      {
+       "title": "Structured Learning Path",
+       "description": "Clear, timed introductory tasks, projects, reading material, and skill‑building goals that match the new hire’s role and experience level."
+      },
+      {
+       "title": "Guided Support & Mentorship",
+       "description": "Assignment of a dedicated buddy/mentor, regular check‑ins, and a rotating support system to help newcomers navigate daily work and questions."
+      },
+      {
+       "title": "Knowledge Base & Docs",
+       "description": "Up‑to‑date, searchable documentation, wikis, FAQs, videos, and glossaries that provide reliable reference material for new employees."
+      },
+      {
+       "title": "Social & Cultural Integration",
+       "description": "Activities and practices that foster belonging – introductions, team meals, events, inclusive language, remote‑worker participation, and cultural immersion."
+      },
+      {
+       "title": "Ongoing Feedback & Review",
+       "description": "Regular performance check‑ins, clear goal setting, transparent probation timelines, and structured feedback loops."
+      }
+     ],
+     "n_themes": 6,
+     "B": {
+      "calls": 5,
+      "wall_s": 115.29,
+      "out_tokens": 6912,
+      "out_tok_s": null,
+      "in_tokens": 5352,
+      "cut_by_length": 0,
+      "errors": 0,
+      "error_messages": [],
+      "max_tokens_in_one_call": 2635
+     },
+     "ari": 0.841,
+     "purity": 0.952,
+     "invalid_share": 0.0,
+     "groups_used": 6,
+     "largest_group_share": 0.212,
+     "lang_ari": -0.0056,
+     "total_s": 136.31,
+     "parallel_s": 47.68,
+     "neurons": 825.9,
+     "reasoning_tokens": 0
+    },
+    "stadtteil": {
+     "seed": 1,
+     "A": {
+      "calls": 2,
+      "wall_s": 15.41,
+      "out_tokens": 741,
+      "out_tok_s": null,
+      "in_tokens": 4295,
+      "cut_by_length": 0,
+      "errors": 0,
+      "error_messages": [],
+      "max_tokens_in_one_call": 4258
+     },
+     "A_info": {
+      "mode": "chunks",
+      "chunk_themes": [
+       6
+      ],
+      "chunks_failed": 0,
+      "themes_raw": 6,
+      "cjk_in_themes": false
+     },
+     "themes": [
+      {
+       "title": "Community Help & Sharing",
+       "description": "Neighbour‑to‑neighbour assistance, item lending, skill swaps, babysitting, garden sharing, volunteer tasks, and other peer‑support activities."
+      },
+      {
+       "title": "Local News & Events",
+       "description": "Calendars, announcements, festivals, workshops, club meetings, cultural happenings, and any other neighbourhood‑wide information."
+      },
+      {
+       "title": "Infrastructure & Safety Reporting",
+       "description": "Reporting and tracking of street, park, building, and utility problems, safety hazards, and updates on their resolution."
+      },
+      {
+       "title": "Mobility & Transportation",
+       "description": "Real‑time public‑transport info, route planning (including accessibility), bike‑sharing, car‑pooling, parking availability, and traffic alerts."
+      },
+      {
+       "title": "Local Business & Discounts",
+       "description": "Details on shops, restaurants, cafés, markets, special offers, stock availability, reservation tools, and promotion of independent businesses."
+      },
+      {
+       "title": "Public Services & Accessibility",
+       "description": "Information on emergency contacts, health services, public toilets, accessibility of venues, and alerts for strikes or closures."
+      }
+     ],
+     "n_themes": 6,
+     "B": {
+      "calls": 5,
+      "wall_s": 122.53,
+      "out_tokens": 6962,
+      "out_tok_s": null,
+      "in_tokens": 5365,
+      "cut_by_length": 0,
+      "errors": 0,
+      "error_messages": [],
+      "max_tokens_in_one_call": 2714
+     },
+     "ari": 0.7519,
+     "purity": 0.892,
+     "invalid_share": 0.0,
+     "groups_used": 6,
+     "largest_group_share": 0.232,
+     "lang_ari": -0.0051,
+     "total_s": 137.94,
+     "parallel_s": 49.48,
+     "neurons": 832.6,
+     "reasoning_tokens": 0
+    }
+   },
+   "date": "2026-11-22 14:07",
+   "prices_neurons_per_m": [
+    31818,
+    68182
+   ],
+   "format": "schema_wrapped",
+   "extras_sent": {
+    "reasoning_effort": "low"
+   },
+   "extras_dropped": []
+  },
+  "@cf/mistralai/mistral-small-3.1-24b-instruct": {
+   "boards": {
+    "onboarding": {
+     "seed": 1,
+     "A": {
+      "calls": 2,
+      "wall_s": 14.08,
+      "out_tokens": 405,
+      "out_tok_s": null,
+      "in_tokens": 4616,
+      "cut_by_length": 0,
+      "errors": 0,
+      "error_messages": [],
+      "max_tokens_in_one_call": 4572
+     },
+     "A_info": {
+      "mode": "chunks",
+      "chunk_themes": [
+       6
+      ],
+      "chunks_failed": 0,
+      "themes_raw": 6,
+      "cjk_in_themes": false
+     },
+     "themes": [
+      {
+       "title": "Onboarding Process",
+       "description": "Structure, planning, and clarity of the onboarding process."
+      },
+      {
+       "title": "Technical Onboarding",
+       "description": "Technical problems and setup issues encountered during onboarding."
+      },
+      {
+       "title": "Support and Guidance",
+       "description": "Quality and availability of support, mentorship, and guidance during onboarding."
+      },
+      {
+       "title": "Communication and Integration",
+       "description": "Communication styles, cultural fit, and social integration of new colleagues."
+      },
+      {
+       "title": "Documentation and Tools",
+       "description": "Quality, accessibility, and usefulness of documentation and resources for onboarding."
+      },
+      {
+       "title": "Expectations and Feedback",
+       "description": "Clarity of expectations, feedback mechanisms, and performance reviews."
+      }
+     ],
+     "n_themes": 6,
+     "B": {
+      "calls": 5,
+      "wall_s": 69.94,
+      "out_tokens": 2628,
+      "out_tok_s": null,
+      "in_tokens": 5015,
+      "cut_by_length": 0,
+      "errors": 0,
+      "error_messages": [],
+      "max_tokens_in_one_call": 1577
+     },
+     "ari": 0.8141,
+     "purity": 0.928,
+     "invalid_share": 0.0,
+     "groups_used": 6,
+     "largest_group_share": 0.204,
+     "lang_ari": -0.006,
+     "total_s": 84.02,
+     "parallel_s": 30.3,
+     "neurons": 460.1,
+     "reasoning_tokens": 0
+    },
+    "stadtteil": {
+     "seed": 1,
+     "A": {
+      "calls": 2,
+      "wall_s": 12.37,
+      "out_tokens": 359,
+      "out_tok_s": null,
+      "in_tokens": 4679,
+      "cut_by_length": 0,
+      "errors": 0,
+      "error_messages": [],
+      "max_tokens_in_one_call": 4639
+     },
+     "A_info": {
+      "mode": "chunks",
+      "chunk_themes": [
+       6
+      ],
+      "chunks_failed": 0,
+      "themes_raw": 6,
+      "cjk_in_themes": false
+     },
+     "themes": [
+      {
+       "title": "Local Services",
+       "description": "Businesses, groups, and services in the neighbourhood."
+      },
+      {
+       "title": "Community Building",
+       "description": "Activities and initiatives that connect and support neighbours."
+      },
+      {
+       "title": "Urban Maintenance",
+       "description": "Issues and tasks related to the neighbourhood's physical environment."
+      },
+      {
+       "title": "Getting Around",
+       "description": "Transportation information and solutions for the neighbourhood."
+      },
+      {
+       "title": "Local Events",
+       "description": "Planning and managing neighbourhood events and activities."
+      },
+      {
+       "title": "Neighbourhood Updates",
+       "description": "General information and news relevant to the neighbourhood."
+      }
+     ],
+     "n_themes": 6,
+     "B": {
+      "calls": 5,
+      "wall_s": 67.74,
+      "out_tokens": 2294,
+      "out_tok_s": null,
+      "in_tokens": 4976,
+      "cut_by_length": 0,
+      "errors": 0,
+      "error_messages": [],
+      "max_tokens_in_one_call": 1561
+     },
+     "ari": 0.6449,
+     "purity": 0.832,
+     "invalid_share": 0.0,
+     "groups_used": 6,
+     "largest_group_share": 0.22,
+     "lang_ari": -0.0048,
+     "total_s": 80.11,
+     "parallel_s": 31.64,
+     "neurons": 441.7,
+     "reasoning_tokens": 0
+    }
+   },
+   "date": "2026-11-22 14:12",
+   "prices_neurons_per_m": [
+    31876,
+    50488
+   ],
+   "format": "schema_wrapped",
+   "extras_sent": {},
+   "extras_dropped": []
+  },
+  "@cf/zai-org/glm-4.7-flash": {
+   "boards": {
+    "onboarding": {
+     "seed": 1,
+     "A": {
+      "calls": 2,
+      "wall_s": 28.7,
+      "out_tokens": 499,
+      "out_tok_s": null,
+      "in_tokens": 4378,
+      "cut_by_length": 0,
+      "errors": 0,
+      "error_messages": [],
+      "max_tokens_in_one_call": 4330
+     },
+     "A_info": {
+      "mode": "chunks",
+      "chunk_themes": [
+       6
+      ],
+      "chunks_failed": 0,
+      "themes_raw": 6,
+      "cjk_in_themes": false
+     },
+     "themes": [
+      {
+       "title": "Structured Onboarding Process",
+       "description": "A clear, planned schedule with defined goals and a timeline to avoid confusion."
+      },
+      {
+       "title": "Buddy and Mentorship",
+       "description": "Dedicated guidance from a person with regular check-ins to support the new hire."
+      },
+      {
+       "title": "Technical Setup and Tools",
+       "description": "Efficient setup of hardware, software, and access rights for a smooth start."
+      },
+      {
+       "title": "Documentation and Knowledge Sharing",
+       "description": "High-quality, current written guides and clear internal communication channels."
+      },
+      {
+       "title": "Social Integration and Culture",
+       "description": "Activities and introductions to help new employees feel welcome and understand norms."
+      },
+      {
+       "title": "Feedback and Communication",
+       "description": "Regular feedback, clear expectations, and open dialogue from management and peers."
+      }
+     ],
+     "n_themes": 6,
+     "B": {
+      "calls": 5,
+      "wall_s": 203.31,
+      "out_tokens": 2522,
+      "out_tok_s": null,
+      "in_tokens": 4914,
+      "cut_by_length": 0,
+      "errors": 0,
+      "error_messages": [],
+      "max_tokens_in_one_call": 1537
+     },
+     "ari": 0.7451,
+     "purity": 0.916,
+     "invalid_share": 0.0,
+     "groups_used": 6,
+     "largest_group_share": 0.236,
+     "lang_ari": -0.0062,
+     "total_s": 232.01,
+     "parallel_s": 170.47,
+     "neurons": 161.1,
+     "reasoning_tokens": 0
+    },
+    "stadtteil": {
+     "seed": 1,
+     "A": {
+      "calls": 2,
+      "wall_s": 11.85,
+      "out_tokens": 406,
+      "out_tok_s": null,
+      "in_tokens": 4329,
+      "cut_by_length": 0,
+      "errors": 0,
+      "error_messages": [],
+      "max_tokens_in_one_call": 4284
+     },
+     "A_info": {
+      "mode": "chunks",
+      "chunk_themes": [
+       6
+      ],
+      "chunks_failed": 0,
+      "themes_raw": 6,
+      "cjk_in_themes": false
+     },
+     "themes": [
+      {
+       "title": "Local Services and Shops",
+       "description": "Information about opening hours, availability, and specific local businesses."
+      },
+      {
+       "title": "Community and Social Connection",
+       "description": "Activities, events, and ways to connect with neighbours and local groups."
+      },
+      {
+       "title": "Maintenance and Infrastructure",
+       "description": "Reporting and tracking issues like potholes, broken lights, and waste."
+      },
+      {
+       "title": "Transport and Mobility",
+       "description": "Public transport, parking, cycling, and shared transport options."
+      },
+      {
+       "title": "Sharing and Resource Exchange",
+       "description": "Borrowing items, sharing skills, and giving away unwanted goods."
+      },
+      {
+       "title": "Information and Discovery",
+       "description": "Finding out what is happening, where things are, and who to contact."
+      }
+     ],
+     "n_themes": 6,
+     "B": {
+      "calls": 5,
+      "wall_s": 132.1,
+      "out_tokens": 2400,
+      "out_tok_s": null,
+      "in_tokens": 4913,
+      "cut_by_length": 0,
+      "errors": 0,
+      "error_messages": [],
+      "max_tokens_in_one_call": 1571
+     },
+     "ari": 0.6419,
+     "purity": 0.836,
+     "invalid_share": 0.0,
+     "groups_used": 6,
+     "largest_group_share": 0.192,
+     "lang_ari": -0.0029,
+     "total_s": 143.95,
+     "parallel_s": 91.74,
+     "neurons": 153.0,
+     "reasoning_tokens": 0
+    }
+   },
+   "date": "2026-11-22 14:14",
+   "prices_neurons_per_m": [
+    5500,
+    36400
+   ],
+   "format": "schema_wrapped",
+   "extras_sent": {
+    "chat_template_kwargs": {
+     "enable_thinking": false
+    }
+   },
+   "extras_dropped": []
+  }
+ },
+ "neurons_spent": 4275.9,
+ "date": "2026-11-22 14:24",
+ "not_run": [
+  "@cf/qwen/qwen3-30b-a3b-fp8: HTTP 410, laut Fehlermeldung am 20.11.2026 abgekündigt, obwohl es am 22.11.2026 noch in der Preisliste stand.",
+  "Ein erster Lauf mit @cf/zai-org/glm-4.7-flash wurde nach zwei Minuten von Hand beendet; sein Verbrauch (wenige Aufrufe) fehlt in der Summe.",
+  "Der erste Lauf endete nach dem ersten Modell mit abgelaufenem Anmelde-Token; die Fehlläufe sind entfernt."
+ ],
+ "side_runs": {
+  "@cf/google/gemma-4-26b-a4b-it [Titel auf Deutsch]": {
+   "boards": {
+    "onboarding": {
+     "seed": 1,
+     "A": {
+      "calls": 2,
+      "wall_s": 11.61,
+      "out_tokens": 536,
+      "out_tok_s": null,
+      "in_tokens": 4660,
+      "cut_by_length": 0,
+      "errors": 0,
+      "error_messages": [],
+      "max_tokens_in_one_call": 4605
+     },
+     "A_info": {
+      "mode": "chunks",
+      "chunk_themes": [
+       5
+      ],
+      "chunks_failed": 0,
+      "themes_raw": 5,
+      "cjk_in_themes": false
+     },
+     "themes": [
+      {
+       "title": "IT-Infrastruktur und Hardware",
+       "description": "Sicherstellung von funktionsfähiger Hardware, schnellen Geräten und allen notwendigen Zugriffsrechten ab dem ersten Tag."
+      },
+      {
+       "title": "Wissensmanagement und Dokumentation",
+       "description": "Aufbau strukturierter Wikis und aktueller Handbücher, um implizites Wissen zugänglich zu machen."
+      },
+      {
+       "title": "Soziale Integration und Mentoring",
+       "description": "Förderung des Teamgefüges durch feste Ansprechpartner und gezielte soziale Unterstützung beim Einstieg."
+      },
+      {
+       "title": "Strukturierter Onboarding-Prozess",
+       "description": "Klare Zeitpläne, definierte Lernziele und transparente Erwartungen für die erste Zeit im Unternehmen."
+      },
+      {
+       "title": "Feedback und Kommunikation",
+       "description": "Regelmäßige Check-ins und klare Kommunikationswege, um den Fortschritt während der Probezeit zu begleiten."
+      }
+     ],
+     "n_themes": 5,
+     "B": {
+      "calls": 5,
+      "wall_s": 61.13,
+      "out_tokens": 3613,
+      "out_tok_s": null,
+      "in_tokens": 5258,
+      "cut_by_length": 0,
+      "errors": 0,
+      "error_messages": [],
+      "max_tokens_in_one_call": 1831
+     },
+     "ari": 0.7461,
+     "purity": 0.856,
+     "invalid_share": 0.0,
+     "groups_used": 5,
+     "largest_group_share": 0.308,
+     "lang_ari": -0.0051,
+     "total_s": 72.74,
+     "parallel_s": 25.82,
+     "neurons": 203.3,
+     "reasoning_tokens": 0
+    },
+    "stadtteil": {
+     "seed": 1,
+     "A": {
+      "calls": 2,
+      "wall_s": 21.62,
+      "out_tokens": 491,
+      "out_tok_s": null,
+      "in_tokens": 4673,
+      "cut_by_length": 0,
+      "errors": 0,
+      "error_messages": [],
+      "max_tokens_in_one_call": 4621
+     },
+     "A_info": {
+      "mode": "chunks",
+      "chunk_themes": [
+       5
+      ],
+      "chunks_failed": 0,
+      "themes_raw": 5,
+      "cjk_in_themes": false
+     },
+     "themes": [
+      {
+       "title": "Lokales Gewerbe und Gastronomie",
+       "description": "Informationen zu Öffnungszeiten, Angeboten, Menüs und neuen Läden im Viertel."
+      },
+      {
+       "title": "Nachbarschaftshilfe und Austausch",
+       "description": "Plattform zum Leihen, Verschenken und für gegenseitige Unterstützung unter Nachbarn."
+      },
+      {
+       "title": "Mobilität und Verkehr",
+       "description": "Echtzeit-Infos zu ÖPNV, Parkplätzen, Radwegen und Fahrgemeinschaften."
+      },
+      {
+       "title": "Mängel- und Schadensmeldung",
+       "description": "Einfaches Melden von Schäden an Infrastruktur oder öffentlichem Raum an die Behörden."
+      },
+      {
+       "title": "Events und Gemeinschaft",
+       "description": "Ein zentraler Kalender für Feste, Kurse, Vereine und soziale Treffpunkte."
+      }
+     ],
+     "n_themes": 5,
+     "B": {
+      "calls": 5,
+      "wall_s": 57.4,
+      "out_tokens": 3374,
+      "out_tok_s": null,
+      "in_tokens": 5214,
+      "cut_by_length": 0,
+      "errors": 0,
+      "error_messages": [],
+      "max_tokens_in_one_call": 1799
+     },
+     "ari": 0.9504,
+     "purity": 0.98,
+     "invalid_share": 0.0,
+     "groups_used": 5,
+     "largest_group_share": 0.204,
+     "lang_ari": -0.006,
+     "total_s": 79.02,
+     "parallel_s": 36.09,
+     "neurons": 195.3,
+     "reasoning_tokens": 0
+    }
+   },
+   "date": "2026-11-22 14:21",
+   "prices_neurons_per_m": [
+    9091,
+    27273
+   ],
+   "settings": {
+    "lang": "de",
+    "limit": 0,
+    "chunk": 250,
+    "batch": 50
+   },
+   "format": "schema_wrapped",
+   "extras_sent": {
+    "chat_template_kwargs": {
+     "enable_thinking": false
+    }
+   },
+   "extras_dropped": []
+  },
+  "@cf/google/gemma-4-26b-a4b-it [30 Zettel, Titel auf Deutsch]": {
+   "boards": {
+    "onboarding": {
+     "seed": 1,
+     "A": {
+      "calls": 2,
+      "wall_s": 8.64,
+      "out_tokens": 472,
+      "out_tok_s": null,
+      "in_tokens": 862,
+      "cut_by_length": 0,
+      "errors": 0,
+      "error_messages": [],
+      "max_tokens_in_one_call": 811
+     },
+     "A_info": {
+      "mode": "chunks",
+      "chunk_themes": [
+       5
+      ],
+      "chunks_failed": 0,
+      "themes_raw": 5,
+      "cjk_in_themes": false
+     },
+     "themes": [
+      {
+       "title": "IT und technische Infrastruktur",
+       "description": "Sicherstellung von Hardware, Software-Zugängen, VPN und allen notwendigen Berechtigungen."
+      },
+      {
+       "title": "Mentoring und soziale Integration",
+       "description": "Begleitung durch feste Ansprechpartner zur Förderung des fachlichen und sozialen Anschlusses."
+      },
+      {
+       "title": "Dokumentation und Wissensmanagement",
+       "description": "Bereitstellung von übersichtlichen, aktuellen Wikis, Handbüchern und Ablagesystemen."
+      },
+      {
+       "title": "Ziele und Erwartungsmanagement",
+       "description": "Definition von klaren Aufgaben, Lernzielen und Zeitplänen für die Einarbeitungsphase."
+      },
+      {
+       "title": "Arbeitsabläufe und praktische Einarbeitung",
+       "description": "Optimierung von Prozessen, Ticket-Systemen und der Integration in laufende Projekte."
+      }
+     ],
+     "n_themes": 5,
+     "B": {
+      "calls": 1,
+      "wall_s": 10.42,
+      "out_tokens": 431,
+      "out_tok_s": null,
+      "in_tokens": 669,
+      "cut_by_length": 0,
+      "errors": 0,
+      "error_messages": [],
+      "max_tokens_in_one_call": 1100
+     },
+     "ari": 0.7137,
+     "purity": 0.9,
+     "invalid_share": 0.0,
+     "groups_used": 5,
+     "largest_group_share": 0.233,
+     "lang_ari": 0.0293,
+     "total_s": 19.06,
+     "parallel_s": 19.06,
+     "neurons": 38.5,
+     "reasoning_tokens": 0
+    },
+    "stadtteil": {
+     "seed": 1,
+     "A": {
+      "calls": 2,
+      "wall_s": 10.58,
+      "out_tokens": 457,
+      "out_tok_s": null,
+      "in_tokens": 957,
+      "cut_by_length": 0,
+      "errors": 0,
+      "error_messages": [],
+      "max_tokens_in_one_call": 903
+     },
+     "A_info": {
+      "mode": "chunks",
+      "chunk_themes": [
+       5
+      ],
+      "chunks_failed": 0,
+      "themes_raw": 5,
+      "cjk_in_themes": false
+     },
+     "themes": [
+      {
+       "title": "Lokaler Handel & Dienstleistungen",
+       "description": "Informationen über Geschäfte, Öffnungszeiten, Angebote und die lokale Gastronomie."
+      },
+      {
+       "title": "Nachbarschaftshilfe & Community",
+       "description": "Plattform für Hilfsangebote, Tauschgeschäfte, soziale Vernetzung und gemeinsame Freizeitaktivitäten."
+      },
+      {
+       "title": "Verkehr & Mobilität",
+       "description": "Aktuelle Infos zu Parkplätzen, ÖPNV, Radwegen und lokalen Fahrpreisen."
+      },
+      {
+       "title": "Mängel & Stadtverwaltung",
+       "description": "Meldung von Schäden im öffentlichen Raum und Kommunikation mit Behörden."
+      },
+      {
+       "title": "Events & Kultur",
+       "description": "Übersicht über lokale Veranstaltungen, kulturelle Termine und Kurse."
+      }
+     ],
+     "n_themes": 5,
+     "B": {
+      "calls": 1,
+      "wall_s": 9.7,
+      "out_tokens": 394,
+      "out_tok_s": null,
+      "in_tokens": 743,
+      "cut_by_length": 0,
+      "errors": 0,
+      "error_messages": [],
+      "max_tokens_in_one_call": 1137
+     },
+     "ari": 0.9387,
+     "purity": 0.9667,
+     "invalid_share": 0.0,
+     "groups_used": 5,
+     "largest_group_share": 0.267,
+     "lang_ari": 0.0206,
+     "total_s": 20.28,
+     "parallel_s": 20.28,
+     "neurons": 38.7,
+     "reasoning_tokens": 0
+    }
+   },
+   "date": "2026-11-22 14:24",
+   "prices_neurons_per_m": [
+    9091,
+    27273
+   ],
+   "settings": {
+    "lang": "de",
+    "limit": 30,
+    "chunk": 250,
+    "batch": 50
+   },
+   "format": "schema_wrapped",
+   "extras_sent": {
+    "chat_template_kwargs": {
+     "enable_thinking": false
+    }
+   },
+   "extras_dropped": []
+  }
+ }
+}

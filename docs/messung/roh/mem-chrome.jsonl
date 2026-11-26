@@ -1,0 +1,9 @@
+{"config":"minilm-q8-wasm-4t","renderer":"772.7M 846.0M ","gpu":"58.9M 301.4M "}
+{"config":"trim-q8-wasm-4t","renderer":"368.5M 439.0M ","gpu":"60.3M 286.9M "}
+{"config":"granite-q8-wasm-4t","renderer":"664.4M 725.4M ","gpu":"55.6M 292.6M "}
+{"config":"e5-q8-wasm-4t","renderer":"767.8M 862.2M ","gpu":"56.0M 287.0M "}
+{"config":"minilm-fp16-webgpu","renderer":"1.6G 1.9G ","gpu":"555.1M 927.0M "}
+{"config":"gemma2-q4-wasm-4t","renderer":"507.9M 742.3M ","gpu":"53.5M 286.6M "}
+{"config":"gemma2-q4-webgpu","renderer":"622.6M 801.9M ","gpu":"674.2M 912.4M "}
+{"config":"voyage-q4-wasm-4t","renderer":"869.1M 1.0G ","gpu":"54.2M 287.7M "}
+{"config":"voyage-q4-webgpu","renderer":"1.0G 1.1G ","gpu":"612.4M 847.9M "}

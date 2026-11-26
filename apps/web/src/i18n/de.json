@@ -1,0 +1,572 @@
+{
+  "app": {
+    "title": "{{view}} · {{app}}",
+    "skip": "Zum Inhalt"
+  },
+  "nav": {
+    "label": "Seiten",
+    "start": "Start",
+    "walls": "Meine Wände",
+    "settings": "Einstellungen"
+  },
+  "common": {
+    "back": "Zurück",
+    "cancel": "Abbrechen",
+    "close": "Schließen",
+    "undo": "Rückgängig",
+    "missing": "{{label}} fehlt.",
+    "tooLong": "{{label}} ist zu lang. Höchstens {{max}}\u00a0Zeichen.",
+    "retry": "Noch mal versuchen",
+    "discard": "Verwerfen",
+    "optional": "(optional)",
+    "yourName": "Dein Name",
+    "yourNameHelp": "So sehen dich die anderen auf der Wand. Ein Vorname oder ein Pseudonym reicht.",
+    "toServer": "Geht an den Server von {{app}} in der EU. Alle auf der Wand sehen es.",
+    "toServerHidden": "Geht an den Server von {{app}} in der EU. Die anderen sehen es erst nach dem Aufdecken."
+  },
+  "more": {
+    "label": "Mehr",
+    "theme": "Hell oder Dunkel",
+    "system": "Wie das System",
+    "light": "Hell",
+    "dark": "Dunkel",
+    "systemIsOn": "Hell oder Dunkel folgt dem System.",
+    "lightIsOn": "Hell ist an.",
+    "darkIsOn": "Dunkel ist an.",
+    "tone": "Farbton",
+    "cool": "Kühl",
+    "warm": "Warm",
+    "coolIsOn": "Farbton Kühl ist an.",
+    "warmIsOn": "Farbton Warm ist an.",
+    "language": "Sprache"
+  },
+  "commands": {
+    "label": "Befehle",
+    "search": "Befehl oder Einstellung suchen",
+    "places": "Orte",
+    "look": "Darstellung",
+    "warm": "Farbton Warm",
+    "move": "wechseln",
+    "run": "ausführen",
+    "close": "schließen",
+    "none": "Kein Befehl passt zu „{{query}}“.",
+    "keys": {
+      "shown": {
+        "Mod": "Strg",
+        "Enter": "Eingabe",
+        "Escape": "Esc"
+      },
+      "spoken": {
+        "Mod": "Befehl",
+        "Enter": "Eingabe",
+        "Escape": "Escape",
+        "Up": "Pfeil nach oben",
+        "Down": "Pfeil nach unten"
+      },
+      "spokenOther": {
+        "Mod": "Steuerung"
+      }
+    }
+  },
+  "start": {
+    "title": "Start",
+    "continue": "Weiter zu „{{question}}“",
+    "all": "Alle Wände auf diesem Gerät"
+  },
+  "landing": {
+    "tab": "Alle schreiben Zettel, eine KI ordnet sie",
+    "claim": "Alle schreiben Zettel, eine KI ordnet sie.",
+    "lede": "Eine Person legt eine Wand mit einer Frage an und teilt den Link. Alle schreiben ihre Ideen auf Zettel, erst verdeckt, dann für alle sichtbar. Auf Knopfdruck schlägt eine KI Gruppen mit Überschriften vor. Kostenlos, ohne Konto.",
+    "ctaHint": "Kein Konto nötig. Du stellst eine Frage und teilst den Link.",
+    "description": "Eine Wand ist eine Frage und eine Fläche für Zettel. Erst schreiben alle für sich, ohne die Zettel der anderen zu lesen. Dann deckt die Moderation auf und lässt die KI Gruppen vorschlagen. Sie sieht den Vorschlag, bevor er gilt, und kann ihn zurücknehmen.",
+    "trust": {
+      "account": "Kein Konto, auch nicht für die Moderation",
+      "where": "Gespeichert in der EU",
+      "ai": "Die KI speichert laut Cloudflare nichts und lernt nicht daraus",
+      "tracking": "Keine Analyse-Skripte, keine Cookies"
+    },
+    "preview": {
+      "label": "Beispiel: eine geordnete Wand",
+      "caption": "Beispieldaten",
+      "question": "Was bremst uns im Alltag?",
+      "state": "12 Zettel in 3 Gruppen",
+      "group1": "Abstimmung",
+      "note1": "Zu viele Termine ohne Ergebnis",
+      "note2": "Unklar, wer entscheidet",
+      "group2": "Werkzeuge",
+      "note3": "Der Build dauert zu lange",
+      "note4": "Zwei Ticket-Systeme nebeneinander"
+    },
+    "howTitle": "So läuft ein Brainstorming",
+    "howRoles": "Eine Person moderiert, alle anderen kommen über den Link dazu.",
+    "steps": {
+      "open": {
+        "title": "1. Frage stellen und Link teilen",
+        "text": "Du legst eine Wand mit deiner Frage an und teilst den Link oder seinen QR-Code. Wer ihn öffnet, gibt einen Vornamen oder ein Pseudonym ein."
+      },
+      "write": {
+        "title": "2. Schreiben, dann aufdecken",
+        "text": "Alle schreiben ihre Zettel, zunächst verdeckt: Niemand liest mit, bis die Moderation aufdeckt."
+      },
+      "arrange": {
+        "title": "3. Ordnen lassen",
+        "text": "Auf Knopfdruck schlägt die KI Gruppen mit Überschriften vor. Die Moderation wendet den Vorschlag an oder verwirft ihn; von Hand ordnen geht immer. Am Ende kann jede Person die Wand als Markdown-Datei sichern."
+      }
+    },
+    "whyTitle": "Warum {{app}}",
+    "why": {
+      "equal": {
+        "title": "Jede Idee zählt gleich",
+        "text": "Wer verdeckt schreibt, wird nicht von der ersten Idee im Raum gelenkt."
+      },
+      "fast": {
+        "title": "Geordnet statt geschoben",
+        "text": "Die KI sortiert, was sonst jemand Zettel für Zettel von Hand schiebt."
+      },
+      "data": {
+        "title": "Sparsam mit Daten",
+        "text": "Kein Konto, keine E-Mail-Adresse. Eine Wand löscht sich 30\u00a0Tage nach dem letzten Besuch."
+      },
+      "languages": {
+        "title": "Deutsch und Englisch",
+        "text": "Jede Person wählt ihre Sprache selbst. Die Überschriften der KI kommen in der Sprache der Moderation."
+      }
+    },
+    "faqTitle": "Fragen und Antworten",
+    "faqGroups": {
+      "basics": "Grundsätzliches",
+      "privacy": "Datenschutz"
+    },
+    "faq": {
+      "cost": {
+        "q": "Was kostet es?",
+        "a": "Nichts. {{app}} ist ein privates, nicht-kommerzielles Projekt ohne Bezahlfunktion."
+      },
+      "account": {
+        "q": "Brauche ich ein Konto?",
+        "a": "Nein. Der Link ist der Zugang: Wer ihn hat, kann auf die Wand. Gib ihn deshalb nur an dein Team weiter."
+      },
+      "admin": {
+        "q": "Wer moderiert?",
+        "a": "Die Person, die die Wand angelegt hat. Mit dem Moderationslink nimmt sie das Recht auf ein zweites Gerät mit oder teilt es mit jemandem."
+      },
+      "limits": {
+        "q": "Gibt es Grenzen?",
+        "a": "Bis zu {{online}}\u00a0Personen zugleich und bis zu {{notes}}\u00a0Zettel auf einer Wand. Die KI ordnet eine Wand höchstens {{runs}}-mal in 24\u00a0Stunden; von Hand geht es immer."
+      },
+      "ai": {
+        "q": "Was passiert beim Ordnen mit den Zetteln?",
+        "a": "Die Frage und die Texte der Zettel gehen an Cloudflare Workers AI, den Dienst, bei dem die Wand ohnehin liegt; Namen gehen nicht mit. Laut Cloudflare wird dort nichts gespeichert und nicht damit trainiert. Gerechnet wird nicht sicher in der EU. Wer das nicht will, ordnet von Hand."
+      },
+      "where": {
+        "q": "Wo liegen die Daten?",
+        "a": "Bei Cloudflare, gespeichert in Rechenzentren in der EU. Die verschlüsselte Verbindung endet am nächstgelegenen Standort von Cloudflare, auch außerhalb der EU."
+      },
+      "howLong": {
+        "q": "Wie lange bleibt etwas gespeichert?",
+        "a": "Eine Wand löscht sich 30\u00a0Tage nach dem letzten Besuch. Die Moderation kann sie sofort löschen."
+      },
+      "tracking": {
+        "q": "Gibt es Tracking?",
+        "a": "Nein. Keine Analyse-Skripte, keine Cookies, nichts von fremden Servern. Dein Browser merkt sich die Wände, auf denen du warst, und deinen Namen. Diese Liste bleibt auf deinem Gerät; dein Name geht erst an eine Wand, wenn du ihr beitrittst."
+      }
+    },
+    "closingTitle": "Probiert es mit einer echten Frage",
+    "closingText": "Leg eine Wand an und teil den Link mit deinem Team.",
+    "notice": "{{app}} ist ein privates, nicht-kommerzielles Projekt. Eine Zusage für die Verfügbarkeit gibt es nicht."
+  },
+  "walls": {
+    "title": "Meine Wände",
+    "emptyTitle": "Noch keine Wände",
+    "emptyText": "Eine Wand steht hier, sobald du sie angelegt hast oder auf ihr warst.",
+    "onDevice_one": "1 Wand auf diesem Gerät.",
+    "onDevice_other": "{{count}} Wände auf diesem Gerät.",
+    "visitedAs": "Zuletzt am {{date}} als {{name}}",
+    "made": "Angelegt am {{date}}",
+    "more": "Mehr zu „{{question}}“",
+    "remove": "Aus der Liste entfernen",
+    "removeTitle": "Wand aus der Liste entfernen?",
+    "removeText": "„{{question}}“ verschwindet aus der Liste dieses Geräts. Die Wand selbst bleibt, wie sie ist; wer du dort warst, weiß dieses Gerät danach nicht mehr.",
+    "removeTextAdmin": "„{{question}}“ verschwindet aus der Liste dieses Geräts. Die Wand selbst bleibt, wie sie ist; wer du dort warst, weiß dieses Gerät danach nicht mehr, und es moderiert die Wand nicht mehr.",
+    "removeConfirm": "Entfernen"
+  },
+  "new": {
+    "title": "Neue Wand",
+    "submit": "Wand anlegen",
+    "question": "Frage",
+    "questionHelp": "Etwa „Was hält uns auf?“. Sie ist der Titel der Wand.",
+    "hidden": "Verdeckt schreiben",
+    "hiddenHelp": "Alle schreiben für sich, und niemand liest mit, bis die Moderation aufdeckt. Ausgeschaltet sehen alle jeden Zettel sofort.",
+    "making": "Wand wird angelegt …",
+    "limited": "Von hier wurden gerade zu viele Wände angelegt. Deine Frage ist noch da; versuch es in einer Minute noch mal.",
+    "spent": "Heute sind alle Wände vergeben. Ab {{time}}\u00a0Uhr geht es weiter. Deine Frage ist noch da.",
+    "failed": "Die Wand ließ sich nicht anlegen. Deine Frage ist noch da; prüf die Verbindung und versuch es noch mal.",
+    "unsavedTitle": "Frage verwerfen?",
+    "unsavedText": "Die Wand ist noch nicht angelegt. Wenn du jetzt gehst, ist die Frage weg."
+  },
+  "join": {
+    "title": "Beitreten",
+    "joining": "Beitritt läuft …",
+    "taken": "Diesen Namen hat schon jemand auf der Wand. Nimm einen anderen, etwa mit dem Anfang deines Nachnamens.",
+    "full": "Die Wand ist voll. Versuch es später noch mal."
+  },
+  "wall": {
+    "title": "Wand",
+    "opening": "Wand wird geöffnet …",
+    "unknownTitle": "Unbekannte Wand",
+    "unknownText": "Diese Wand gibt es nicht. Vielleicht wurde sie gelöscht, oder der Link ist unvollständig.",
+    "failedText": "Die Wand ließ sich nicht öffnen. Prüf die Verbindung.",
+    "deletedTitle": "Wand gelöscht",
+    "deletedText": "Diese Wand wurde gelöscht. Was darauf stand, ist entfernt.",
+    "people": "Auf der Wand",
+    "you": "(du)",
+    "admin": "Moderation",
+    "here": "da",
+    "away": "nicht da",
+    "count_one": "1 Person ist da.",
+    "count_other": "{{count}} Personen sind da.",
+    "summary": "{{notes}} {{people}}",
+    "noNotes": "Noch keine Zettel.",
+    "notes_one": "1\u00a0Zettel.",
+    "notes_other": "{{count}}\u00a0Zettel.",
+    "noteCount_one": "1\u00a0Zettel",
+    "noteCount_other": "{{count}}\u00a0Zettel",
+    "groupCount_one": "1\u00a0Gruppe",
+    "groupCount_other": "{{count}}\u00a0Gruppen",
+    "emptyGroupCount_one": "1\u00a0leere Gruppe",
+    "emptyGroupCount_other": "{{count}}\u00a0leere Gruppen",
+    "allGrouped": "{{notes}} in {{groups}}.",
+    "someGrouped": "{{notes}}, {{grouped}} davon in {{groups}}.",
+    "noneGrouped": "{{notes}} und {{groups}}.",
+    "noNotesGroups": "Noch keine Zettel, {{groups}}.",
+    "hiddenNone": "Verdecktes Schreiben: noch keine Zettel.",
+    "hiddenNotes_one": "Verdecktes Schreiben: 1\u00a0Zettel.",
+    "hiddenNotes_other": "Verdecktes Schreiben: {{count}}\u00a0Zettel.",
+    "hiddenOthersNone": "Von den anderen liegt noch kein Zettel auf der Wand.",
+    "hiddenOthers_one": "1\u00a0Zettel der anderen liegt verdeckt auf der Wand.",
+    "hiddenOthers_other": "{{count}}\u00a0Zettel der anderen liegen verdeckt auf der Wand.",
+    "reconnecting": "Verbindung getrennt. Wird neu verbunden …",
+    "outdated": "Es gibt eine neue Version. Lade die Seite neu.",
+    "copyLink": "Link kopieren",
+    "copied": "Kopiert",
+    "copyFailed": "Kopieren ging nicht",
+    "copyAdminLink": "Moderationslink kopieren",
+    "export": "Als Markdown sichern",
+    "exporting": "Wird gesichert …",
+    "exportHint": "Ohne Namen. Die Datei bleibt auf diesem Gerät.",
+    "exported": "Gesichert als „{{name}}“.",
+    "exportFailed": "Die Wand ließ sich nicht als Datei holen. Prüf die Verbindung und versuch es noch mal.",
+    "exportStranger": "Dieser Browser steht nicht mehr auf der Wand. Lade die Seite neu und tritt wieder bei.",
+    "qrShow": "QR-Code zeigen",
+    "qrTitle": "QR-Code der Wand",
+    "qrText": "Wer ihn mit dem Handy scannt, öffnet die Wand und tritt mit einem Namen bei. Darunter steht derselbe Link als Text. Das Moderationsrecht ist nicht darin.",
+    "qrLabel": "QR-Code mit dem Link der Wand",
+    "qrFailed": "Der QR-Code ließ sich nicht zeichnen. Der Link darunter geht.",
+    "reveal": "Aufdecken",
+    "revealTitle": "Zettel aufdecken?",
+    "revealTextNone": "Auf der Wand liegt noch kein Zettel. Nach dem Aufdecken sehen alle jeden Zettel, sobald er geschrieben ist.",
+    "revealText_one": "Auf der Wand liegt 1\u00a0Zettel. Nach dem Aufdecken sehen alle jeden Zettel, auch jeden, der noch dazukommt.",
+    "revealText_other": "Auf der Wand liegen {{count}}\u00a0Zettel. Nach dem Aufdecken sehen alle jeden Zettel, auch jeden, der noch dazukommt.",
+    "revealClock": "Die Uhr endet damit.",
+    "revealFinal": "Das lässt sich nicht rückgängig machen.",
+    "revealedNone": "Aufgedeckt. Auf der Wand liegt noch kein Zettel.",
+    "revealed_one": "Aufgedeckt: 1\u00a0Zettel ist jetzt für alle zu sehen.",
+    "revealed_other": "Aufgedeckt: {{count}}\u00a0Zettel sind jetzt für alle zu sehen.",
+    "clock": {
+      "left_one": "Noch 1\u00a0Minute zum Schreiben.",
+      "left_other": "Noch {{count}}\u00a0Minuten zum Schreiben.",
+      "paused_one": "Die Uhr ist angehalten: noch 1\u00a0Minute zum Schreiben.",
+      "paused_other": "Die Uhr ist angehalten: noch {{count}}\u00a0Minuten zum Schreiben.",
+      "over": "Die Zeit ist um.",
+      "min": "Min.",
+      "tab": {
+        "left": "Noch {{left}} · {{question}}",
+        "paused": "Angehalten · {{question}}",
+        "over": "Zeit um · {{question}}"
+      },
+      "controls": "Uhr",
+      "length": "Zeit zum Schreiben",
+      "minutes_one": "1\u00a0Minute",
+      "minutes_other": "{{count}}\u00a0Minuten",
+      "usual": "Üblich",
+      "other": "Andere Dauer",
+      "start": "Uhr starten",
+      "pause": "Uhr anhalten",
+      "resume": "Uhr fortsetzen",
+      "extend": "{{count}}\u00a0Minuten mehr",
+      "clear": "Uhr ausschalten"
+    },
+    "delete": "Wand löschen",
+    "deleteTitle": "Wand löschen?",
+    "deleteText": "„{{question}}“ wird für alle gelöscht, mit allen Namen darauf. Das lässt sich nicht rückgängig machen.",
+    "deleteConfirm": "Löschen",
+    "erase": "Meine Angaben löschen",
+    "eraseTitle": "Deine Angaben löschen?",
+    "eraseText": "Dein Name wird von der Wand entfernt, und die Wand verschwindet aus der Liste dieses Geräts.",
+    "eraseNotes_one": "Dein Zettel bleibt auf der Wand, ohne deinen Namen: Ändern oder löschen kannst du ihn danach nicht mehr. Soll er weg, lösch ihn vorher.",
+    "eraseNotes_other": "Deine {{count}} Zettel bleiben auf der Wand, ohne deinen Namen: Ändern oder löschen kannst du sie danach nicht mehr. Sollen sie weg, lösch sie vorher.",
+    "eraseAdmin": "Du moderierst: Danach moderierst du diese Wand nur noch mit dem Moderationslink. Kopier ihn vorher, wenn du ihn noch brauchst.",
+    "eraseFinal": "Das lässt sich nicht rückgängig machen.",
+    "eraseConfirm": "Löschen",
+    "erasedTitle": "Angaben gelöscht",
+    "erasedText": "Dein Name ist von der Wand entfernt, und die Wand steht nicht mehr in der Liste dieses Geräts. Was du geschrieben hast, bleibt auf der Wand, ohne deinen Namen.",
+    "state": "Stand der Wand",
+    "view": "Ansicht",
+    "viewSurface": "Fläche",
+    "viewList": "Liste",
+    "guide": {
+      "adminAloneEmpty": "Du moderierst: Schick den Link an dein Team, dann schreibt ihr alle eure Ideen auf Zettel.",
+      "adminAloneNotes": "Du moderierst: Schick den Link an dein Team, damit alle mitschreiben.",
+      "adminEmpty": "Du moderierst: Jetzt schreiben alle ihre Ideen auf Zettel, du auch.",
+      "adminNotes": "Du moderierst: Alle schreiben weiter. Was zusammengehört, kommt mit „Neue Gruppe“ in einen Rahmen.",
+      "adminSorting": "Du moderierst: Schiebt zusammen, was zusammengehört, und gebt jeder Gruppe einen Namen.",
+      "adminSorted": "Du moderierst: Jeder Zettel liegt in einer benannten Gruppe. Schreibt weiter, wenn noch etwas fehlt.",
+      "adminArrange": "Du moderierst: Wenn alle fertig sind, schlägt „Ordnen“ Gruppen mit Überschriften vor. Von Hand geht es genauso: Was zusammengehört, kommt mit „Neue Gruppe“ in einen Rahmen.",
+      "adminArrangeRest": "Du moderierst: „Ordnen“ schlägt Gruppen für die Zettel vor, die in keiner von Hand angelegten oder umbenannten Gruppe liegen. Von Hand geht es genauso: Schiebt zusammen, was zusammengehört.",
+      "adminArrangedFresh": "Du moderierst: Die KI hat geordnet. Passt es nicht, nimmt „Rückgängig“ es sofort zurück. Sonst schiebt um und benennt um, was nicht trifft.",
+      "adminArranged": "Du moderierst: Die KI hat geordnet. Schiebt um und benennt um, was nicht trifft. Zurücknehmen lässt sich das Ordnen noch unter „Mehr“.",
+      "memberAlone": "Schreib deine Ideen auf Zettel, und schick den Link weiter, wenn noch jemand fehlt.",
+      "memberEmpty": "Schreib deine Ideen auf Zettel.",
+      "memberNotes": "Schreib weitere Ideen auf Zettel. Was zusammengehört, kommt mit „Neue Gruppe“ in einen Rahmen.",
+      "memberSorting": "Schieb zusammen, was zusammengehört, und gib jeder Gruppe einen Namen.",
+      "memberSorted": "Jeder Zettel liegt in einer benannten Gruppe. Schreib weiter, wenn noch etwas fehlt.",
+      "adminHiddenAlone": "Du moderierst: Schick den Link an dein Team. Alle schreiben für sich, und niemand liest mit, bis du aufdeckst.",
+      "adminHiddenEmpty": "Du moderierst: Jetzt schreiben alle ihre Ideen auf Zettel, du auch. Niemand liest mit, bis du aufdeckst.",
+      "adminHiddenNotes": "Du moderierst: Alle schreiben für sich, niemand liest mit. Wenn alle fertig sind, zeigt „Aufdecken“ allen jeden Zettel.",
+      "adminHiddenOver": "Du moderierst: Nichts ist gesperrt, alle können weiterschreiben. Deck auf, wenn alle fertig sind, oder gib fünf Minuten mehr.",
+      "memberHiddenAlone": "Schreib deine Ideen auf Zettel, und schick den Link weiter, wenn noch jemand fehlt. Niemand liest mit, bis die Moderation aufdeckt.",
+      "memberHidden": "Schreib deine Ideen auf Zettel. Niemand liest mit, bis die Moderation aufdeckt.",
+      "memberHiddenOver": "Du kannst weiterschreiben, bis die Moderation aufdeckt."
+    },
+    "adminLinkCopied": "Moderationslink kopiert. Wer ihn hat, moderiert diese Wand und kann sie löschen: Gib ihn nur weiter, wenn jemand mit dir moderieren soll."
+  },
+  "surface": {
+    "label": "Fläche",
+    "notes": "Zettel auf der Fläche",
+    "tools": "Werkzeuge der Fläche",
+    "zoomIn": "Vergrößern",
+    "zoomOut": "Verkleinern",
+    "fit": "Alles zeigen",
+    "empty": "„Neuer Zettel“ legt einen Zettel auf die Fläche. Alle auf der Wand sehen ihn sofort.",
+    "emptyHidden": "„Neuer Zettel“ legt einen Zettel auf die Fläche. Die anderen sehen ihn erst nach dem Aufdecken.",
+    "keysName": "Tasten",
+    "keys": "Tasten: Die Pfeiltasten gehen zum nächsten Zettel. G geht zur nächsten Gruppe. Eingabe ändert den Text oder den Titel, Entf löscht, M bewegt, V verschiebt in eine Gruppe, N schreibt einen neuen Zettel. Die Leertaste wählt einen Zettel aus, Umschalt mit den Pfeiltasten wählt weitere dazu, Esc hebt die Auswahl auf. Plus und Minus zoomen, 0 zeigt alles.",
+    "moving": "Bewegen: Die Pfeiltasten bewegen den Zettel. Eingabe legt ihn ab, Esc bricht ab.",
+    "movingSeveral": "Bewegen: Die Pfeiltasten bewegen die {{count}}\u00a0Zettel. Eingabe legt sie ab, Esc bricht ab.",
+    "movingGroup": "Bewegen: Die Pfeiltasten bewegen die Gruppe mit ihren Zetteln, mit Umschalt ändern sie ihre Größe. Eingabe legt sie ab, Esc bricht ab.",
+    "moved": "Zettel abgelegt.",
+    "movedSeveral": "{{count}}\u00a0Zettel abgelegt.",
+    "movedGroup": "Gruppe abgelegt.",
+    "moveCancelled": "Bewegen abgebrochen. Der Zettel liegt wieder, wo er war.",
+    "moveCancelledAll": "Bewegen abgebrochen. Alles liegt wieder, wo es war.",
+    "selected_one": "1\u00a0Zettel ausgewählt",
+    "selected_other": "{{count}}\u00a0Zettel ausgewählt",
+    "clear": "Auswahl aufheben",
+    "cleared": "Auswahl aufgehoben.",
+    "choose": "Auswählen",
+    "choosing": "Auswählen ist an: Ein Druck auf einen Zettel wählt ihn aus oder wieder ab.",
+    "chooseOff": "Auswählen ist aus.",
+    "dismiss": "Hinweis schließen"
+  },
+  "note": {
+    "new": "Neuer Zettel",
+    "edit": "Bearbeiten",
+    "delete": "Löschen",
+    "save": "Sichern",
+    "text": "Text des Zettels",
+    "placeholder": "Deine Idee",
+    "length": "{{used}} von {{max}}\u00a0Zeichen",
+    "own": "Deiner",
+    "deleteTitle": "Zettel löschen?",
+    "deleteText": "„{{text}}“ wird für alle gelöscht. Das lässt sich nicht rückgängig machen.",
+    "move": "Verschieben nach …",
+    "inGroup": "in „{{group}}“",
+    "more": "Mehr zu „{{text}}“"
+  },
+  "move": {
+    "text_one": "Wohin soll der Zettel?",
+    "text_other": "Wohin sollen die {{count}}\u00a0Zettel?",
+    "target": "Ziel",
+    "none": "Keine Gruppe",
+    "confirm": "Verschieben",
+    "into_one": "Zettel nach „{{group}}“ verschoben.",
+    "into_other": "{{count}}\u00a0Zettel nach „{{group}}“ verschoben.",
+    "out_one": "Der Zettel liegt jetzt ohne Gruppe.",
+    "out_other": "{{count}}\u00a0Zettel liegen jetzt ohne Gruppe."
+  },
+  "group": {
+    "new": "Neue Gruppe",
+    "untitled": "Ohne Titel",
+    "title": "Titel der Gruppe",
+    "placeholder": "Titel",
+    "titleHelp": "Höchstens {{max}}\u00a0Zeichen. Der Titel darf fehlen.",
+    "rename": "Umbenennen",
+    "delete": "Gruppe löschen",
+    "deleteTitle": "Gruppe löschen?",
+    "deleteText_one": "„{{title}}“ wird für alle gelöscht. Der Zettel darin bleibt auf der Wand, ohne Gruppe. Das lässt sich nicht rückgängig machen.",
+    "deleteText_other": "„{{title}}“ wird für alle gelöscht. Die {{count}}\u00a0Zettel darin bleiben auf der Wand, ohne Gruppe. Das lässt sich nicht rückgängig machen.",
+    "deleteTextEmpty": "„{{title}}“ wird für alle gelöscht. Es liegen keine Zettel darin. Das lässt sich nicht rückgängig machen.",
+    "option": "Gruppe „{{title}}“, {{notes}}",
+    "made": "Gruppe angelegt.",
+    "madeAround_one": "Gruppe um 1\u00a0Zettel angelegt.",
+    "madeAround_other": "Gruppe um {{count}}\u00a0Zettel angelegt.",
+    "deleted": "Gruppe gelöscht.",
+    "deletedNotes_one": "Gruppe gelöscht. Ihr Zettel liegt jetzt ohne Gruppe.",
+    "deletedNotes_other": "Gruppe gelöscht. Ihre {{count}}\u00a0Zettel liegen jetzt ohne Gruppe.",
+    "more": "Mehr zu „{{title}}“",
+    "empty": "Noch keine Zettel in dieser Gruppe."
+  },
+  "list": {
+    "label": "Liste",
+    "ungrouped": "Ohne Gruppe",
+    "notes": "Zettel",
+    "own": "Deine Zettel",
+    "empty": "Noch keine Zettel. „Neuer Zettel“ schreibt den ersten, und alle auf der Wand sehen ihn sofort.",
+    "emptyHidden": "Noch keine Zettel von dir. „Neuer Zettel“ schreibt den ersten; die anderen sehen ihn erst nach dem Aufdecken."
+  },
+  "arrange": {
+    "start": "Ordnen",
+    "running": "Ordnen läuft …",
+    "apply": "Anwenden",
+    "applying": "Wird angewendet …",
+    "where": "„Ordnen“ schickt die Frage und die Texte der Zettel, ohne Namen, an Cloudflares KI-Dienst Workers AI: laut Cloudflare ohne Speicherung und ohne Training, aber nicht sicher in der EU. Mehr unter <privacy>Datenschutz</privacy>.",
+    "whereNote": "Ein neuer Zettel geht an den Server von {{app}} in der EU. Alle auf der Wand sehen ihn.",
+    "runningState_one": "Die KI ordnet 1\u00a0Zettel. Das dauert meist unter einer halben Minute.",
+    "runningState_other": "Die KI ordnet {{count}}\u00a0Zettel. Das dauert meist unter einer halben Minute.",
+    "elapsed_one": "Bisher 1\u00a0Sekunde.",
+    "elapsed_other": "Bisher {{count}}\u00a0Sekunden.",
+    "cancelHint": "„Abbrechen“ beendet nur das Warten. Der Versuch zählt trotzdem: Eine Wand lässt sich {{runs}}-mal in 24\u00a0Stunden ordnen.",
+    "proposal": "Vorschlag der KI: {{groups}}. Nur du siehst ihn.",
+    "proposalLoose": "Vorschlag der KI: {{groups}}, {{loose}} ohne Gruppe. Nur du siehst ihn.",
+    "partial": "Ein Teil der Zettel bekam keine Antwort der KI und liegt ohne Gruppe.",
+    "previewNote": "„Anwenden“ ordnet die Wand für alle so, „Verwerfen“ lässt sie, wie sie war. Solange der Vorschlag steht, änderst du nichts an der Wand; die anderen arbeiten weiter.",
+    "applyHint": "„Anwenden“ speichert die Anordnung auf dem Server von {{app}} in der EU. Alle auf der Wand sehen sie.",
+    "runsLeft_one": "Diese Wand lässt sich in 24\u00a0Stunden {{runs}}-mal ordnen, jetzt noch 1-mal.",
+    "runsLeft_other": "Diese Wand lässt sich in 24\u00a0Stunden {{runs}}-mal ordnen, jetzt noch {{count}}-mal.",
+    "runsNone": "Diese Wand lässt sich in 24\u00a0Stunden {{runs}}-mal ordnen: Das war vorerst das letzte Mal.",
+    "undoName": "Ordnen rückgängig machen",
+    "undoTitle": "Ordnen rückgängig machen?",
+    "undoText": "Die Zettel liegen danach wieder dort, wo sie vor dem Ordnen lagen, und die Gruppen der KI verschwinden. Umbenannte Gruppen bleiben, mit ihren Zetteln. Was seitdem verschoben wurde, geht verloren. Das lässt sich nicht rückgängig machen.",
+    "undoConfirm": "Rückgängig machen",
+    "saidApplied_one": "Geordnet: 1\u00a0Gruppe.",
+    "saidApplied_other": "Geordnet: {{count}}\u00a0Gruppen.",
+    "saidUndone": "Das Ordnen wurde zurückgenommen.",
+    "saidDiscarded": "Vorschlag verworfen. Die Wand ist, wie sie war.",
+    "saidCancelled": "Warten abgebrochen.",
+    "whereKey": "„Ordnen“ schickt die Frage und die Texte der Zettel, ohne Namen, mit deinem Schlüssel direkt aus diesem Browser an {{provider}}: {{facts}}. Mehr unter <privacy>Datenschutz</privacy>.",
+    "keyOn": "„Ordnen“ fragt {{provider}}, mit deinem Schlüssel. Entfernst du ihn unter „Mehr“, ordnet wieder Cloudflare.",
+    "runningStateKey_one": "{{provider}} ordnet 1\u00a0Zettel, mit deinem Schlüssel.",
+    "runningStateKey_other": "{{provider}} ordnet {{count}}\u00a0Zettel, mit deinem Schlüssel.",
+    "cancelHintKey": "„Abbrechen“ beendet die Anfragen an {{provider}}. Was bis dahin gerechnet ist, kann {{provider}} deinem Konto trotzdem berechnen.",
+    "saidCancelledKey": "Abgebrochen: Die Anfragen an {{provider}} sind beendet."
+  },
+  "reject": {
+    "notAuthorEdit": "Den Text eines Zettels ändert nur, wer ihn geschrieben hat.",
+    "notAuthorDelete": "Einen Zettel löscht nur, wer ihn geschrieben hat, oder die Moderation.",
+    "notFound": "Diesen Zettel gibt es nicht mehr: Jemand hat ihn gelöscht.",
+    "notFoundGroup": "Diese Gruppe gibt es nicht mehr: Jemand hat sie gelöscht.",
+    "limit": "Die Wand ist voll: Mehr als {{max}}\u00a0Zettel passen nicht darauf. Lösch einen, dann ist wieder Platz.",
+    "limitGroups": "Mehr als {{max}}\u00a0Gruppen passen nicht auf eine Wand. Lösch eine, dann ist wieder Platz.",
+    "conflict": "Der Zettel ließ sich nicht anlegen. Schreib ihn noch mal.",
+    "invalid": "Die Wand hat die Änderung nicht angenommen. Versuch es noch mal.",
+    "phaseGroups": "Gruppen gibt es erst, wenn die Zettel aufgedeckt sind.",
+    "phaseClock": "Die Zettel sind schon aufgedeckt: Die Uhr gibt es nur, solange verdeckt geschrieben wird.",
+    "staleClock": "Die Uhr wurde im selben Moment schon anders gestellt: Dein Schritt wurde nicht übernommen. Sie zeigt, was jetzt gilt.",
+    "daySpent": "Die Wand hat heute so viel gespeichert, wie eine Wand an einem Tag darf: Deine Änderung wurde nicht übernommen. Ab {{time}}\u00a0Uhr geht es weiter.",
+    "notAdmin": "Das darf nur die Moderation.",
+    "rateLimit": "Das waren zu viele Änderungen auf einmal: Die letzte wurde nicht übernommen. Warte einen Moment und mach sie noch mal.",
+    "lost": "Ohne Verbindung haben sich zu viele Änderungen gestaut: Die älteste wurde zurückgenommen.",
+    "phaseArrange": "Geordnet wird erst, wenn die Zettel aufgedeckt sind.",
+    "staleUndo": "Inzwischen wurde neu geordnet: Zurücknehmen lässt sich nur das letzte Ordnen. Die Wand zeigt, was jetzt gilt.",
+    "applyChanged": "Die Wand hat sich beim Anwenden zweimal geändert, und die Anordnung wurde nicht übernommen. Der Vorschlag steht noch: Versuch es noch mal.",
+    "arrangeNothing": "Zum Ordnen sind es zu wenige Zettel: Die KI braucht mindestens {{min}}, die in keiner von Hand angelegten oder umbenannten Gruppe liegen.",
+    "arrangeBudget": "Das Kontingent der KI ist aufgebraucht, für alle Wände. {{when}} geht es weiter. Von Hand ordnen geht immer.",
+    "arrangeBudgetNoTime": "Das Kontingent der KI bei Cloudflare ist aufgebraucht, für alle Wände. Wann es weitergeht, kann die App nicht sagen: spätestens in 24\u00a0Stunden. Von Hand ordnen geht immer.",
+    "arrangeRuns": "Diese Wand hat die KI in 24\u00a0Stunden {{runs}}-mal ordnen lassen, öfter geht es nicht. {{when}} geht es wieder. Von Hand ordnen geht immer.",
+    "arrangeFailed": "Die KI hat keine brauchbare Antwort gegeben. Versuch es noch mal, oder ordnet von Hand.",
+    "arrangeUnavailable": "Auf diesem Server ist keine KI angeschlossen. Ordnet von Hand.",
+    "arrangeNetwork": "Die Anfrage kam nicht beim Server an. Prüf die Verbindung und versuch es noch mal.",
+    "arrangeTimeout": "Nach zwei Minuten kam keine Antwort der KI, das Warten ist beendet. Versuch es noch mal, oder ordnet von Hand.",
+    "arrangeUnknown": "Das Ordnen hat nicht geklappt: Der Server hat unerwartet geantwortet. Versuch es noch mal, oder ordnet von Hand.",
+    "arrangeNothingLeft": "Vom Vorschlag ist nichts mehr übrig: Seine Zettel wurden inzwischen gelöscht oder liegen in Gruppen, die von Hand angelegt oder umbenannt wurden.",
+    "whenToday": "Ab {{time}}\u00a0Uhr",
+    "whenTomorrow": "Morgen ab {{time}}\u00a0Uhr",
+    "keyRefused": "{{provider}} hat den Schlüssel abgelehnt. Trag ihn unter „Mehr“ neu ein: Vielleicht ist er unvollständig kopiert, abgelaufen oder für diesen Dienst nicht freigegeben.",
+    "keyRefusedBrowser": "{{provider}} hat den Schlüssel abgelehnt. Trag ihn unter „Mehr“ neu ein: Vielleicht ist er unvollständig kopiert, abgelaufen oder für diesen Dienst nicht freigegeben. Konten mit „Zero Data Retention“ lässt {{provider}} aus einem Browser nicht fragen.",
+    "keyNoCredit": "{{provider}} hat nicht gerechnet: Das Konto hat kein Guthaben mehr, oder ein Ausgabenlimit ist erreicht. Lade dort Guthaben auf oder heb das Limit an. Von Hand ordnen geht immer.",
+    "keyRateLimited": "{{provider}} nimmt gerade keine weiteren Anfragen an: zu viele in kurzer Zeit, oder der Dienst ist überlastet. Warte einen Moment und versuch es noch mal.",
+    "keyRejected": "{{provider}} hat die Anfrage zurückgewiesen, nicht den Schlüssel. Das kann am Modell liegen, an der Form der Anfrage oder an einer Grenze deines Kontos dort. Ordnet von Hand, oder entferne den Schlüssel unter „Mehr“: Dann ordnet wieder Cloudflare.",
+    "keyDeclined": "{{provider}} hat keine Antwort gegeben: Das Modell hat die Anfrage abgelehnt, aus Gründen des Anbieters. Ordnet von Hand, oder entferne den Schlüssel unter „Mehr“: Dann ordnet wieder Cloudflare.",
+    "keyUnreachable": "{{provider}} war nicht zu erreichen, oder der Browser durfte die Antwort nicht lesen. Prüf die Verbindung und versuch es noch mal.",
+    "keyUnusable": "{{provider}} hat keine brauchbare Antwort gegeben. Versuch es noch mal, oder ordnet von Hand.",
+    "keyTimeout": "Nach zwei Minuten war {{provider}} nicht fertig: Die Anfragen sind abgebrochen. Versuch es noch mal, oder ordnet von Hand.",
+    "keyLoad": "Der Teil der App, der mit deinem Schlüssel ordnet, ließ sich nicht laden. Prüf die Verbindung und versuch es noch mal."
+  },
+  "key": {
+    "entry": "Eigener KI-Schlüssel …",
+    "title": "Eigener KI-Schlüssel",
+    "text": "Mit einem eigenen Schlüssel fragt „Ordnen“ deinen KI-Anbieter direkt aus diesem Browser, nicht Cloudflare. Der Schlüssel bleibt in diesem Tab: Nach dem Neuladen ist er weg, und den Server von {{app}} erreicht er nie. Was das Ordnen kostet, berechnet der Anbieter deinem Konto dort.",
+    "provider": "Anbieter",
+    "line": "Zettel: {{facts}}. Kosten: nach Preisliste rund {{cents}}\u00a0US-Cent für eine Wand mit 250\u00a0Zetteln.",
+    "facts": "{{place}}, {{kept}}, {{training}}",
+    "place": {
+      "eu": "laut {{provider}} in Rechenzentren in der EU und der EFTA",
+      "anywhere": "ohne zugesagten Ort"
+    },
+    "kept": "dort bis zu {{days}}\u00a0Tage gespeichert",
+    "keptLonger": "dort bis zu {{days}}\u00a0Tage gespeichert (auffällige Inhalte länger)",
+    "training": {
+      "no": "laut {{provider}} nicht zum Training genutzt",
+      "account": "Training je nach Einstellung deines Kontos dort"
+    },
+    "unmeasured": "Wie gut {{provider}} ordnet, ist noch nicht gemessen.",
+    "set": "Für {{provider}} ist ein Schlüssel eingetragen.",
+    "remove": "Schlüssel entfernen",
+    "field": "Schlüssel",
+    "replaces": "Ein neuer Schlüssel ersetzt den eingetragenen.",
+    "malformed": "Im Schlüssel stehen Leerzeichen oder Zeichen, die in keinem Schlüssel vorkommen. Kopier ihn noch mal.",
+    "page": "Schlüssel bei {{provider}} anlegen",
+    "take": "Übernehmen",
+    "stays": "Bleibt in diesem Tab.",
+    "saidTaken": "Schlüssel übernommen. „Ordnen“ fragt jetzt {{provider}}.",
+    "saidRemoved": "Schlüssel entfernt. „Ordnen“ fragt wieder Cloudflare."
+  },
+  "settings": {
+    "title": "Einstellungen",
+    "motion": "Bewegung immer reduzieren",
+    "motionHelp": "Neues erscheint dann ohne Bewegung, es wird nur eingeblendet. Gilt auch, wenn das Gerät Bewegung zulässt.",
+    "about": "Über",
+    "version": "Version",
+    "sender": "Ein Werkzeug von",
+    "senderName": "sebaro",
+    "storage": "Ablage",
+    "storageValue": "Wände, auf denen du warst, dein Name, deine Moderationsrechte und ob du die Fläche oder die Liste gewählt hast: im Speicher des Browsers auf diesem Gerät. Was auf einer Wand steht: auf dem Server von {{app}} in der EU, bis 30 Tage nach dem letzten Beitritt"
+  },
+  "licences": {
+    "title": "Lizenzen",
+    "text": "{{app}} enthält diese freie Software und diese Schriften.",
+    "texts": "Alle Lizenztexte als Textdatei"
+  },
+  "legal": {
+    "imprint": "Impressum",
+    "privacy": "Datenschutz",
+    "accessibility": "Barrierefreiheit",
+    "draft": "Entwurf: Markierte Angaben fehlen noch, und der Betreiber hat diese Fassung noch nicht freigegeben.",
+    "asOf": "Stand: {{date}}"
+  },
+  "footer": {
+    "copyright": "© {{year}} {{app}}",
+    "github": "GitHub",
+    "source": "Quelltext der laufenden Version"
+  },
+  "notFound": {
+    "title": "Unbekannte Adresse",
+    "text": "Unter dieser Adresse liegt nichts.",
+    "link": "Zum Start"
+  },
+  "error": {
+    "title": "Fehler",
+    "text": "Diese Ansicht ließ sich nicht anzeigen. Lade die Seite noch einmal.",
+    "retry": "Noch mal versuchen"
+  }
+}

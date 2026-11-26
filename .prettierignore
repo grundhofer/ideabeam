@@ -1,0 +1,10 @@
+# apps/web brings its own list and is formatted from its own folder
+apps/web
+# the throwaway measuring prototype of stage 0 (its own branch)
+proto
+pnpm-lock.yaml
+*.md
+# written by `wrangler types`
+worker-configuration.d.ts
+.wrangler
+dist

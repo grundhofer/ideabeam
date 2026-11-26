@@ -1,0 +1,530 @@
+{
+ "measured": "2026-11-23",
+ "how": "scripts/measure-arrange.mjs against the deployed preview: a wall is made, filled over its socket, arranged by POST /api/walls/:id/arrange, deleted",
+ "worker_cpu_ms": {
+  "source": "Cloudflare GraphQL analytics, workersInvocationsAdaptive, requests that ended with success in the minutes of the runs",
+  "median": 7.3,
+  "p75": 12.2,
+  "highest": 23.7,
+  "run_of_500_notes": 17.5,
+  "errors": 0
+ },
+ "durable_objects": {
+  "window": "2026-11-23T11:20:00Z to 11:30:31Z",
+  "wallroom_awake_s": 4.35,
+  "wallroom_rows_written": 1756,
+  "ratelimiter_rows_written": 24
+ },
+ "runs": [
+  {
+   "worker": "the preview (ideabeam-vorschau), commit abe081c",
+   "at": "2026-11-23T11:24:13.496Z",
+   "board": "onboarding",
+   "notes": 12,
+   "dirty": "none",
+   "language": "de",
+   "seed": 1,
+   "runs": [
+    {
+     "ok": true,
+     "seconds": 5.1,
+     "groups": [
+      {
+       "title": "Dokumentation und Wissenstransfer",
+       "notes": 4,
+       "mostly": "docs",
+       "ofThat": 4
+      },
+      {
+       "title": "Technische Onboarding-Prozesse",
+       "notes": 3,
+       "mostly": "access",
+       "ofThat": 2
+      },
+      {
+       "title": "Feedback und Kommunikation",
+       "notes": 3,
+       "mostly": "mentoring",
+       "ofThat": 2
+      },
+      {
+       "title": "Arbeitsorganisation und Rahmenbedingungen",
+       "notes": 2,
+       "mostly": "team",
+       "ofThat": 1
+      }
+     ],
+     "all": {
+      "notes": 12,
+      "ari": 0.5932,
+      "purity": 0.75,
+      "withoutGroup": 0
+     },
+     "cost": {
+      "neurons": 13.25,
+      "calls": 2,
+      "inputTokens": 753,
+      "outputTokens": 235
+     },
+     "partial": false,
+     "model": "@cf/google/gemma-4-26b-a4b-it",
+     "runsLeft": 5
+    }
+   ]
+  },
+  {
+   "worker": "the preview (ideabeam-vorschau), commit abe081c",
+   "at": "2026-11-23T11:24:30.453Z",
+   "board": "onboarding",
+   "notes": 250,
+   "dirty": "none",
+   "language": "de",
+   "seed": 1,
+   "runs": [
+    {
+     "ok": true,
+     "seconds": 14.9,
+     "groups": [
+      {
+       "title": "IT-Ausstattung und technische Infrastruktur",
+       "notes": 50,
+       "mostly": "access",
+       "ofThat": 50
+      },
+      {
+       "title": "Wissensmanagement und Dokumentation",
+       "notes": 51,
+       "mostly": "docs",
+       "ofThat": 50
+      },
+      {
+       "title": "Soziale Integration und Unternehmenskultur",
+       "notes": 52,
+       "mostly": "team",
+       "ofThat": 50
+      },
+      {
+       "title": "Strukturierter Onboarding-Prozess",
+       "notes": 35,
+       "mostly": "firsttasks",
+       "ofThat": 19
+      },
+      {
+       "title": "Mentoring und fachliche Begleitung",
+       "notes": 34,
+       "mostly": "mentoring",
+       "ofThat": 32
+      },
+      {
+       "title": "Aufgaben und Lerninhalte",
+       "notes": 28,
+       "mostly": "firsttasks",
+       "ofThat": 28
+      }
+     ],
+     "all": {
+      "notes": 250,
+      "ari": 0.8079,
+      "purity": 0.916,
+      "withoutGroup": 0
+     },
+     "cost": {
+      "neurons": 132.28,
+      "calls": 6,
+      "inputTokens": 9943,
+      "outputTokens": 1536
+     },
+     "partial": false,
+     "model": "@cf/google/gemma-4-26b-a4b-it",
+     "runsLeft": 5
+    },
+    {
+     "ok": true,
+     "seconds": 22,
+     "groups": [
+      {
+       "title": "IT-Ausstattung und technische Infrastruktur",
+       "notes": 50,
+       "mostly": "access",
+       "ofThat": 50
+      },
+      {
+       "title": "Wissensmanagement und Dokumentation",
+       "notes": 51,
+       "mostly": "docs",
+       "ofThat": 50
+      },
+      {
+       "title": "Soziale Integration und Unternehmenskultur",
+       "notes": 52,
+       "mostly": "team",
+       "ofThat": 50
+      },
+      {
+       "title": "Strukturierter Onboarding-Prozess",
+       "notes": 51,
+       "mostly": "firsttasks",
+       "ofThat": 47
+      },
+      {
+       "title": "Mentoring und persönliche Betreuung",
+       "notes": 33,
+       "mostly": "mentoring",
+       "ofThat": 31
+      },
+      {
+       "title": "Feedback und Kommunikation",
+       "notes": 13,
+       "mostly": "mentoring",
+       "ofThat": 13
+      }
+     ],
+     "all": {
+      "notes": 250,
+      "ari": 0.8729,
+      "purity": 0.964,
+      "withoutGroup": 0
+     },
+     "cost": {
+      "neurons": 165.45,
+      "calls": 8,
+      "inputTokens": 12142,
+      "outputTokens": 2019
+     },
+     "partial": false,
+     "model": "@cf/google/gemma-4-26b-a4b-it",
+     "runsLeft": 4
+    }
+   ]
+  },
+  {
+   "worker": "the preview (ideabeam-vorschau), commit abe081c",
+   "at": "2026-11-23T11:25:09.727Z",
+   "board": "stadtteil",
+   "notes": 250,
+   "dirty": "none",
+   "language": "de",
+   "seed": 1,
+   "runs": [
+    {
+     "ok": true,
+     "seconds": 21.5,
+     "groups": [
+      {
+       "title": "Nachbarschaftshilfe und Teilen",
+       "notes": 54,
+       "mostly": "sharing",
+       "ofThat": 48
+      },
+      {
+       "title": "Lokaler Handel und Gastronomie",
+       "notes": 49,
+       "mostly": "shops",
+       "ofThat": 49
+      },
+      {
+       "title": "Mobilität und Verkehr",
+       "notes": 43,
+       "mostly": "mobility",
+       "ofThat": 42
+      },
+      {
+       "title": "Mängel melden und Stadtpflege",
+       "notes": 47,
+       "mostly": "issues",
+       "ofThat": 47
+      },
+      {
+       "title": "Veranstaltungen und Gemeinschaft",
+       "notes": 49,
+       "mostly": "events",
+       "ofThat": 49
+      },
+      {
+       "title": "Barrierefreiheit und Inklusion",
+       "notes": 8,
+       "mostly": "sharing",
+       "ofThat": 2
+      }
+     ],
+     "all": {
+      "notes": 250,
+      "ari": 0.8921,
+      "purity": 0.948,
+      "withoutGroup": 0
+     },
+     "cost": {
+      "neurons": 131.68,
+      "calls": 6,
+      "inputTokens": 9922,
+      "outputTokens": 1521
+     },
+     "partial": false,
+     "model": "@cf/google/gemma-4-26b-a4b-it",
+     "runsLeft": 5
+    },
+    {
+     "ok": true,
+     "seconds": 10.8,
+     "groups": [
+      {
+       "title": "Nachbarschaftshilfe und Teilen",
+       "notes": 54,
+       "mostly": "sharing",
+       "ofThat": 48
+      },
+      {
+       "title": "Lokaler Handel und Gastronomie",
+       "notes": 49,
+       "mostly": "shops",
+       "ofThat": 49
+      },
+      {
+       "title": "Mobilität und Verkehr",
+       "notes": 42,
+       "mostly": "mobility",
+       "ofThat": 42
+      },
+      {
+       "title": "Mängel melden und Stadtpflege",
+       "notes": 49,
+       "mostly": "issues",
+       "ofThat": 49
+      },
+      {
+       "title": "Veranstaltungen und Gemeinschaft",
+       "notes": 49,
+       "mostly": "events",
+       "ofThat": 49
+      },
+      {
+       "title": "Barrierefreiheit und Inklusion",
+       "notes": 7,
+       "mostly": "sharing",
+       "ofThat": 2
+      }
+     ],
+     "all": {
+      "notes": 250,
+      "ari": 0.9071,
+      "purity": 0.956,
+      "withoutGroup": 0
+     },
+     "cost": {
+      "neurons": 132.06,
+      "calls": 6,
+      "inputTokens": 9949,
+      "outputTokens": 1526
+     },
+     "partial": false,
+     "model": "@cf/google/gemma-4-26b-a4b-it",
+     "runsLeft": 4
+    }
+   ]
+  },
+  {
+   "worker": "the preview (ideabeam-vorschau), commit abe081c",
+   "at": "2026-11-23T11:25:58.712Z",
+   "board": "stadtteil",
+   "notes": 280,
+   "dirty": "mixed",
+   "language": "de",
+   "seed": 1,
+   "runs": [
+    {
+     "ok": true,
+     "seconds": 11.7,
+     "groups": [
+      {
+       "title": "Nachbarschaft & Gemeinschaft",
+       "notes": 67,
+       "mostly": "sharing",
+       "ofThat": 55
+      },
+      {
+       "title": "Lokale Events & Freizeit",
+       "notes": 56,
+       "mostly": "events",
+       "ofThat": 52
+      },
+      {
+       "title": "Einkaufen & Gastronomie",
+       "notes": 53,
+       "mostly": "shops",
+       "ofThat": 53
+      },
+      {
+       "title": "Verkehr & Mobilität",
+       "notes": 45,
+       "mostly": "mobility",
+       "ofThat": 44
+      },
+      {
+       "title": "Mängel & Stadtverwaltung",
+       "notes": 59,
+       "mostly": "issues",
+       "ofThat": 55
+      }
+     ],
+     "all": {
+      "notes": 280,
+      "ari": 0.8229,
+      "purity": 0.925,
+      "withoutGroup": 0
+     },
+     "dirty": {
+      "notes": 30,
+      "ari": 0.8422,
+      "purity": 0.9333,
+      "withoutGroup": 0
+     },
+     "cost": {
+      "neurons": 139.75,
+      "calls": 7,
+      "inputTokens": 10539,
+      "outputTokens": 1611
+     },
+     "partial": false,
+     "model": "@cf/google/gemma-4-26b-a4b-it",
+     "runsLeft": 5
+    }
+   ]
+  },
+  {
+   "worker": "the preview (ideabeam-vorschau), commit abe081c",
+   "at": "2026-11-23T11:26:14.059Z",
+   "board": "stadtteil",
+   "notes": 250,
+   "dirty": "none",
+   "language": "en",
+   "seed": 1,
+   "runs": [
+    {
+     "ok": true,
+     "seconds": 10.4,
+     "groups": [
+      {
+       "title": "Local Commerce and Services",
+       "notes": 46,
+       "mostly": "shops",
+       "ofThat": 46
+      },
+      {
+       "title": "Community Sharing and Help",
+       "notes": 49,
+       "mostly": "sharing",
+       "ofThat": 49
+      },
+      {
+       "title": "Public Infrastructure and Reporting",
+       "notes": 48,
+       "mostly": "issues",
+       "ofThat": 47
+      },
+      {
+       "title": "Events and Social Life",
+       "notes": 53,
+       "mostly": "events",
+       "ofThat": 49
+      },
+      {
+       "title": "Mobility and Transport",
+       "notes": 46,
+       "mostly": "mobility",
+       "ofThat": 46
+      },
+      {
+       "title": "Accessibility and Safety",
+       "notes": 8,
+       "mostly": "issues",
+       "ofThat": 3
+      }
+     ],
+     "all": {
+      "notes": 250,
+      "ari": 0.9085,
+      "purity": 0.96,
+      "withoutGroup": 0
+     },
+     "cost": {
+      "neurons": 127.94,
+      "calls": 6,
+      "inputTokens": 9675,
+      "outputTokens": 1466
+     },
+     "partial": false,
+     "model": "@cf/google/gemma-4-26b-a4b-it",
+     "runsLeft": 5
+    }
+   ]
+  },
+  {
+   "worker": "the preview (ideabeam-vorschau), commit abe081c",
+   "at": "2026-11-23T11:28:09.936Z",
+   "board": "both",
+   "notes": 500,
+   "dirty": "none",
+   "language": "de",
+   "seed": 1,
+   "runs": [
+    {
+     "ok": true,
+     "seconds": 17.2,
+     "groups": [
+      {
+       "title": "Strukturierte Einarbeitung und Onboarding",
+       "notes": 58,
+       "mostly": "onboarding/firsttasks",
+       "ofThat": 47
+      },
+      {
+       "title": "Mentoring und soziale Integration",
+       "notes": 75,
+       "mostly": "onboarding/team",
+       "ofThat": 43
+      },
+      {
+       "title": "IT-Infrastruktur und technische Ausstattung",
+       "notes": 52,
+       "mostly": "onboarding/access",
+       "ofThat": 50
+      },
+      {
+       "title": "Wissensmanagement und Dokumentation",
+       "notes": 56,
+       "mostly": "onboarding/docs",
+       "ofThat": 49
+      },
+      {
+       "title": "Feedback und Kommunikation",
+       "notes": 30,
+       "mostly": "onboarding/mentoring",
+       "ofThat": 20
+      },
+      {
+       "title": "Lokale Gemeinschaft und Nachbarschaft",
+       "notes": 229,
+       "mostly": "stadtteil/shops",
+       "ofThat": 48
+      }
+     ],
+     "all": {
+      "notes": 500,
+      "ari": 0.339,
+      "purity": 0.514,
+      "withoutGroup": 0
+     },
+     "cost": {
+      "neurons": 253,
+      "calls": 11,
+      "inputTokens": 19655,
+      "outputTokens": 2725
+     },
+     "partial": false,
+     "model": "@cf/google/gemma-4-26b-a4b-it",
+     "runsLeft": 5
+    }
+   ]
+  }
+ ]
+}

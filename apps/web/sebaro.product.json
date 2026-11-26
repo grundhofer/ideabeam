@@ -1,0 +1,36 @@
+{
+  "$comment": "The sign is provisional (three notes: two in a group, one on its way to it), drawn for stage 1 so the product has a tile; the owner has not chosen a sign yet (PLAN.md 7.3). After any change here: pnpm sebaro:build (src/sebaro/product/PRODUCT-CONTRACT.md).",
+  "schemaVersion": "1.0",
+  "id": "ideabeam",
+  "name": "IdeaBeam",
+  "tile": "collaboration",
+  "sign": {
+    "glyph": [
+      {
+        "d": "M3 3 H10 V10 H3 Z",
+        "paint": "fill"
+      },
+      {
+        "d": "M3 14 H10 V21 H3 Z",
+        "paint": "fill"
+      },
+      {
+        "d": "M14 8.5 H21 V15.5 H14 Z",
+        "paint": "fill"
+      }
+    ]
+  },
+  "outputs": [
+    "web"
+  ],
+  "web": {
+    "manifest": {
+      "id": "/",
+      "lang": "de",
+      "dir": "ltr",
+      "start_url": "/",
+      "scope": "/",
+      "display": "browser"
+    }
+  }
+}

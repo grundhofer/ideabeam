@@ -1,0 +1,976 @@
+/* app.css: the copy's stylesheets in their order, then the app's own layout around sebaro's parts. Only app-*
+   classes, only var(--sb-*) tokens, no colour values, no shadows. Everything that looks like sebaro comes from the
+   copy. The product's colours come after tokens.css: product.css, written by the copy's kit. A length without a
+   token carries the comment „no sebaro token“ with its reason (tests/rules.spec.ts). */
+@import "./sebaro/fonts/fonts.css";
+@import "./sebaro/tokens.css";
+@import "../sebaro-product/sign/product.css";
+@import "./sebaro/icons/sprite.css";
+@import "./sebaro/css/sebaro.css";
+
+/* A page: head, content, action zone, footer, in this order and one under the other. It is at least as tall as the
+   window (no sebaro token: the height of the window itself), so the footer stands at the bottom when the content is
+   short; and no wider than sebaro's container, in the middle of a window that is wider */
+.app-page {
+  min-block-size: 100dvh;
+  max-inline-size: var(--sb-size-container-max);
+  margin-inline: auto;
+  /* the page's gutter, as sebaro's site header, container and footer take it: wider from 1024 px. A wall's own
+     parts (its head, its state, its content, its action zone) stand in the same line */
+  --app-gutter: var(--sb-spacing-gutter);
+}
+@media (min-width: 64rem) {
+  .app-page {
+    --app-gutter: var(--sb-spacing-gutter-wide);
+  }
+}
+/* a wall is a tool and takes the whole window, as RetroBeam's board does: its surface has no edge of its own, so
+   the window is its only one. Its head, state, zone and footer stand in the same gutter. In the height too: head,
+   state, content and action zone fill the window, so the surface gets what the window has left; the footer is
+   still the last thing on the page and follows right under the window's edge, one scroll away. It stands out of
+   the page's flow, under the page, and the document grows by it */
+.app-page--wall {
+  position: relative;
+  max-inline-size: none;
+}
+.app-page--wall > .sb-site-footer {
+  position: absolute;
+  inset-block-start: 100%;
+  inset-inline: var(--sb-space-0);
+}
+/* What stands in a wall's action zone is in view wherever the page stands: the zone stays at the window's bottom
+   edge. The page keeps the zone's height free at its end for a field that takes the focus (sebaro's scroll padding),
+   and a browser reads the zone's own actions as covered by that room: the Tab key on „Neuer Zettel“ scrolled the
+   page by the footer's height, which lies under the window here, and left the wall's head out of view. The zone's
+   actions give that room back */
+.app-page--wall .sb-bottom-block :is(a, button) {
+  scroll-margin-block-end: calc(-1 * var(--sb-bottom-block-size, var(--sb-space-0)));
+}
+/* What scrolls under a wall's zone is covered by it. A control of the content that the zone covers in part (a row's
+   menu in a long list) keeps 24 px clear of the zone's own action: the room a small target needs to its neighbour
+   (WCAG 2.5.8). So the zone's action stands 24 px under the zone's edge, not 12 */
+.app-page--wall .sb-primary-action-bar {
+  padding-block-start: var(--sb-space-6);
+}
+/* the moderation's zone while the notes are hidden: „Neuer Zettel“ as the second action beside the primary one,
+   „Aufdecken“. On a phone they share the zone's width, the primary one taking what is left; in the zone's wide
+   form they stand at its end, as the one action does. Both are as high as the zone's action */
+.app-zone-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--sb-space-2);
+  min-inline-size: 0;
+  margin-inline-start: auto;
+}
+.app-zone-actions > .sb-secondary-action {
+  flex: 0 1 auto;
+  min-block-size: var(--sb-size-control-lg);
+}
+.app-zone-actions > .sb-primary-action {
+  flex: 1 1 0;
+}
+/* the content and its action zone take the room between head and footer. A page that is no wall keeps one column
+   of reading width in the middle, as RetroBeam's pages do; its action zone follows its content directly */
+.app-main {
+  display: flex;
+  flex: 1 0 auto;
+  flex-direction: column;
+  box-sizing: border-box;
+  inline-size: 100%;
+  max-inline-size: var(--sb-size-measure-prose);
+  margin-inline: auto;
+  padding-block-end: var(--sb-space-8);
+}
+.app-main > .sb-view__content {
+  flex: 0 0 auto;
+}
+/* a wall and the start use the page's whole width; on a wall the content takes the height, so the zone with the
+   state sentence stands right above the footer */
+.app-main--wide {
+  max-inline-size: none;
+  padding-block-end: var(--sb-space-0);
+}
+.app-main--wide > .sb-view__content {
+  flex: 1 0 auto;
+}
+/* in a page's one column the gutter is the phone's at every width: the column is narrow already. The sections of
+   the start keep sebaro's page gutter, which grows from 1024 px, as the site's head and the footer do */
+.app-main:not(.app-main--wide) .sb-container {
+  padding-inline: var(--sb-spacing-gutter);
+}
+/* a page's first heading and the way back above it, in the column's gutter. The heading is as wide as its words:
+   it takes the focus when the view arrives, and the ring stands around the words */
+.app-title {
+  box-sizing: border-box;
+  inline-size: fit-content;
+  max-inline-size: calc(100% - 2 * var(--sb-spacing-gutter));
+  margin: var(--sb-space-8) var(--sb-spacing-gutter) var(--sb-space-4);
+}
+.app-back {
+  margin: 0;
+  padding: var(--sb-space-6) var(--sb-spacing-gutter) var(--sb-space-0);
+}
+.app-back + .app-title {
+  margin-block-start: var(--sb-space-2);
+}
+.app-back > a {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--sb-space-1);
+}
+/* the wall's head: the sign and the name, the wall's question, the link to copy and „Mehr“; the ink line under it as
+   under the site's head. The lockup's own margin (a website header's) would push the title to the far end */
+.app-wall-head {
+  gap: var(--sb-space-4);
+  padding-inline: var(--app-gutter);
+  border-block-end: var(--sb-x-sebaro-layer-line-width) solid var(--sb-x-sebaro-layer-line-color);
+}
+.app-wall-head > .sb-lockup {
+  margin-inline-end: var(--sb-space-0);
+}
+/* the wall's question takes the focus when the wall opens: the ring stands around the words, not around the bar */
+.app-wall-head .sb-top-bar__title {
+  inline-size: fit-content;
+  max-inline-size: 100%;
+}
+/* on a phone the head is one line: the sign without the name beside it, and the copy key as its icon; the tools
+   of the surface are their icons too. All keep their words for a screen reader: clipped, not removed (no sebaro
+   token: the box of the copy's own sb-visually-hidden, which a class cannot switch on by the window's width) */
+@media (max-width: 39.99rem) {
+  .app-wall-head {
+    gap: var(--sb-space-2);
+  }
+  .app-wall-head > .sb-lockup > .sb-wordmark,
+  .app-copy-key > .app-copy-key__word,
+  .app-tool > .app-tool__word {
+    position: absolute;
+    inline-size: 1px;
+    block-size: 1px;
+    overflow: hidden;
+    clip-path: inset(50%);
+    white-space: nowrap;
+  }
+}
+/* the zone's bar of a wall in the page's gutter; in a page's one column it keeps sebaro's own */
+.app-main--wide .sb-primary-action-bar {
+  padding-inline: var(--app-gutter);
+}
+/* the data-path line stands directly under its action: in the zone's wide form (state sentence at the start, action
+   at the end) it takes a row of its own, under the action */
+.app-page .sb-primary-action-bar > .sb-action-hint {
+  flex: 1 1 100%;
+  margin: 0;
+  text-align: end;
+}
+/* the state of the wall at its top: the sentence large, and under it what to do now, a sentence per role. No
+   colour and no bar. On a phone the surface needs the height: less room around the sentences */
+.app-state {
+  padding: var(--sb-space-6) var(--app-gutter) var(--sb-space-4);
+}
+@media (max-width: 39.99rem) {
+  .app-state {
+    padding-block: var(--sb-space-4) var(--sb-space-3);
+  }
+}
+.app-state__sentence,
+.app-state__clock,
+.app-state__note {
+  margin: 0;
+  max-inline-size: var(--sb-size-measure-prose);
+}
+/* the clock of the writing: a second sentence as large as the state, so the time left is seen from across a room.
+   Words alone: no bar, no colour, no seconds (sebaro „Collaboration“). Without a clock the line is empty and takes
+   no room, and stays a live region */
+.app-state__sentence,
+.app-state__clock {
+  font: var(--sb-type-headline);
+  letter-spacing: var(--sb-type-headline-tracking);
+  text-wrap: balance;
+}
+.app-state__clock:not(:empty) {
+  margin-block-start: var(--sb-space-1);
+}
+.app-state__note {
+  margin-block-start: var(--sb-space-2);
+  text-wrap: balance;
+}
+/* the link the sentence speaks of, to copy right there */
+.app-state__key {
+  margin-block-start: var(--sb-space-3);
+}
+/* the moderation's controls of the clock, in the wall's bar beside the state: the time to choose and „Uhr
+   starten“, or the few controls of a clock that is set, in one row that wraps. The field is as wide as its
+   longest time */
+.app-clock {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  gap: var(--sb-space-2) var(--sb-space-3);
+}
+.app-clock > .sb-field {
+  flex: 0 1 auto;
+}
+/* the top of a wall: its state, and at its end the wall's bar: while the notes are hidden the moderation's controls
+   of the clock, then how the wall is looked at („Fläche“ or „Liste“) and the wall's second action, „Neue Gruppe“.
+   All act on the wall whichever way it is looked at, so they stand outside the surface and the list. A hairline
+   under the band. On a phone the bar stands under the state; from 640 px beside it, at the band's end, and under
+   it again where the two do not fit one line (no sebaro token: the least width of the state's sentences, a rem, so
+   it grows with the text) */
+.app-wall-top {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  border-block-end: var(--sb-border-width-hairline) solid var(--sb-color-border);
+}
+.app-wall-bar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: var(--sb-space-3) var(--sb-space-6);
+  padding: var(--sb-space-0) var(--app-gutter) var(--sb-space-3);
+}
+@media (min-width: 40rem) {
+  .app-wall-top {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: flex-end;
+    justify-content: space-between;
+  }
+  .app-wall-top > .app-state {
+    flex: 1 1 28rem;
+    align-self: flex-start;
+    min-inline-size: 0;
+  }
+  .app-wall-bar {
+    flex: 0 1 auto;
+    justify-content: flex-end;
+    padding-block-end: var(--sb-space-4);
+  }
+  /* with the clock's controls the bar is a column, the controls above the choice of the view: the bar stays
+     narrow, and the state beside it keeps the width for its sentences */
+  .app-wall-bar[data-clock] {
+    flex-direction: column;
+    flex-wrap: nowrap;
+    align-items: flex-end;
+    justify-content: flex-end;
+    padding-block-start: var(--sb-space-4);
+  }
+}
+/* A wall's content stands in the page's gutter and takes the height the page has left, so the zone with „Neuer
+   Zettel“ stands right above the footer: the surface first, the people under it. From 1024 px the people are a
+   column beside the surface, as RetroBeam's rail is (no sebaro token: the width of a list of names with their
+   state; a rem, so it grows with the text). The surface is never lower than its parts need. The parts in it bring
+   no gutter of their own */
+.app-page--wall .sb-view__content {
+  display: flex;
+  flex-direction: column;
+  padding-block-end: var(--sb-space-3);
+}
+.app-wall {
+  display: grid;
+  flex: 1 0 auto;
+  grid-template-columns: minmax(0, 1fr);
+  grid-template-rows: minmax(min-content, 1fr) auto;
+  gap: var(--sb-space-2) var(--sb-space-6);
+  padding: var(--sb-space-4) var(--app-gutter) var(--sb-space-0);
+}
+@media (min-width: 64rem) {
+  .app-wall {
+    grid-template-columns: minmax(0, 1fr) 20rem;
+    grid-template-rows: minmax(min-content, 1fr);
+    padding-block-start: var(--sb-space-6);
+  }
+  /* beside the surface the people take the height the surface has, never more: a long list scrolls in its
+     column, under its heading, and the surface keeps the window's height */
+  .app-wall__people {
+    block-size: 0;
+    min-block-size: 100%;
+    padding-inline-start: var(--sb-space-6);
+    border-inline-start: var(--sb-border-width-hairline) solid var(--sb-color-border);
+    overflow-y: auto;
+  }
+  .app-wall__people .app-people__head {
+    position: sticky;
+    inset-block-start: var(--sb-space-0);
+    z-index: 1;
+    background: var(--sb-color-bg);
+  }
+}
+.app-wall :is(.sb-container, .sb-list-header, .sb-list-row, .sb-list-end) {
+  padding-inline: var(--sb-space-0);
+}
+.app-wall .sb-list-row + .sb-list-row::before {
+  inset-inline-start: var(--sb-space-0);
+}
+.app-wall__people {
+  min-inline-size: 0;
+}
+/* the people's heading opens and closes their list: under the surface it is closed at first, so the surface keeps
+   the height; the chevron turns when it is open. The heading is a target of 48 px */
+.app-people__head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--sb-space-2);
+  min-block-size: var(--sb-size-target-touch);
+  border-radius: var(--sb-radius-control);
+  cursor: pointer;
+  list-style: none;
+}
+.app-people__head::-webkit-details-marker {
+  display: none;
+}
+.app-people__head > .sb-list-header {
+  padding-block: var(--sb-space-0);
+}
+.app-people__head > .sb-icon {
+  flex: none;
+  color: var(--sb-color-text-muted);
+}
+.app-people[open] > .app-people__head > .sb-icon {
+  transform: rotate(180deg);
+}
+/* The surface: its tools in a row of their own, which never covers a note, and under them the ground with the
+   notes. A hairline frame around both; the ground is the page's own, without a grid (sebaro „Collaboration“) */
+.app-surface {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  min-inline-size: 0;
+  overflow: clip;
+  border: var(--sb-border-width-hairline) solid var(--sb-color-border-strong);
+  border-radius: var(--sb-radius-container);
+  background: var(--sb-color-bg);
+}
+.app-surface__tools {
+  display: flex;
+  flex: none;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--sb-space-1) var(--sb-space-2);
+  min-block-size: var(--sb-size-target-touch);
+  padding: var(--sb-space-1) var(--sb-space-2);
+  border-block-end: var(--sb-border-width-hairline) solid var(--sb-color-border);
+}
+.app-surface__note-tools,
+.app-surface__view-tools {
+  display: flex;
+  align-items: center;
+  gap: var(--sb-space-1);
+}
+.app-surface__view-tools {
+  margin-inline-start: auto;
+}
+/* a tool with its icon before its word. One that is switched on („Auswählen“) is in the colour of what is chosen
+   and heavier, as sebaro's pressed chip is */
+.app-tool {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--sb-space-1);
+}
+.app-tool[aria-pressed="true"] {
+  color: var(--sb-color-link);
+  font-weight: var(--sb-type-title-weight);
+}
+/* on a phone the two actions of a note that is being written need the row to themselves, and so do the count and
+   the tools of a selection */
+@media (max-width: 39.99rem) {
+  .app-surface__tools:is([data-writing], [data-several]) > .app-surface__view-tools {
+    display: none;
+  }
+}
+/* how many notes are selected: a sentence among the selection's tools */
+.app-surface__count {
+  margin: var(--sb-space-0);
+  padding-inline: var(--sb-space-2);
+  white-space: nowrap;
+}
+/* why a change was not taken: the error glyph, the sentence, and the key that puts it away. Empty, it takes no
+   room and stays a live region */
+.app-surface__problem {
+  display: flex;
+  flex: none;
+  align-items: flex-start;
+  gap: var(--sb-space-2);
+  padding-inline: var(--sb-space-4) var(--sb-space-2);
+  border-block-end: var(--sb-border-width-hairline) solid var(--sb-color-border);
+}
+.app-surface__problem:empty {
+  display: none;
+}
+.app-surface__problem > p {
+  flex: 1 1 0;
+  min-inline-size: 0;
+  margin: 0;
+  padding-block: var(--sb-space-3);
+}
+.app-surface__problem > .sb-icon {
+  flex: none;
+  margin-block-start: calc(var(--sb-space-3) + (1lh - var(--sb-size-icon-sm)) / 2);
+  color: var(--sb-color-danger);
+}
+/* the others' notes while the wall is hidden: sebaro's hidden card as one line, the glyph and the sentence that
+   says how many there are, quiet. On the surface it stands above the ground, with a hairline under it; in the list
+   it is the first line */
+.app-hidden {
+  display: flex;
+  flex: none;
+  align-items: flex-start;
+  gap: var(--sb-space-2);
+  max-inline-size: none;
+  margin: var(--sb-space-0);
+  padding: var(--sb-space-3) var(--sb-space-4);
+  color: var(--sb-color-text-muted);
+}
+.app-hidden > .sb-icon {
+  flex: none;
+  margin-block-start: calc((1lh - var(--sb-size-icon-md)) / 2);
+}
+.app-surface > .app-hidden {
+  border-block-end: var(--sb-border-width-hairline) solid var(--sb-color-border);
+}
+.app-list > .app-hidden {
+  padding-inline: var(--sb-space-0);
+}
+/* the frame the world is seen through: it cuts what lies outside, takes every pointer itself (the page neither
+   scrolls nor zooms under a finger on it) and holds the layout of five hundred notes apart from the page's. It is
+   never lower than a note of a few lines at life size with room around it (no sebaro token: that height; a rem,
+   so it grows with the text). In a window too low for that the page scrolls, and the action zone stays at the
+   window's edge */
+.app-surface__frame {
+  position: relative;
+  flex: 1 1 auto;
+  min-block-size: 14rem;
+  overflow: clip;
+  contain: layout paint style;
+  touch-action: none;
+  -webkit-user-select: none;
+  user-select: none;
+  cursor: grab;
+}
+.app-surface__frame[data-dragging] {
+  cursor: grabbing;
+}
+/* the ground: the one tab stop of the surface. Its focus ring stands inside its edge, where the frame does not
+   cut it */
+.app-surface__ground {
+  position: absolute;
+  inset: var(--sb-space-0);
+}
+.app-surface__ground:focus-visible {
+  outline-offset: calc(-1 * var(--sb-focus-width));
+}
+/* the world: one element, moved and scaled by one transform (Surface.tsx). It has no size: the notes lie in it at
+   their places. While the view moves it is a layer of its own; at rest it is drawn sharp again */
+.app-surface__world {
+  position: absolute;
+  inset-block-start: var(--sb-space-0);
+  inset-inline-start: var(--sb-space-0);
+  inline-size: var(--sb-space-0);
+  block-size: var(--sb-space-0);
+  transform-origin: 0 0;
+}
+.app-surface__frame[data-moving] .app-surface__world {
+  will-change: transform;
+}
+/* the layer above the world takes no pointer but in the field that stands in it */
+.app-surface__world--over {
+  pointer-events: none;
+}
+/* A note: a card of sebaro at its place in the world. Every note is as wide as NOTE_WIDTH of the shared rules says
+   (no sebaro token: 240 units of 1/16 rem), and its text keeps 16 units from its edge, the frame's line included
+   (no sebaro token: the line's own width, taken off the inset). Its text is body text, with the breaks its writer
+   made; a word longer than a line breaks */
+.app-note {
+  position: absolute;
+  inline-size: 15rem;
+  margin: var(--sb-space-0);
+  padding: calc(var(--sb-spacing-inset-container) - var(--sb-border-width-hairline));
+  contain: layout style;
+}
+.app-note__text {
+  margin: var(--sb-space-0);
+  font: var(--sb-type-body);
+  letter-spacing: var(--sb-type-body-tracking);
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+/* one's own note says so, to the person who wrote it and to nobody else: a small word in the note's far corner, in
+   the room between its text and its edge and out of the text's flow, so the note is exactly as tall as everybody
+   else sees it (its height is reckoned from its text alone). Grey as a meta line; no colour tells people apart */
+.app-note__own {
+  position: absolute;
+  inset-block-end: var(--sb-space-0);
+  inset-inline-end: var(--sb-space-3);
+  font: var(--sb-type-caption);
+  letter-spacing: var(--sb-type-caption-tracking);
+  line-height: var(--sb-space-4);
+  color: var(--sb-color-text-muted);
+  white-space: nowrap;
+}
+/* a note that is being moved carries an ink frame: no shadow, no ghost, no half opacity (sebaro „Board“). It lies
+   above its neighbours */
+.app-note[data-lifted] {
+  z-index: 1;
+  border-color: var(--sb-color-text);
+}
+/* a note whose text is in the field: the field stands in its place */
+.app-note[data-writing] {
+  visibility: hidden;
+}
+/* An arrangement glides: when the AI's arrangement is applied or taken back, or the moderation's preview of one opens
+   or closes, the surface marks its world for the time of the motion (Surface.tsx), and the notes go to their new
+   places one after the other. The surface says how long a note glides and how long after the first one each sets
+   out; together at most 600 ms, the owner's exception to sebaro's 200 ms (docs/sebaro-luecken.md, A3). Under reduced
+   motion, the system's or the app's own setting, nothing glides: the notes are simply there */
+@media (prefers-reduced-motion: no-preference) {
+  .app-surface__world[data-gliding]:not([data-sb-motion="reduce"] *) > .app-note {
+    transition:
+      left var(--app-glide) var(--sb-motion-easing-standard) var(--app-glide-delay, 0s),
+      top var(--app-glide) var(--sb-motion-easing-standard) var(--app-glide-delay, 0s);
+  }
+}
+/* a picked note: the frame of what is selected, in cobalt, and the check in its corner, inside the note's own
+   edge. The frame is a line of the same width at every zoom: the surface tells the world its zoom once the view
+   rests (Surface.tsx, --app-zoom) */
+.app-note[data-picked] {
+  outline: calc(var(--sb-focus-width) / var(--app-zoom, 1)) solid var(--sb-color-accent);
+}
+.app-note__check {
+  position: absolute;
+  inset-block-start: var(--sb-space-0);
+  inset-inline-end: var(--sb-space-0);
+  color: var(--sb-color-accent);
+}
+/* A group: a frame without fill at its place in the world, with its title at its top (sebaro „Collaboration“: a
+   hairline in the strong border colour, the container's radius, no ground). The frame takes no pointer: the
+   ground under it still pans, and the notes in it are pressed as ever. Its head is what a pointer takes hold of:
+   as wide as the frame and as high as GROUP_HEAD of lib/surface/groups.ts (no sebaro token: 40 units of 1/16 rem).
+   The title stands in the strong body type: a fitted wall is drawn smaller than life, and the field that takes
+   its place must not be smaller than body text. A title longer than its frame ends in „…“ */
+.app-group {
+  position: absolute;
+  box-sizing: border-box;
+  margin: var(--sb-space-0);
+  border: var(--sb-border-width-hairline) solid var(--sb-color-border-strong);
+  border-radius: var(--sb-radius-container);
+  pointer-events: none;
+}
+.app-group__head {
+  display: flex;
+  align-items: center;
+  box-sizing: border-box;
+  block-size: 2.5rem;
+  margin: var(--sb-space-0);
+  padding-inline: var(--sb-space-3);
+  pointer-events: auto;
+  cursor: grab;
+}
+.app-group__title {
+  min-inline-size: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font: var(--sb-type-body-strong);
+  letter-spacing: var(--sb-type-body-strong-tracking);
+}
+.app-group__title[data-untitled] {
+  color: var(--sb-color-text-muted);
+}
+/* a group whose title is in the field: the field stands in its place */
+.app-group__head[data-writing] {
+  visibility: hidden;
+}
+/* a frame that is being moved carries an ink line, as a note does. The frame a dragged note would land in carries
+   the accent frame of a target, inside its own edge (sebaro „Drag and drop“: a border, never a ground), as wide at
+   every zoom */
+.app-group[data-lifted] {
+  border-color: var(--sb-color-text);
+}
+.app-group[data-target] {
+  outline: calc(var(--sb-border-width-strong) / var(--app-zoom, 1)) solid var(--sb-color-accent);
+  outline-offset: calc(-1 * var(--sb-border-width-strong) / var(--app-zoom, 1));
+}
+/* the field a group's title is written in: the group's frame in the layer above the world, with the field in the
+   place of its title (no sebaro token: the head's 40 units). The field has no frame and no ground of its own */
+.app-group__input {
+  display: block;
+  box-sizing: border-box;
+  inline-size: 100%;
+  block-size: 2.5rem;
+  margin: var(--sb-space-0);
+  padding: var(--sb-space-0) var(--sb-space-3);
+  border: 0;
+  outline: 0;
+  background: transparent;
+  color: var(--sb-color-text);
+  font: var(--sb-type-body-strong);
+  letter-spacing: var(--sb-type-body-strong-tracking);
+  text-overflow: ellipsis;
+  pointer-events: auto;
+  -webkit-user-select: text;
+  user-select: text;
+  cursor: auto;
+}
+.app-group__input::placeholder {
+  color: var(--sb-color-text-muted);
+  opacity: 1;
+}
+/* the field a note is written in: the note's own box, with the text field as its content. The field has no frame
+   and no ground of its own and is as tall as its text (no sebaro token: three lines of text, the least height of
+   a note) */
+.app-note--field {
+  pointer-events: auto;
+  -webkit-user-select: text;
+  user-select: text;
+  cursor: auto;
+}
+.app-note__input {
+  display: block;
+  box-sizing: border-box;
+  inline-size: 100%;
+  min-block-size: 3lh;
+  margin: var(--sb-space-0);
+  padding: var(--sb-space-0);
+  border: 0;
+  outline: 0;
+  background: transparent;
+  color: var(--sb-color-text);
+  font: var(--sb-type-body);
+  letter-spacing: var(--sb-type-body-tracking);
+  resize: none;
+  field-sizing: content;
+}
+.app-note__input::placeholder {
+  color: var(--sb-color-text-muted);
+  opacity: 1;
+}
+.app-note__length {
+  margin: var(--sb-space-0);
+  font: var(--sb-type-caption);
+  letter-spacing: var(--sb-type-caption-tracking);
+  color: var(--sb-color-text-muted);
+}
+/* the mark around the current note: drawn on the surface, not in the world, so its line is as wide at every zoom.
+   Cobalt, the colour of the current place and of the focus; ink while the note is being moved. It stands a little
+   outside the note (no sebaro token: the offset of the focus ring, as an outline) */
+.app-surface__mark {
+  position: absolute;
+  inset-block-start: var(--sb-space-0);
+  inset-inline-start: var(--sb-space-0);
+  box-sizing: border-box;
+  border-radius: var(--sb-radius-container);
+  outline: var(--sb-border-width-strong) solid var(--sb-color-accent);
+  outline-offset: var(--sb-focus-offset);
+  pointer-events: none;
+}
+.app-surface__mark[data-lifted] {
+  outline-color: var(--sb-color-text);
+}
+/* the handle that changes the current group's size: on the mark's far corner, on the surface and not in the world,
+   so it is a target of 48 px at every zoom. The grip stands on a piece of the ground, so the frame's corner does
+   not run through it */
+.app-surface__handle {
+  position: absolute;
+  inset-block-end: calc(-0.5 * var(--sb-size-target-touch));
+  inset-inline-end: calc(-0.5 * var(--sb-size-target-touch));
+  display: grid;
+  place-items: center;
+  inline-size: var(--sb-size-target-touch);
+  block-size: var(--sb-size-target-touch);
+  color: var(--sb-color-text-muted);
+  pointer-events: auto;
+  touch-action: none;
+  cursor: nwse-resize;
+}
+.app-surface__handle > .sb-icon {
+  border-radius: var(--sb-radius-small);
+  background: var(--sb-color-bg);
+}
+/* an empty surface says how it fills: quiet, at its start, where the first note will not land */
+.app-surface__empty {
+  position: absolute;
+  inset-block-start: var(--sb-space-0);
+  inset-inline: var(--sb-space-0);
+  max-inline-size: var(--sb-size-measure-prose);
+  margin: var(--sb-space-0);
+  padding: var(--sb-space-4);
+  color: var(--sb-color-text-muted);
+  pointer-events: none;
+}
+/* the keys of the surface, said once: its description for a screen reader, and for whoever presses „Tasten“ in the
+   tools a quiet line under the ground, in a row of its own. The key and the line are for a window of 1024 px and
+   more, where a keyboard is likely; a phone keeps the room. Closed, the line is clipped, not removed (no sebaro
+   token: the box of the copy's own sb-visually-hidden) */
+.app-surface__keys {
+  position: absolute;
+  inline-size: 1px;
+  block-size: 1px;
+  margin: var(--sb-space-0);
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+.app-surface__keys-key {
+  display: none;
+}
+@media (min-width: 64rem) {
+  .app-surface__keys-key {
+    display: inline-grid;
+  }
+  .app-surface__keys[data-shown] {
+    position: static;
+    flex: none;
+    inline-size: auto;
+    block-size: auto;
+    max-inline-size: none;
+    padding: var(--sb-space-2) var(--sb-space-4);
+    border-block-start: var(--sb-border-width-hairline) solid var(--sb-color-border);
+    overflow: visible;
+    clip-path: none;
+    white-space: normal;
+    font: var(--sb-type-caption);
+    letter-spacing: var(--sb-type-caption-tracking);
+    color: var(--sb-color-text-muted);
+  }
+}
+/* The wall as a list (WallList.tsx): the groups as headings, each with its menu at its end, and the notes as flat
+   rows under them. A note's text keeps the breaks its writer made; a word longer than a line breaks. The list
+   takes the focus itself when what had it is gone: its ring stands inside its edge */
+.app-list {
+  min-inline-size: 0;
+}
+.app-list:focus-visible {
+  outline-offset: calc(-1 * var(--sb-focus-width));
+}
+.app-list__head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--sb-space-2);
+  min-block-size: var(--sb-size-target-touch);
+  margin-block-start: var(--sb-space-2);
+}
+/* the heading stands level with its menu: the room above it is the head's */
+.app-list__head > .sb-list-header {
+  flex: 1 1 auto;
+  flex-wrap: wrap;
+  min-inline-size: 0;
+  padding-block: var(--sb-space-0);
+  overflow-wrap: anywhere;
+}
+.app-list__text {
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+/* an empty wall says how it fills, where the first row will stand */
+.app-list__none {
+  max-inline-size: var(--sb-size-measure-prose);
+}
+/* a note's text or a group's title as a field in the list: the field with its label, and under it its two actions
+   at the end. In a row it takes the row's whole width */
+.app-list__editor {
+  display: grid;
+  grid-column: 1 / -1;
+  gap: var(--sb-space-3);
+  min-inline-size: 0;
+  max-inline-size: var(--sb-size-measure-prose);
+  padding-block: var(--sb-space-2);
+}
+.app-list__actions {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: var(--sb-space-2);
+}
+/* the choice of a dialog („Verschieben nach …“): radio rows one under the other; a long title wraps */
+.app-choice {
+  display: grid;
+  min-inline-size: 0;
+  margin: var(--sb-space-0);
+  padding: var(--sb-space-0);
+  border: 0;
+}
+.app-choice > .sb-radio {
+  min-inline-size: 0;
+  overflow-wrap: anywhere;
+}
+/* a choice whose rows each say more than their name („Eigener KI-Schlüssel“): the question as a visible legend in
+   the label's type, and under the rows a quiet line about the chosen one */
+.app-choice__legend {
+  padding: var(--sb-space-0);
+  font: var(--sb-type-label);
+  letter-spacing: var(--sb-type-label-tracking);
+}
+.app-choice__note {
+  margin: var(--sb-space-0);
+  padding-block-start: var(--sb-space-1);
+  font: var(--sb-type-caption);
+  letter-spacing: var(--sb-type-caption-tracking);
+  color: var(--sb-color-text-muted);
+}
+/* the parts of the dialog „Eigener KI-Schlüssel“ one under the other: the key that is set with the action that
+   removes it, the choice of a provider, the field, the way to the provider's page */
+.app-key {
+  display: grid;
+  gap: var(--sb-space-4);
+  min-inline-size: 0;
+  margin-block-start: var(--sb-space-4);
+}
+/* the sentence, and under it the text action, its word in line with the sentence's start (as the copy sets a text
+   action under an intro) */
+.app-key__set {
+  display: grid;
+  justify-items: start;
+  margin: var(--sb-space-0);
+}
+.app-key__set > .sb-text-action {
+  margin-inline-start: calc(-1 * var(--sb-space-2));
+}
+.app-key__page {
+  margin: var(--sb-space-0);
+}
+/* the start: a sentence keeps the reading measure, a quiet line is grey */
+.app-measure {
+  max-inline-size: var(--sb-size-measure-prose);
+}
+.app-muted {
+  color: var(--sb-color-text-muted);
+}
+/* the start's pair of text and picture, and its rows of steps and reasons: one under the other on a phone, side by
+   side where there is room */
+.app-landing-pair,
+.app-landing-grid {
+  display: grid;
+  gap: var(--sb-space-8);
+  align-items: start;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.app-landing-grid {
+  margin-block-start: var(--sb-space-8);
+}
+@media (min-width: 40rem) {
+  .app-landing-grid--three {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+  .app-landing-grid--two {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+@media (min-width: 64rem) {
+  .app-landing-pair {
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  }
+}
+/* the picture of a wall on the start: a frame with the wall's parts in it, and its caption under it */
+.app-preview {
+  margin: 0;
+}
+.app-preview__frame {
+  border: var(--sb-border-width-control) solid var(--sb-color-border-strong);
+  border-radius: var(--sb-radius-container);
+  padding-block: var(--sb-space-4);
+  background: var(--sb-color-bg);
+}
+.app-preview__wall,
+.app-preview__state {
+  margin: 0;
+  padding-inline: var(--sb-spacing-gutter);
+}
+.app-preview__wall {
+  font: var(--sb-type-title);
+  letter-spacing: var(--sb-type-title-tracking);
+}
+.app-preview__state,
+.app-preview__caption {
+  color: var(--sb-color-text-muted);
+}
+.app-preview__caption {
+  margin-block-start: var(--sb-space-2);
+  font: var(--sb-type-caption);
+  letter-spacing: var(--sb-type-caption-tracking);
+}
+/* the tone's choice in the settings: two short words, no wider than they need (no sebaro token: the width of two
+   short words; a rem, so it grows with the text) */
+.app-tone {
+  max-inline-size: 16rem;
+}
+
+/* a tool at the end of a row whose whole face is a link (the row's menu): above the link, so a press reaches it */
+.app-row-tool {
+  position: relative;
+}
+
+/* the one place of the toast: sebaro draws the toast, the app places it; at the bottom of its pane, above the
+   action zone and the navigation, never covering them. The place takes no room: the toast stands over the content */
+.app-toast-place {
+  position: sticky;
+  inset-block-end: calc(var(--sb-bottom-block-size, var(--sb-space-0)) + var(--sb-space-4));
+  z-index: var(--sb-layer-toast);
+  display: flex;
+  flex: none;
+  align-items: flex-end;
+  justify-content: center;
+  block-size: 0;
+  padding-inline: var(--sb-spacing-gutter);
+  pointer-events: none;
+}
+.app-toast-place > .sb-toast {
+  pointer-events: auto;
+  inline-size: 100%;
+}
+
+/* the QR code of the wall's link in its dialog: as wide as the dialog lets it be, at most half the window's height,
+   so the link under it and the actions stay in view, and at most 28 rem (no sebaro token: the code's size follows
+   the dialog and the window, not the spacing scale; whether a camera reads it across a room is not tested). Its own
+   light ground in both modes (QrCode.tsx); while it is made, a still grey box of the same size */
+.app-qr {
+  display: block;
+  box-sizing: border-box;
+  inline-size: min(100%, 50vh, 28rem);
+  aspect-ratio: 1;
+  margin: var(--sb-space-0);
+}
+.app-qr__ground {
+  fill: var(--sb-color-surface-raised);
+}
+.app-qr__modules {
+  fill: var(--sb-color-text);
+}
+.app-qr--waiting {
+  background: var(--sb-color-surface-sunken);
+}
+.app-qr--failed {
+  display: flex;
+  align-items: center;
+  padding: var(--sb-space-4);
+  background: var(--sb-color-surface-sunken);
+  font: var(--sb-type-body);
+  letter-spacing: var(--sb-type-body-tracking);
+}
+/* the link under the code, as text: what a person types when no camera is at hand. It breaks anywhere */
+.app-qr-link {
+  margin: var(--sb-space-0);
+  margin-block-start: var(--sb-space-3);
+  overflow-wrap: anywhere;
+}
+.app-qr-body {
+  display: grid;
+  justify-items: start;
+  margin-block-start: var(--sb-space-4);
+}
+
+/* paper shows only the content: no head, no action zone (sebaro.css hides the zones and the footer's links,
+   tokens.css prints light) */
+@media print {
+  .app-page {
+    min-block-size: auto;
+  }
+  .app-page > :is(.sb-site-header, .app-wall-head),
+  .app-wall-bar,
+  .app-surface__tools {
+    display: none;
+  }
+}

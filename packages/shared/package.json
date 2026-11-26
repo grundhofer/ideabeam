@@ -1,0 +1,21 @@
+{
+  "name": "@ideabeam/shared",
+  "private": true,
+  "description": "IdeaBeam: the protocol and the rules that browser and worker share. Plain functions, no I/O.",
+  "license": "AGPL-3.0-or-later",
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "scripts": {
+    "check": "tsc --noEmit",
+    "test": "vitest run"
+  },
+  "dependencies": {
+    "zod": "4.6.7"
+  },
+  "devDependencies": {
+    "typescript": "6.0.3",
+    "vitest": "5.1.0"
+  }
+}

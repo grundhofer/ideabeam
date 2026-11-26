@@ -1,0 +1,556 @@
+// SPDX-FileCopyrightText: 2026 Sebastian Grundhöfer
+// SPDX-License-Identifier: AGPL-3.0-or-later
+
+// What a wall costs. The free plan's limit that binds is rows written a day, for the whole account (PLAN.md 3.6),
+// so a wall is played here against the real object in workerd and every row it writes is counted, by kind of
+// action. After RetroBeam's cost.test.ts and FokusBeam's.
+//
+// Two walls are played, both with 8 people and 60 notes, through the whole flow: the moderation sets a clock,
+// everybody writes hidden, the clock is paused, resumed and extended, the moderation reveals, groups are made by
+// hand, the AI arranges the wall twice (the first arrangement is applied and taken back, the second applied), and
+// notes are moved. The AI is the test's: what is counted is what the Worker's route and the wall write around it.
+// They differ in how much is moved:
+//
+//  - the typical wall: about 200 movements. It has to stay at or under the plan's 400 rows written.
+//  - the heavily dragged wall: 150 frames a person, the assumption of PLAN.md 3.6, which makes a good thousand
+//    movements. It is counted and printed; nothing bounds it but the wall's brake (the owner's decision 11,
+//    PLAN.md 7.2), under which it has to stay.
+//
+// The session's 45 minutes pass in seconds, so the test refills each socket's frame budget as the minutes would
+// have.
+
+import { env, runInDurableObject } from "cloudflare:test";
+import { describe, expect, it } from "vitest";
+import {
+  generateHexId,
+  generateSessionKey,
+  parseServerEvent,
+  WALL_DAILY_ROWS,
+  type ServerEvent,
+} from "@ideabeam/shared";
+import { dailyWalls, WALL_BUDGET_KEY } from "../src/rate-limiter.js";
+import { limiterStub, newWall } from "../src/wall-stub.js";
+import { applyOf, arrangeRoute, proposed, scriptedAi, wellBehaved } from "./arrange-helpers.js";
+import { connect, type Sync, type TestSocket } from "./helpers.js";
+
+const PEOPLE = ["Anna", "Ben", "Cem", "Dora", "Emil", "Finn", "Gül", "Hana"];
+/** Notes on the wall at the end. A few more are written and deleted again. */
+const NOTES = 60;
+/** Written while the notes are hidden, and written after they were revealed. */
+const NOTES_HIDDEN = 56;
+const NOTES_OPEN = 8;
+/** Deleted while hidden, and deleted after revealing. */
+const DELETED_HIDDEN = 2;
+const DELETED_OPEN = 2;
+/** Texts changed while hidden, and after revealing. */
+const TEXTS_HIDDEN = 32;
+const TEXTS_OPEN = 8;
+const GROUPS = 6;
+/** How often the AI arranges the wall, and how many groups each arrangement makes. The first arrangement is taken
+ *  back, the second stays. */
+const RUNS = 2;
+const ARRANGED = 4;
+/** People who lose the line once and come back as the same person. */
+const RECONNECTS = 4;
+/** Every so many movements, one carries a whole selection instead of one note. */
+const SELECTION_EVERY = 10;
+const SELECTION_SIZE = 6;
+
+/** The typical wall: how many movements it sees, hidden and revealed together. */
+const MOVEMENTS_TYPICAL = 200;
+/** The heavily dragged wall: frames a person, as PLAN.md 3.6 assumes. */
+const FRAMES_HEAVY = 150;
+
+/** The plan's target for a typical wall: rows written (PLAN.md 3.6). */
+const ROWS_TARGET = 400;
+
+type Kind =
+  | "wall made"
+  | "join"
+  | "join again"
+  | "admin.clock.start"
+  | "admin.clock.pause"
+  | "admin.clock.resume"
+  | "admin.clock.extend"
+  | "note.create, hidden"
+  | "note.update, hidden"
+  | "notes.move, hidden"
+  | "note.delete, hidden"
+  | "admin.phase.set (reveal)"
+  | "note.create"
+  | "note.update"
+  | "note.delete"
+  | "group.create"
+  | "group.update"
+  | "group.delete"
+  | "arrange (the route)"
+  | "admin.arrange.apply"
+  | "admin.arrange.undo"
+  | "notes.move, one note"
+  | "notes.move, a selection";
+
+const MOVES: Kind[] = ["notes.move, hidden", "notes.move, one note", "notes.move, a selection"];
+
+interface Count {
+  frames: number;
+  written: number;
+  read: number;
+}
+
+interface Cost {
+  kinds: Map<Kind, Count>;
+  total: Count;
+  /** Frames that moved notes, and the rows they wrote. */
+  movements: number;
+  moves: number;
+  /** Notes and groups on the wall at the end. */
+  notes: number;
+  groups: number;
+  /** The most frames one person sent, and the fewest. */
+  framesPerPerson: [most: number, fewest: number];
+  /** The number of the wall's last stored change at the end: what the wall's brake counts. */
+  seq: number;
+}
+
+type Sink = (read: number, written: number) => void;
+
+/** Wraps an object's SqlStorage so that every row it reads or writes is counted (the way RetroBeam's cost test does
+ *  it: `readonly` is a compile-time notion). An object that is counted already, the limiter of the wall played
+ *  before, counts for the new wall from now on. */
+function counted(instance: unknown, onRows: Sink): void {
+  const holder = instance as { sql: SqlStorage; sink?: Sink };
+  const wrapped = holder.sink !== undefined;
+  holder.sink = onRows;
+  if (wrapped) return;
+  const target = holder.sql;
+  holder.sql = {
+    exec: (query: string, ...bindings: unknown[]) => {
+      const cursor = target.exec(query, ...bindings);
+      const rows = cursor.toArray();
+      holder.sink?.(cursor.rowsRead, cursor.rowsWritten);
+      return {
+        toArray: () => rows,
+        one: () => {
+          if (rows.length !== 1) throw new Error(`one() of ${rows.length} rows`);
+          return rows[0];
+        },
+        [Symbol.iterator]: () => rows[Symbol.iterator](),
+      } as unknown as ReturnType<SqlStorage["exec"]>;
+    },
+  } as unknown as SqlStorage;
+}
+
+const isCounted = (instance: unknown) => (instance as { sink?: Sink }).sink !== undefined;
+
+/** How much a wall is moved: a number of movements, or as many as fill everybody's frames. */
+type Moved = { movements: number } | { framesPerPerson: number };
+
+async function playTheWall(moved: Moved): Promise<Cost> {
+  const kinds = new Map<Kind, Count>();
+  let current: Count = { frames: 0, written: 0, read: 0 };
+  const during = (kind: Kind): Count => {
+    current = kinds.get(kind) ?? { frames: 0, written: 0, read: 0 };
+    kinds.set(kind, current);
+    return current;
+  };
+  const onRows = (read: number, written: number) => {
+    current.read += read;
+    current.written += written;
+  };
+
+  // The wall is made the way the route makes it: one of the day's walls is taken (a row in the limiter), then the
+  // object writes its tables, what it knows about itself, and its alarm. Both objects are counted from before. The
+  // wall starts with hidden writing, as the route makes it when nothing else is asked.
+  during("wall made").frames += 1;
+  await runInDurableObject(limiterStub(env), (instance) => counted(instance, onRows));
+  expect((await limiterStub(env).spendDaily(WALL_BUDGET_KEY, dailyWalls(env))).granted).toBe(true);
+  expect(await runInDurableObject(limiterStub(env), isCounted), "the limiter was replaced on the way").toBe(true);
+  const { wallId, stub } = newWall(env);
+  const adminToken = "c".repeat(32);
+  await runInDurableObject(stub, async (instance, state) => {
+    counted(instance, onRows);
+    const setAlarm = state.storage.setAlarm.bind(state.storage);
+    state.storage.setAlarm = (...args: Parameters<typeof setAlarm>) => {
+      current.written += 1; // an alarm that is set is a row written
+      return setAlarm(...args);
+    };
+    await instance.initialize({ wallId, question: "What slows us down?", adminToken, hidden: true });
+  });
+
+  /** The session's minutes pass: every socket may send again as if it had waited. */
+  const minutesPass = () =>
+    runInDurableObject(stub, (_instance, state) => {
+      for (const ws of state.getWebSockets()) {
+        const attachment = { ...(ws.deserializeAttachment() as { budget?: unknown }) };
+        delete attachment.budget;
+        ws.serializeAttachment(attachment);
+      }
+    });
+
+  interface Person {
+    name: string;
+    sessionKey: string;
+    socket: TestSocket;
+    you: string;
+    frames: number;
+    notes: string[];
+  }
+
+  /** A person's socket, joined. Every frame it sends is counted for the kind of action that is going on. */
+  async function enter(kind: Kind, person: Pick<Person, "name" | "sessionKey">, token?: string) {
+    during(kind);
+    const socket = await connect(wallId);
+    socket.send({
+      type: "join",
+      name: person.name,
+      sessionKey: person.sessionKey,
+      ...(token === undefined ? {} : { adminToken: token }),
+    });
+    current.frames += 1;
+    const sync = (await socket.waitFor((event) => event.type === "sync")) as Sync;
+    return { socket, you: sync.you.participantId };
+  }
+
+  /** One command, sent and answered before the next: so its rows are counted for its kind, and for nothing else.
+   *  The answer is taken off the socket the moment it arrives: a thousand commands have no time to wait for a poll.
+   *  `opId` is the operation's id where the script needs to know it: an arrangement is taken back under it. */
+  async function does(
+    person: Person,
+    kind: Kind,
+    command: Record<string, unknown>,
+    opId = generateHexId(),
+  ): Promise<void> {
+    during(kind);
+    const answered = new Promise<ServerEvent>((resolve, reject) => {
+      const { ws } = person.socket;
+      const onMessage = (message: MessageEvent) => {
+        const event = parseServerEvent(message.data);
+        if (event === null || (event.type !== "ack" && event.type !== "reject") || event.opId !== opId) return;
+        ws.removeEventListener("message", onMessage);
+        resolve(event);
+      };
+      ws.addEventListener("message", onMessage);
+      ws.addEventListener("close", () => reject(new Error(`${kind}: the socket closed before the answer came`)));
+    });
+    person.socket.send({ ...command, opId });
+    person.frames += 1;
+    current.frames += 1;
+    const said = await answered;
+    // every command of the script is taken: none is refused, by the rules or by the wall's brake
+    expect(said.type, `${kind}: ${JSON.stringify(said)}`).toBe("ack");
+  }
+
+  // Everybody comes in.
+  const people: Person[] = [];
+  for (const name of PEOPLE) {
+    const sessionKey = generateSessionKey();
+    const joined = await enter("join", { name, sessionKey }, name === "Anna" ? adminToken : undefined);
+    people.push({ name, sessionKey, ...joined, frames: 1, notes: [] });
+  }
+  const moderation = people[0] as Person;
+  const each = async (turn: (person: Person, index: number) => Promise<void>) => {
+    for (const [index, person] of people.entries()) await turn(person, index);
+    await minutesPass();
+  };
+
+  // A place for the next thing, a new one every time: no movement goes to where its note already lies.
+  let step = 0;
+  const place = () => {
+    step += 1;
+    return { x: (step * 37) % 4000, y: (step * 91) % 3000 };
+  };
+  const write = (person: Person, kind: Kind, n: number) => {
+    const noteId = generateHexId();
+    person.notes.push(noteId);
+    return does(person, kind, {
+      type: "note.create",
+      noteId,
+      text: `${person.name} thinks that point ${n + 1} is what slows the team down most.`,
+      ...place(),
+    });
+  };
+  const reword = (person: Person, kind: Kind, n: number) =>
+    does(person, kind, {
+      type: "note.update",
+      noteId: person.notes[n],
+      text: `${person.name} thinks that point ${n + 1} slows the team down, on second thought.`,
+    });
+
+  // The writing, hidden: the moderation sets ten minutes, everybody writes their notes, corrects some of them and
+  // puts one of their own somewhere else. The clock is paused for a question, goes on, and gets five minutes more.
+  let clock = 0;
+  const control = (type: string, more: object = {}) => {
+    const command = { type, rev: clock, ...more };
+    clock += 1;
+    return does(moderation, type as Kind, command);
+  };
+  await control("admin.clock.start", { minutes: 10 });
+  let movements = 0;
+  for (let n = 0; n < NOTES_HIDDEN / PEOPLE.length; n++) {
+    await each((person) => write(person, "note.create, hidden", n));
+    if (n === 3) await control("admin.clock.pause");
+  }
+  await control("admin.clock.resume");
+  for (let n = 0; n < TEXTS_HIDDEN / PEOPLE.length; n++) {
+    await each((person) => reword(person, "note.update, hidden", n));
+  }
+  await each((person) => {
+    movements += 1;
+    return does(person, "notes.move, hidden", {
+      type: "notes.move",
+      moves: [{ noteId: person.notes[0], ...place(), groupId: null }],
+    });
+  });
+  await control("admin.clock.extend");
+  // A few notes turn out to be doubles of one's own and go.
+  for (const person of people.slice(0, DELETED_HIDDEN)) {
+    await does(person, "note.delete, hidden", { type: "note.delete", noteId: person.notes.pop() });
+  }
+
+  // Revealing: everybody gets the notes of everybody else.
+  await does(moderation, "admin.phase.set (reveal)", { type: "admin.phase.set", phase: "open" });
+  await minutesPass();
+
+  // Half of the people lose the line once and come back.
+  for (const person of people.slice(0, RECONNECTS)) {
+    person.socket.ws.close(1000, "line lost");
+    Object.assign(person, await enter("join again", person));
+    person.frames += 1;
+  }
+  await minutesPass();
+
+  // Reading brings a few late notes and corrections, and doubles of somebody else's go.
+  for (const person of people.slice(0, NOTES_OPEN)) await write(person, "note.create", NOTES_HIDDEN / PEOPLE.length);
+  for (const person of people.slice(0, TEXTS_OPEN)) await reword(person, "note.update", 5);
+  for (const person of people.slice(-DELETED_OPEN)) {
+    await does(person, "note.delete", { type: "note.delete", noteId: person.notes.pop() });
+  }
+  await minutesPass();
+
+  // A few groups: made, named, put where they belong; one is given up again.
+  const groups: string[] = [];
+  for (const person of people.slice(0, GROUPS)) {
+    const groupId = generateHexId();
+    groups.push(groupId);
+    await does(person, "group.create", { type: "group.create", groupId, title: "", ...place(), w: 900, h: 700 });
+    await does(person, "group.update", { type: "group.update", groupId, title: `Theme of ${person.name}` });
+    await does(person, "group.update", { type: "group.update", groupId, ...place(), w: 1200 });
+  }
+  await does(people[GROUPS] as Person, "group.delete", { type: "group.delete", groupId: groups.pop() });
+  await minutesPass();
+
+  // „Ordnen“, twice: the moderation asks the Worker for a proposal and applies it with the product's layout; the
+  // first arrangement does not convince and is taken back, the second stays. A run is a request to the Worker's
+  // route, which reads the wall once and writes the counter of the AI's budget twice; applying and taking back are
+  // frames of the moderation. To lay a proposal out, a browser has the wall in hand: the test asks for a snapshot,
+  // and what that reads is counted for nothing.
+  const snapshot = async () => {
+    const counting = current;
+    current = { frames: 0, written: 0, read: 0 };
+    moderation.socket.send({ type: "resync" });
+    const sync = (await moderation.socket.waitForNext((event) => event.type === "sync")) as Sync;
+    current = counting;
+    return sync;
+  };
+  const ai = scriptedAi(wellBehaved(["Meetings", "Tools", "People", "Planning"].slice(0, ARRANGED)));
+  for (let run = 1; run <= RUNS; run++) {
+    during("arrange (the route)").frames += 1;
+    const { proposal } = await proposed(await arrangeRoute(wallId, adminToken, { ai }));
+    expect(proposal.groups).toHaveLength(ARRANGED);
+    const command = applyOf(proposal, await snapshot());
+    await does(moderation, "admin.arrange.apply", command, command.opId);
+    if (run < RUNS) {
+      await does(moderation, "admin.arrange.undo", { type: "admin.arrange.undo", runId: command.opId });
+    }
+    await minutesPass();
+  }
+
+  // Moving, for the rest of the session: one note at a time, into a group, out of it, somewhere else; and now and
+  // then a whole selection at once. Everybody moves anybody's notes.
+  const allNotes = people.flatMap((person) => person.notes);
+  const target = (n: number) => groups[n % (groups.length + 2)] ?? null; // some movements lead out of every group
+  const goesOn = (person: Person) =>
+    "movements" in moved ? movements < moved.movements : person.frames < moved.framesPerPerson;
+  while (people.some(goesOn)) {
+    for (let burst = 0; burst < 15; burst++) {
+      for (const person of people) {
+        if (!goesOn(person)) continue;
+        movements += 1;
+        const selection = movements % SELECTION_EVERY === 0;
+        const moves = Array.from({ length: selection ? SELECTION_SIZE : 1 }, (_, i) => ({
+          noteId: allNotes[(movements * 7 + i) % allNotes.length],
+          ...place(),
+          groupId: target(movements + i),
+        }));
+        await does(person, selection ? "notes.move, a selection" : "notes.move, one note", {
+          type: "notes.move",
+          moves,
+        });
+      }
+    }
+    await minutesPass();
+  }
+
+  // What the wall holds at the end, asked through a socket like any browser asks. The question is the test's, not
+  // the wall's: what it reads is counted for nothing.
+  current = { frames: 0, written: 0, read: 0 };
+  moderation.socket.send({ type: "resync" });
+  const end = (await moderation.socket.waitForNext((event) => event.type === "sync")) as Sync;
+  expect(end).toMatchObject({ phase: "open", hidden: 0 });
+
+  // the counters are worth nothing if the object was replaced on the way
+  expect(await runInDurableObject(stub, isCounted), "the wall's object was replaced on the way").toBe(true);
+
+  const total: Count = { frames: 0, written: 0, read: 0 };
+  for (const count of kinds.values()) {
+    total.frames += count.frames;
+    total.written += count.written;
+    total.read += count.read;
+  }
+  const frames = people.map((person) => person.frames);
+  return {
+    kinds,
+    total,
+    movements,
+    moves: MOVES.reduce((rows, kind) => rows + (kinds.get(kind)?.written ?? 0), 0),
+    notes: end.notes.length,
+    groups: end.groups.length,
+    framesPerPerson: [Math.max(...frames), Math.min(...frames)],
+    seq: end.seq,
+  };
+}
+
+function table(title: string, cost: Cost): string {
+  const row = (kind: string, count: Count) =>
+    `${kind.padEnd(26)}${String(count.frames).padStart(7)}${String(count.written).padStart(9)}${String(count.read).padStart(9)}`;
+  const withoutMoves = cost.total.written - cost.moves;
+  return [
+    `${title}: ${PEOPLE.length} people, ${cost.notes} notes, ${cost.movements} movements`,
+    `${"".padEnd(26)}${"frames".padStart(7)}${"written".padStart(9)}${"read".padStart(9)}`,
+    ...[...cost.kinds].map(([kind, count]) => row(kind, count)),
+    row("all of it", cost.total),
+    `rows written: ${cost.total.written}, of them ${cost.moves} for its movements and ${withoutMoves} for everything else`,
+    `the plan's target for a typical wall is ${ROWS_TARGET} rows: beside everything else that is room for ${ROWS_TARGET - withoutMoves} movements`,
+    `the wall's brake is ${WALL_DAILY_ROWS} rows a day, counted as stored changes: this wall stored ${cost.seq}`,
+  ].join("\n");
+}
+
+describe("what a wall costs", { timeout: 120_000 }, () => {
+  // each played once, looked at by the tests below
+  let playedTypical: Promise<Cost> | undefined;
+  let playedHeavy: Promise<Cost> | undefined;
+  const typical = () => (playedTypical ??= playTheWall({ movements: MOVEMENTS_TYPICAL }));
+  const heavy = () => (playedHeavy ??= playTheWall({ framesPerPerson: FRAMES_HEAVY }));
+
+  const of = (cost: Cost, kind: Kind) => cost.kinds.get(kind) ?? { frames: 0, written: 0, read: 0 };
+  /** The frames that were commands: everything but making the wall, coming in, and asking the Worker for a
+   *  proposal. */
+  const commands = (cost: Cost) =>
+    cost.total.frames -
+    of(cost, "wall made").frames -
+    of(cost, "join").frames -
+    of(cost, "join again").frames -
+    of(cost, "arrange (the route)").frames;
+
+  it(`the typical wall, with about ${MOVEMENTS_TYPICAL} movements, stays at or under ${ROWS_TARGET} rows written`, async () => {
+    const cost = await typical();
+    // eslint-disable-next-line no-console -- the one test whose job is to say what it measured
+    console.log(table("the typical wall", cost));
+    expect(cost.notes).toBe(NOTES);
+    // the groups made by hand, and the ones the arrangement that stayed made
+    expect(cost.groups).toBe(GROUPS - 1 + ARRANGED);
+    expect(cost.movements).toBe(MOVEMENTS_TYPICAL);
+    expect(cost.total.written).toBeLessThanOrEqual(ROWS_TARGET);
+  });
+
+  it(`the heavily dragged wall, with ${FRAMES_HEAVY} frames a person, is counted and stays under the wall's brake`, async () => {
+    const cost = await heavy();
+    // eslint-disable-next-line no-console -- the one test whose job is to say what it measured
+    console.log(table("the heavily dragged wall", cost));
+    expect(cost.notes).toBe(NOTES);
+    expect(cost.groups).toBe(GROUPS - 1 + ARRANGED);
+    expect(cost.framesPerPerson).toEqual([FRAMES_HEAVY, FRAMES_HEAVY]);
+    // all frames, the request that made the wall, and the requests that asked for a proposal
+    expect(cost.total.frames - 1 - RUNS).toBe(PEOPLE.length * FRAMES_HEAVY);
+    // PLAN.md 3.6 measured 1,061 movements for this wall in stage 2; the flow of stage 3 takes a few of its frames
+    expect(cost.movements).toBeGreaterThan(1000);
+    // No command of it was refused (does() holds that), and the brake is not near: what it counts is the number of
+    // the wall's last stored change.
+    expect(cost.seq).toBeLessThan(WALL_DAILY_ROWS);
+    // every command a number, revealing two, and each of the three arrangements as many as the rows it wrote
+    expect(cost.seq).toBe(commands(cost) + 1 + (2 * RUNS - 1) * (ARRANGED + 1));
+  });
+
+  it("every command writes the rows the model says, and none of them pays for a counter", async () => {
+    for (const cost of [await typical(), await heavy()]) {
+      const perFrame = (kind: Kind) => of(cost, kind).written / of(cost, kind).frames;
+
+      // One row for a note written, for a text changed, for a group made or changed; one row for a movement, whether
+      // it moves one note or a selection; two for a delete (the row that goes, and the layout row). Hidden or
+      // revealed, a command writes the same: hiding is decided where the frames are built, and costs no row.
+      for (const kind of ["note.update, hidden", "notes.move, hidden", "note.create", "note.update"] as const) {
+        expect(perFrame(kind), kind).toBe(1);
+      }
+      for (const kind of ["notes.move, one note", "notes.move, a selection", "group.create", "group.update"] as const) {
+        expect(perFrame(kind), kind).toBe(1);
+      }
+      for (const kind of ["note.delete, hidden", "note.delete", "group.delete"] as const) {
+        expect(perFrame(kind), kind).toBe(2);
+      }
+      // The first change of the wall's day writes the day's mark for the brake, once: one row beside its own.
+      expect(of(cost, "note.create, hidden").written).toBe(of(cost, "note.create, hidden").frames + 1);
+      // Every control of the clock is one row, and so is revealing: the phase and the clock stand in one row.
+      for (const kind of [
+        "admin.clock.start",
+        "admin.clock.pause",
+        "admin.clock.resume",
+        "admin.clock.extend",
+        "admin.phase.set (reveal)",
+      ] as const) {
+        expect(of(cost, kind), kind).toMatchObject({ frames: 1, written: 1 });
+      }
+      // Somebody new is a row and its key's index; somebody who comes back is nothing.
+      expect(perFrame("join")).toBe(2);
+      expect(of(cost, "join again").written).toBe(0);
+      // Making the wall: the day's budget (1), five tables (11), what the wall knows about itself (7), the alarm (1).
+      expect(of(cost, "wall made").written).toBe(20);
+
+      // „Ordnen“. A run writes two rows, both the counter's: the estimate that is reserved, and what the run cost
+      // in its place. The wall is read for it and writes nothing.
+      expect(of(cost, "arrange (the route)")).toMatchObject({ frames: RUNS, written: 2 * RUNS });
+      // Applying writes a row for each group it makes and two more however many notes it moves: the layout row,
+      // and what the wall remembers of the run. Taking it back writes a row for each group that goes, the layout
+      // row, and the row of what was remembered, which goes too.
+      expect(of(cost, "admin.arrange.apply")).toMatchObject({ frames: RUNS, written: RUNS * (ARRANGED + 2) });
+      expect(of(cost, "admin.arrange.undo")).toMatchObject({ frames: RUNS - 1, written: (RUNS - 1) * (ARRANGED + 2) });
+
+      // Every command of this wall changed something and took one number; revealing took two, for its two frames;
+      // an arrangement, applied or taken back, took as many as the rows it wrote, so that the wall's brake counts
+      // it by what it costs. Nothing on top: the number of a change travels in the row the change writes
+      // (wall-room.ts, currentSeq()).
+      const arrangements = 2 * RUNS - 1;
+      expect(cost.seq).toBe(commands(cost) + 1 + arrangements * (ARRANGED + 1));
+      const deletes = DELETED_HIDDEN + DELETED_OPEN + 1;
+      // what arranging writes beyond one row a command: the counter's rows, and the groups and the second layout row
+      const arranging = 2 * RUNS + arrangements * (ARRANGED + 1);
+      expect(cost.total.written).toBe(20 + 2 * PEOPLE.length + 1 + commands(cost) + deletes + arranging);
+    }
+  });
+
+  it("everything but the movements is the same for both walls, and leaves the typical wall room for 200 of them", async () => {
+    const [light, dragged] = [await typical(), await heavy()];
+    const withoutMoves = light.total.written - light.moves;
+    expect(dragged.total.written - dragged.moves).toBe(withoutMoves);
+    expect(withoutMoves + 200, `without its movements a wall writes ${withoutMoves} rows`).toBeLessThanOrEqual(
+      ROWS_TARGET,
+    );
+  });
+
+  it("reads no more than a join's snapshot and a look per command explain", async () => {
+    // Measured 2026-11-22: see the tables this file prints. The bounds are loose: a canary for a change that makes
+    // a command read the whole wall, not a benchmark. While the notes are hidden a change is told to the others as
+    // a count, and that count is carried on their sockets: telling it reads no row.
+    expect((await heavy()).total.read).toBeLessThanOrEqual(25_000);
+    expect((await typical()).total.read).toBeLessThanOrEqual(10_000);
+  });
+});

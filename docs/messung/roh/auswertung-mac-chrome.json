@@ -1,0 +1,1985 @@
+{
+ "mac-chrome-e5-q8-wasm-4t": {
+  "dim": 384,
+  "sets": {
+   "alle500": {
+    "n": 500,
+    "trueK": 10,
+    "silhouette": {
+     "k": 2,
+     "groups": 2,
+     "singles": 0,
+     "h": 0.25,
+     "sil": 0.157,
+     "ari": 0,
+     "langAri": 0.001,
+     "cross": 0.972,
+     "mono": 0.973,
+     "pairs": 1
+    },
+    "orakel": {
+     "k": 104,
+     "groups": 69,
+     "singles": 35,
+     "h": 0.181,
+     "sil": 0.031,
+     "ari": 0.036,
+     "langAri": 0.117,
+     "cross": 0.005,
+     "mono": 0.173,
+     "pairs": 0.2
+    },
+    "beiWahremK": {
+     "k": 10,
+     "groups": 9,
+     "singles": 1,
+     "h": 0.229,
+     "sil": 0.109,
+     "ari": -0.002,
+     "langAri": 0.837,
+     "cross": 0.039,
+     "mono": 0.879,
+     "pairs": 0.2
+    }
+   },
+   "erste200": {
+    "n": 200,
+    "trueK": 10,
+    "silhouette": {
+     "k": 2,
+     "groups": 2,
+     "singles": 0,
+     "h": 0.237,
+     "sil": 0.173,
+     "ari": 0,
+     "langAri": 0,
+     "cross": 0.98,
+     "mono": 0.98,
+     "pairs": 1
+    },
+    "orakel": {
+     "k": 43,
+     "groups": 29,
+     "singles": 14,
+     "h": 0.183,
+     "sil": 0.044,
+     "ari": 0.057,
+     "langAri": 0.176,
+     "cross": 0.004,
+     "mono": 0.287,
+     "pairs": 0.6
+    },
+    "beiWahremK": {
+     "k": 10,
+     "groups": 8,
+     "singles": 2,
+     "h": 0.211,
+     "sil": 0.08,
+     "ari": 0.008,
+     "langAri": 0.751,
+     "cross": 0.028,
+     "mono": 0.843,
+     "pairs": 0.6
+    }
+   },
+   "erste50": {
+    "n": 50,
+    "trueK": 10,
+    "silhouette": {
+     "k": 2,
+     "groups": 2,
+     "singles": 0,
+     "h": 0.223,
+     "sil": 0.158,
+     "ari": -0.035,
+     "langAri": 1,
+     "cross": 0,
+     "mono": 1,
+     "pairs": null
+    },
+    "orakel": {
+     "k": 34,
+     "groups": 9,
+     "singles": 25,
+     "h": 0.159,
+     "sil": 0.061,
+     "ari": 0.067,
+     "langAri": 0.052,
+     "cross": 0,
+     "mono": 0.175,
+     "pairs": null
+    },
+    "beiWahremK": {
+     "k": 10,
+     "groups": 4,
+     "singles": 6,
+     "h": 0.198,
+     "sil": 0.033,
+     "ari": -0.005,
+     "langAri": 0.483,
+     "cross": 0,
+     "mono": 0.6,
+     "pairs": null
+    }
+   },
+   "wand:onboarding": {
+    "n": 250,
+    "trueK": 5,
+    "silhouette": {
+     "k": 5,
+     "groups": 2,
+     "singles": 3,
+     "h": 0.218,
+     "sil": 0.132,
+     "ari": -0.006,
+     "langAri": 0.929,
+     "cross": 0.023,
+     "mono": 0.953,
+     "pairs": 0.12
+    },
+    "orakel": {
+     "k": 44,
+     "groups": 28,
+     "singles": 16,
+     "h": 0.176,
+     "sil": 0.044,
+     "ari": 0.038,
+     "langAri": 0.151,
+     "cross": 0.002,
+     "mono": 0.2,
+     "pairs": 0.12
+    },
+    "beiWahremK": {
+     "k": 5,
+     "groups": 2,
+     "singles": 3,
+     "h": 0.218,
+     "sil": 0.132,
+     "ari": -0.006,
+     "langAri": 0.929,
+     "cross": 0.023,
+     "mono": 0.953,
+     "pairs": 0.12
+    }
+   },
+   "wand:stadtteil": {
+    "n": 250,
+    "trueK": 5,
+    "silhouette": {
+     "k": 2,
+     "groups": 2,
+     "singles": 0,
+     "h": 0.249,
+     "sil": 0.145,
+     "ari": 0,
+     "langAri": 0.001,
+     "cross": 0.96,
+     "mono": 0.962,
+     "pairs": 1
+    },
+    "orakel": {
+     "k": 40,
+     "groups": 29,
+     "singles": 11,
+     "h": 0.194,
+     "sil": 0.039,
+     "ari": 0.061,
+     "langAri": 0.212,
+     "cross": 0.018,
+     "mono": 0.302,
+     "pairs": 0.36
+    },
+    "beiWahremK": {
+     "k": 5,
+     "groups": 4,
+     "singles": 1,
+     "h": 0.24,
+     "sil": 0.059,
+     "ari": 0,
+     "langAri": 0.001,
+     "cross": 0.945,
+     "mono": 0.946,
+     "pairs": 1
+    }
+   }
+  },
+  "festerAbstand": {
+   "h aus onboarding": 0.23,
+   "ARI auf stadtteil": -0.005,
+   "h aus stadtteil": 0.21,
+   "ARI auf onboarding": -0.006,
+   "ARI alle500 bei mittlerem h": -0.002,
+   "k alle500 bei mittlerem h": 15
+  },
+  "dubletten": {
+   "dup": {
+    "de-de": {
+     "min": 0.84,
+     "med": 0.933,
+     "max": 0.99
+    },
+    "en-en": {
+     "min": 0.883,
+     "med": 0.952,
+     "max": 0.978
+    },
+    "de-en": {
+     "min": 0.795,
+     "med": 0.871,
+     "max": 0.918
+    }
+   },
+   "miss": {
+    "de-de": {
+     "min": 0.911,
+     "med": 0.956,
+     "max": 0.992
+    },
+    "en-en": {
+     "min": 0.904,
+     "med": 0.949,
+     "max": 0.971
+    },
+    "de-en": {
+     "min": 0.79,
+     "med": 0.885,
+     "max": 0.924
+    }
+   },
+   "best": {
+    "t": 0.5,
+    "acc": 0.5
+   },
+   "at": [
+    {
+     "t": 0.8,
+     "dupFound": 29,
+     "of": 30,
+     "falseMerges": 29
+    },
+    {
+     "t": 0.85,
+     "dupFound": 25,
+     "of": 30,
+     "falseMerges": 28
+    },
+    {
+     "t": 0.9,
+     "dupFound": 21,
+     "of": 30,
+     "falseMerges": 23
+    },
+    {
+     "t": 0.95,
+     "dupFound": 7,
+     "of": 30,
+     "falseMerges": 11
+    }
+   ]
+  },
+  "schmutzigTreffer": 0.7
+ },
+ "mac-chrome-gemma2-q4-wasm-4t": {
+  "dim": 768,
+  "sets": {
+   "alle500": {
+    "n": 500,
+    "trueK": 10,
+    "silhouette": {
+     "k": 3,
+     "groups": 2,
+     "singles": 1,
+     "h": 0.215,
+     "sil": 0.189,
+     "ari": 0,
+     "langAri": 0,
+     "cross": 0.984,
+     "mono": 0.984,
+     "pairs": 1
+    },
+    "orakel": {
+     "k": 135,
+     "groups": 72,
+     "singles": 63,
+     "h": 0.124,
+     "sil": 0.068,
+     "ari": 0.079,
+     "langAri": 0.133,
+     "cross": 0.004,
+     "mono": 0.258,
+     "pairs": 0.2
+    },
+    "beiWahremK": {
+     "k": 10,
+     "groups": 8,
+     "singles": 2,
+     "h": 0.189,
+     "sil": 0.093,
+     "ari": 0.002,
+     "langAri": 0.011,
+     "cross": 0.832,
+     "mono": 0.852,
+     "pairs": 0.84
+    }
+   },
+   "erste200": {
+    "n": 200,
+    "trueK": 10,
+    "silhouette": {
+     "k": 5,
+     "groups": 3,
+     "singles": 2,
+     "h": 0.19,
+     "sil": 0.196,
+     "ari": -0.008,
+     "langAri": 0.904,
+     "cross": 0.01,
+     "mono": 0.916,
+     "pairs": 0.4
+    },
+    "orakel": {
+     "k": 66,
+     "groups": 27,
+     "singles": 39,
+     "h": 0.126,
+     "sil": 0.077,
+     "ari": 0.093,
+     "langAri": 0.176,
+     "cross": 0.002,
+     "mono": 0.353,
+     "pairs": 0.4
+    },
+    "beiWahremK": {
+     "k": 10,
+     "groups": 6,
+     "singles": 4,
+     "h": 0.177,
+     "sil": 0.168,
+     "ari": -0.005,
+     "langAri": 0.758,
+     "cross": 0.008,
+     "mono": 0.779,
+     "pairs": 0.4
+    }
+   },
+   "erste50": {
+    "n": 50,
+    "trueK": 10,
+    "silhouette": {
+     "k": 3,
+     "groups": 2,
+     "singles": 1,
+     "h": 0.19,
+     "sil": 0.233,
+     "ari": -0.034,
+     "langAri": 0.969,
+     "cross": 0,
+     "mono": 0.975,
+     "pairs": null
+    },
+    "orakel": {
+     "k": 31,
+     "groups": 10,
+     "singles": 21,
+     "h": 0.112,
+     "sil": 0.093,
+     "ari": 0.193,
+     "langAri": 0.061,
+     "cross": 0,
+     "mono": 0.4,
+     "pairs": null
+    },
+    "beiWahremK": {
+     "k": 10,
+     "groups": 6,
+     "singles": 4,
+     "h": 0.152,
+     "sil": 0.19,
+     "ari": -0.017,
+     "langAri": 0.658,
+     "cross": 0,
+     "mono": 0.75,
+     "pairs": null
+    }
+   },
+   "wand:onboarding": {
+    "n": 250,
+    "trueK": 5,
+    "silhouette": {
+     "k": 3,
+     "groups": 2,
+     "singles": 1,
+     "h": 0.2,
+     "sil": 0.201,
+     "ari": 0,
+     "langAri": 0,
+     "cross": 0.969,
+     "mono": 0.968,
+     "pairs": 1
+    },
+    "orakel": {
+     "k": 100,
+     "groups": 41,
+     "singles": 59,
+     "h": 0.11,
+     "sil": 0.069,
+     "ari": 0.052,
+     "langAri": 0.146,
+     "cross": 0.004,
+     "mono": 0.211,
+     "pairs": 0.24
+    },
+    "beiWahremK": {
+     "k": 5,
+     "groups": 4,
+     "singles": 1,
+     "h": 0.196,
+     "sil": 0.157,
+     "ari": 0,
+     "langAri": 0.001,
+     "cross": 0.93,
+     "mono": 0.931,
+     "pairs": 0.92
+    }
+   },
+   "wand:stadtteil": {
+    "n": 250,
+    "trueK": 5,
+    "silhouette": {
+     "k": 2,
+     "groups": 2,
+     "singles": 0,
+     "h": 0.21,
+     "sil": 0.202,
+     "ari": 0.002,
+     "langAri": 0.004,
+     "cross": 0.936,
+     "mono": 0.946,
+     "pairs": 0.92
+    },
+    "orakel": {
+     "k": 127,
+     "groups": 43,
+     "singles": 84,
+     "h": 0.106,
+     "sil": 0.072,
+     "ari": 0.063,
+     "langAri": 0.036,
+     "cross": 0.001,
+     "mono": 0.104,
+     "pairs": 0.12
+    },
+    "beiWahremK": {
+     "k": 5,
+     "groups": 3,
+     "singles": 2,
+     "h": 0.201,
+     "sil": 0.136,
+     "ari": 0.002,
+     "langAri": 0.005,
+     "cross": 0.912,
+     "mono": 0.924,
+     "pairs": 0.92
+    }
+   }
+  },
+  "festerAbstand": {
+   "h aus onboarding": 0.2,
+   "ARI auf stadtteil": 0.002,
+   "h aus stadtteil": 0.2,
+   "ARI auf onboarding": 0,
+   "ARI alle500 bei mittlerem h": 0,
+   "k alle500 bei mittlerem h": 7
+  },
+  "dubletten": {
+   "dup": {
+    "de-de": {
+     "min": 0.949,
+     "med": 0.971,
+     "max": 0.992
+    },
+    "en-en": {
+     "min": 0.914,
+     "med": 0.979,
+     "max": 0.994
+    },
+    "de-en": {
+     "min": 0.899,
+     "med": 0.915,
+     "max": 0.928
+    }
+   },
+   "miss": {
+    "de-de": {
+     "min": 0.939,
+     "med": 0.987,
+     "max": 0.996
+    },
+    "en-en": {
+     "min": 0.914,
+     "med": 0.971,
+     "max": 0.991
+    },
+    "de-en": {
+     "min": 0.897,
+     "med": 0.93,
+     "max": 0.948
+    }
+   },
+   "best": {
+    "t": 0.905,
+    "acc": 0.517
+   },
+   "at": [
+    {
+     "t": 0.8,
+     "dupFound": 30,
+     "of": 30,
+     "falseMerges": 30
+    },
+    {
+     "t": 0.85,
+     "dupFound": 30,
+     "of": 30,
+     "falseMerges": 30
+    },
+    {
+     "t": 0.9,
+     "dupFound": 29,
+     "of": 30,
+     "falseMerges": 29
+    },
+    {
+     "t": 0.95,
+     "dupFound": 17,
+     "of": 30,
+     "falseMerges": 17
+    }
+   ]
+  },
+  "schmutzigTreffer": 0.7
+ },
+ "mac-chrome-gemma2-q4-webgpu": {
+  "dim": 768,
+  "sets": {
+   "alle500": {
+    "n": 500,
+    "trueK": 10,
+    "silhouette": {
+     "k": 3,
+     "groups": 2,
+     "singles": 1,
+     "h": 0.215,
+     "sil": 0.189,
+     "ari": 0,
+     "langAri": 0,
+     "cross": 0.984,
+     "mono": 0.984,
+     "pairs": 1
+    },
+    "orakel": {
+     "k": 135,
+     "groups": 72,
+     "singles": 63,
+     "h": 0.124,
+     "sil": 0.068,
+     "ari": 0.079,
+     "langAri": 0.133,
+     "cross": 0.004,
+     "mono": 0.258,
+     "pairs": 0.2
+    },
+    "beiWahremK": {
+     "k": 10,
+     "groups": 8,
+     "singles": 2,
+     "h": 0.189,
+     "sil": 0.093,
+     "ari": 0.002,
+     "langAri": 0.011,
+     "cross": 0.832,
+     "mono": 0.852,
+     "pairs": 0.84
+    }
+   },
+   "erste200": {
+    "n": 200,
+    "trueK": 10,
+    "silhouette": {
+     "k": 5,
+     "groups": 3,
+     "singles": 2,
+     "h": 0.19,
+     "sil": 0.196,
+     "ari": -0.008,
+     "langAri": 0.904,
+     "cross": 0.01,
+     "mono": 0.916,
+     "pairs": 0.4
+    },
+    "orakel": {
+     "k": 66,
+     "groups": 27,
+     "singles": 39,
+     "h": 0.126,
+     "sil": 0.077,
+     "ari": 0.093,
+     "langAri": 0.176,
+     "cross": 0.002,
+     "mono": 0.353,
+     "pairs": 0.4
+    },
+    "beiWahremK": {
+     "k": 10,
+     "groups": 6,
+     "singles": 4,
+     "h": 0.177,
+     "sil": 0.168,
+     "ari": -0.005,
+     "langAri": 0.758,
+     "cross": 0.008,
+     "mono": 0.779,
+     "pairs": 0.4
+    }
+   },
+   "erste50": {
+    "n": 50,
+    "trueK": 10,
+    "silhouette": {
+     "k": 3,
+     "groups": 2,
+     "singles": 1,
+     "h": 0.19,
+     "sil": 0.233,
+     "ari": -0.034,
+     "langAri": 0.969,
+     "cross": 0,
+     "mono": 0.975,
+     "pairs": null
+    },
+    "orakel": {
+     "k": 31,
+     "groups": 10,
+     "singles": 21,
+     "h": 0.112,
+     "sil": 0.093,
+     "ari": 0.193,
+     "langAri": 0.061,
+     "cross": 0,
+     "mono": 0.4,
+     "pairs": null
+    },
+    "beiWahremK": {
+     "k": 10,
+     "groups": 6,
+     "singles": 4,
+     "h": 0.152,
+     "sil": 0.19,
+     "ari": -0.017,
+     "langAri": 0.658,
+     "cross": 0,
+     "mono": 0.75,
+     "pairs": null
+    }
+   },
+   "wand:onboarding": {
+    "n": 250,
+    "trueK": 5,
+    "silhouette": {
+     "k": 3,
+     "groups": 2,
+     "singles": 1,
+     "h": 0.2,
+     "sil": 0.201,
+     "ari": 0,
+     "langAri": 0,
+     "cross": 0.969,
+     "mono": 0.968,
+     "pairs": 1
+    },
+    "orakel": {
+     "k": 100,
+     "groups": 41,
+     "singles": 59,
+     "h": 0.11,
+     "sil": 0.069,
+     "ari": 0.052,
+     "langAri": 0.146,
+     "cross": 0.004,
+     "mono": 0.211,
+     "pairs": 0.24
+    },
+    "beiWahremK": {
+     "k": 5,
+     "groups": 4,
+     "singles": 1,
+     "h": 0.196,
+     "sil": 0.157,
+     "ari": 0,
+     "langAri": 0.001,
+     "cross": 0.93,
+     "mono": 0.931,
+     "pairs": 0.92
+    }
+   },
+   "wand:stadtteil": {
+    "n": 250,
+    "trueK": 5,
+    "silhouette": {
+     "k": 2,
+     "groups": 2,
+     "singles": 0,
+     "h": 0.21,
+     "sil": 0.202,
+     "ari": 0.002,
+     "langAri": 0.004,
+     "cross": 0.936,
+     "mono": 0.946,
+     "pairs": 0.92
+    },
+    "orakel": {
+     "k": 127,
+     "groups": 43,
+     "singles": 84,
+     "h": 0.106,
+     "sil": 0.072,
+     "ari": 0.063,
+     "langAri": 0.036,
+     "cross": 0.001,
+     "mono": 0.104,
+     "pairs": 0.12
+    },
+    "beiWahremK": {
+     "k": 5,
+     "groups": 3,
+     "singles": 2,
+     "h": 0.201,
+     "sil": 0.136,
+     "ari": 0.002,
+     "langAri": 0.005,
+     "cross": 0.912,
+     "mono": 0.924,
+     "pairs": 0.92
+    }
+   }
+  },
+  "festerAbstand": {
+   "h aus onboarding": 0.2,
+   "ARI auf stadtteil": 0.002,
+   "h aus stadtteil": 0.2,
+   "ARI auf onboarding": 0,
+   "ARI alle500 bei mittlerem h": 0,
+   "k alle500 bei mittlerem h": 7
+  },
+  "dubletten": {
+   "dup": {
+    "de-de": {
+     "min": 0.949,
+     "med": 0.971,
+     "max": 0.992
+    },
+    "en-en": {
+     "min": 0.914,
+     "med": 0.979,
+     "max": 0.994
+    },
+    "de-en": {
+     "min": 0.899,
+     "med": 0.915,
+     "max": 0.928
+    }
+   },
+   "miss": {
+    "de-de": {
+     "min": 0.939,
+     "med": 0.987,
+     "max": 0.996
+    },
+    "en-en": {
+     "min": 0.914,
+     "med": 0.971,
+     "max": 0.991
+    },
+    "de-en": {
+     "min": 0.897,
+     "med": 0.93,
+     "max": 0.948
+    }
+   },
+   "best": {
+    "t": 0.905,
+    "acc": 0.517
+   },
+   "at": [
+    {
+     "t": 0.8,
+     "dupFound": 30,
+     "of": 30,
+     "falseMerges": 30
+    },
+    {
+     "t": 0.85,
+     "dupFound": 30,
+     "of": 30,
+     "falseMerges": 30
+    },
+    {
+     "t": 0.9,
+     "dupFound": 29,
+     "of": 30,
+     "falseMerges": 29
+    },
+    {
+     "t": 0.95,
+     "dupFound": 17,
+     "of": 30,
+     "falseMerges": 17
+    }
+   ]
+  },
+  "schmutzigTreffer": 0.7
+ },
+ "mac-chrome-granite-q8-wasm-4t": {
+  "dim": 384,
+  "sets": {
+   "alle500": {
+    "n": 500,
+    "trueK": 10,
+    "silhouette": {
+     "k": 3,
+     "groups": 2,
+     "singles": 1,
+     "h": 0.341,
+     "sil": 0.088,
+     "ari": 0,
+     "langAri": 0,
+     "cross": 0.988,
+     "mono": 0.988,
+     "pairs": 1
+    },
+    "orakel": {
+     "k": 54,
+     "groups": 45,
+     "singles": 9,
+     "h": 0.279,
+     "sil": 0.021,
+     "ari": 0.145,
+     "langAri": 0.001,
+     "cross": 0.211,
+     "mono": 0.212,
+     "pairs": 0.84
+    },
+    "beiWahremK": {
+     "k": 10,
+     "groups": 7,
+     "singles": 3,
+     "h": 0.316,
+     "sil": -0.008,
+     "ari": 0.001,
+     "langAri": 0.001,
+     "cross": 0.876,
+     "mono": 0.879,
+     "pairs": 1
+    }
+   },
+   "erste200": {
+    "n": 200,
+    "trueK": 10,
+    "silhouette": {
+     "k": 2,
+     "groups": 2,
+     "singles": 0,
+     "h": 0.334,
+     "sil": 0.09,
+     "ari": 0,
+     "langAri": 0.001,
+     "cross": 0.97,
+     "mono": 0.972,
+     "pairs": 1
+    },
+    "orakel": {
+     "k": 35,
+     "groups": 26,
+     "singles": 9,
+     "h": 0.279,
+     "sil": 0.042,
+     "ari": 0.15,
+     "langAri": 0.005,
+     "cross": 0.172,
+     "mono": 0.226,
+     "pairs": 0.6
+    },
+    "beiWahremK": {
+     "k": 10,
+     "groups": 9,
+     "singles": 1,
+     "h": 0.312,
+     "sil": -0.008,
+     "ari": 0,
+     "langAri": 0.002,
+     "cross": 0.745,
+     "mono": 0.74,
+     "pairs": 1
+    }
+   },
+   "erste50": {
+    "n": 50,
+    "trueK": 10,
+    "silhouette": {
+     "k": 2,
+     "groups": 2,
+     "singles": 0,
+     "h": 0.342,
+     "sil": 0.121,
+     "ari": 0,
+     "langAri": -0.023,
+     "cross": 0.933,
+     "mono": 0.9,
+     "pairs": null
+    },
+    "orakel": {
+     "k": 21,
+     "groups": 14,
+     "singles": 7,
+     "h": 0.268,
+     "sil": 0.081,
+     "ari": 0.16,
+     "langAri": 0.023,
+     "cross": 0.183,
+     "mono": 0.2,
+     "pairs": null
+    },
+    "beiWahremK": {
+     "k": 10,
+     "groups": 7,
+     "singles": 3,
+     "h": 0.3,
+     "sil": 0.052,
+     "ari": 0.111,
+     "langAri": -0.003,
+     "cross": 0.4,
+     "mono": 0.325,
+     "pairs": null
+    }
+   },
+   "wand:onboarding": {
+    "n": 250,
+    "trueK": 5,
+    "silhouette": {
+     "k": 2,
+     "groups": 2,
+     "singles": 0,
+     "h": 0.315,
+     "sil": 0.121,
+     "ari": 0.001,
+     "langAri": 0,
+     "cross": 0.962,
+     "mono": 0.962,
+     "pairs": 1
+    },
+    "orakel": {
+     "k": 20,
+     "groups": 16,
+     "singles": 4,
+     "h": 0.284,
+     "sil": 0.008,
+     "ari": 0.117,
+     "langAri": -0.003,
+     "cross": 0.381,
+     "mono": 0.369,
+     "pairs": 0.96
+    },
+    "beiWahremK": {
+     "k": 5,
+     "groups": 4,
+     "singles": 1,
+     "h": 0.31,
+     "sil": 0.031,
+     "ari": 0,
+     "langAri": 0,
+     "cross": 0.923,
+     "mono": 0.923,
+     "pairs": 1
+    }
+   },
+   "wand:stadtteil": {
+    "n": 250,
+    "trueK": 5,
+    "silhouette": {
+     "k": 73,
+     "groups": 58,
+     "singles": 15,
+     "h": 0.255,
+     "sil": 0.076,
+     "ari": 0.068,
+     "langAri": 0.003,
+     "cross": 0.06,
+     "mono": 0.057,
+     "pairs": 0.84
+    },
+    "orakel": {
+     "k": 25,
+     "groups": 24,
+     "singles": 1,
+     "h": 0.29,
+     "sil": 0.036,
+     "ari": 0.152,
+     "langAri": 0,
+     "cross": 0.205,
+     "mono": 0.196,
+     "pairs": 0.88
+    },
+    "beiWahremK": {
+     "k": 5,
+     "groups": 4,
+     "singles": 1,
+     "h": 0.315,
+     "sil": 0.005,
+     "ari": 0.002,
+     "langAri": -0.001,
+     "cross": 0.852,
+     "mono": 0.85,
+     "pairs": 1
+    }
+   }
+  },
+  "festerAbstand": {
+   "h aus onboarding": 0.28,
+   "ARI auf stadtteil": 0.13,
+   "h aus stadtteil": 0.29,
+   "ARI auf onboarding": 0.079,
+   "ARI alle500 bei mittlerem h": 0.128,
+   "k alle500 bei mittlerem h": 48
+  },
+  "dubletten": {
+   "dup": {
+    "de-de": {
+     "min": 0.814,
+     "med": 0.882,
+     "max": 0.956
+    },
+    "en-en": {
+     "min": 0.841,
+     "med": 0.906,
+     "max": 0.97
+    },
+    "de-en": {
+     "min": 0.791,
+     "med": 0.844,
+     "max": 0.925
+    }
+   },
+   "miss": {
+    "de-de": {
+     "min": 0.865,
+     "med": 0.932,
+     "max": 0.984
+    },
+    "en-en": {
+     "min": 0.859,
+     "med": 0.937,
+     "max": 0.969
+    },
+    "de-en": {
+     "min": 0.729,
+     "med": 0.84,
+     "max": 0.915
+    }
+   },
+   "best": {
+    "t": 0.77,
+    "acc": 0.55
+   },
+   "at": [
+    {
+     "t": 0.8,
+     "dupFound": 29,
+     "of": 30,
+     "falseMerges": 27
+    },
+    {
+     "t": 0.85,
+     "dupFound": 21,
+     "of": 30,
+     "falseMerges": 24
+    },
+    {
+     "t": 0.9,
+     "dupFound": 9,
+     "of": 30,
+     "falseMerges": 17
+    },
+    {
+     "t": 0.95,
+     "dupFound": 2,
+     "of": 30,
+     "falseMerges": 5
+    }
+   ]
+  },
+  "schmutzigTreffer": 0.633
+ },
+ "mac-chrome-minilm-fp16-webgpu": {
+  "dim": 384,
+  "sets": {
+   "alle500": {
+    "n": 500,
+    "trueK": 10,
+    "silhouette": {
+     "k": 2,
+     "groups": 2,
+     "singles": 0,
+     "h": 0.913,
+     "sil": 0.127,
+     "ari": 0,
+     "langAri": 0,
+     "cross": 0.985,
+     "mono": 0.985,
+     "pairs": 1
+    },
+    "orakel": {
+     "k": 38,
+     "groups": 35,
+     "singles": 3,
+     "h": 0.783,
+     "sil": 0.047,
+     "ari": 0.139,
+     "langAri": 0.006,
+     "cross": 0.173,
+     "mono": 0.175,
+     "pairs": 0.82
+    },
+    "beiWahremK": {
+     "k": 10,
+     "groups": 9,
+     "singles": 1,
+     "h": 0.869,
+     "sil": -0.004,
+     "ari": 0.031,
+     "langAri": 0.009,
+     "cross": 0.642,
+     "mono": 0.655,
+     "pairs": 0.94
+    }
+   },
+   "erste200": {
+    "n": 200,
+    "trueK": 10,
+    "silhouette": {
+     "k": 66,
+     "groups": 47,
+     "singles": 19,
+     "h": 0.682,
+     "sil": 0.105,
+     "ari": 0.068,
+     "langAri": 0.004,
+     "cross": 0.067,
+     "mono": 0.067,
+     "pairs": 1
+    },
+    "orakel": {
+     "k": 32,
+     "groups": 26,
+     "singles": 6,
+     "h": 0.762,
+     "sil": 0.049,
+     "ari": 0.142,
+     "langAri": 0.002,
+     "cross": 0.186,
+     "mono": 0.186,
+     "pairs": 1
+    },
+    "beiWahremK": {
+     "k": 10,
+     "groups": 9,
+     "singles": 1,
+     "h": 0.852,
+     "sil": 0.042,
+     "ari": 0.093,
+     "langAri": 0.017,
+     "cross": 0.43,
+     "mono": 0.459,
+     "pairs": 1
+    }
+   },
+   "erste50": {
+    "n": 50,
+    "trueK": 10,
+    "silhouette": {
+     "k": 15,
+     "groups": 11,
+     "singles": 4,
+     "h": 0.772,
+     "sil": 0.098,
+     "ari": 0.128,
+     "langAri": 0.022,
+     "cross": 0.167,
+     "mono": 0.275,
+     "pairs": null
+    },
+    "orakel": {
+     "k": 22,
+     "groups": 10,
+     "singles": 12,
+     "h": 0.703,
+     "sil": 0.065,
+     "ari": 0.136,
+     "langAri": 0.016,
+     "cross": 0.167,
+     "mono": 0.225,
+     "pairs": null
+    },
+    "beiWahremK": {
+     "k": 10,
+     "groups": 8,
+     "singles": 2,
+     "h": 0.816,
+     "sil": 0.072,
+     "ari": 0.092,
+     "langAri": 0.018,
+     "cross": 0.217,
+     "mono": 0.375,
+     "pairs": null
+    }
+   },
+   "wand:onboarding": {
+    "n": 250,
+    "trueK": 5,
+    "silhouette": {
+     "k": 2,
+     "groups": 2,
+     "singles": 0,
+     "h": 0.931,
+     "sil": 0.122,
+     "ari": 0.001,
+     "langAri": 0,
+     "cross": 0.97,
+     "mono": 0.97,
+     "pairs": 1
+    },
+    "orakel": {
+     "k": 21,
+     "groups": 18,
+     "singles": 3,
+     "h": 0.786,
+     "sil": 0.062,
+     "ari": 0.088,
+     "langAri": 0.012,
+     "cross": 0.179,
+     "mono": 0.184,
+     "pairs": 0.76
+    },
+    "beiWahremK": {
+     "k": 5,
+     "groups": 5,
+     "singles": 0,
+     "h": 0.883,
+     "sil": 0.033,
+     "ari": 0.021,
+     "langAri": 0.003,
+     "cross": 0.808,
+     "mono": 0.812,
+     "pairs": 1
+    }
+   },
+   "wand:stadtteil": {
+    "n": 250,
+    "trueK": 5,
+    "silhouette": {
+     "k": 84,
+     "groups": 59,
+     "singles": 25,
+     "h": 0.65,
+     "sil": 0.125,
+     "ari": 0.045,
+     "langAri": 0,
+     "cross": 0.044,
+     "mono": 0.04,
+     "pairs": 0.8
+    },
+    "orakel": {
+     "k": 15,
+     "groups": 15,
+     "singles": 0,
+     "h": 0.814,
+     "sil": 0.04,
+     "ari": 0.13,
+     "langAri": 0.019,
+     "cross": 0.327,
+     "mono": 0.351,
+     "pairs": 0.96
+    },
+    "beiWahremK": {
+     "k": 5,
+     "groups": 5,
+     "singles": 0,
+     "h": 0.868,
+     "sil": 0.003,
+     "ari": 0.012,
+     "langAri": 0.002,
+     "cross": 0.832,
+     "mono": 0.84,
+     "pairs": 1
+    }
+   }
+  },
+  "festerAbstand": {
+   "h aus onboarding": 0.79,
+   "ARI auf stadtteil": 0.116,
+   "h aus stadtteil": 0.82,
+   "ARI auf onboarding": 0.056,
+   "ARI alle500 bei mittlerem h": 0.13,
+   "k alle500 bei mittlerem h": 32
+  },
+  "dubletten": {
+   "dup": {
+    "de-de": {
+     "min": 0.615,
+     "med": 0.81,
+     "max": 0.984
+    },
+    "en-en": {
+     "min": 0.667,
+     "med": 0.848,
+     "max": 0.966
+    },
+    "de-en": {
+     "min": 0.403,
+     "med": 0.734,
+     "max": 0.919
+    }
+   },
+   "miss": {
+    "de-de": {
+     "min": 0.586,
+     "med": 0.793,
+     "max": 0.991
+    },
+    "en-en": {
+     "min": 0.509,
+     "med": 0.79,
+     "max": 0.945
+    },
+    "de-en": {
+     "min": 0.143,
+     "med": 0.776,
+     "max": 0.91
+    }
+   },
+   "best": {
+    "t": 0.84,
+    "acc": 0.6
+   },
+   "at": [
+    {
+     "t": 0.8,
+     "dupFound": 14,
+     "of": 30,
+     "falseMerges": 11
+    },
+    {
+     "t": 0.85,
+     "dupFound": 11,
+     "of": 30,
+     "falseMerges": 6
+    },
+    {
+     "t": 0.9,
+     "dupFound": 6,
+     "of": 30,
+     "falseMerges": 4
+    },
+    {
+     "t": 0.95,
+     "dupFound": 2,
+     "of": 30,
+     "falseMerges": 1
+    }
+   ]
+  },
+  "schmutzigTreffer": 0.517
+ },
+ "mac-chrome-minilm-fp32-wasm-4t": {
+  "dim": 384,
+  "sets": {
+   "alle500": {
+    "n": 500,
+    "trueK": 10,
+    "silhouette": {
+     "k": 2,
+     "groups": 2,
+     "singles": 0,
+     "h": 0.911,
+     "sil": 0.122,
+     "ari": 0,
+     "langAri": 0,
+     "cross": 0.977,
+     "mono": 0.978,
+     "pairs": 1
+    },
+    "orakel": {
+     "k": 28,
+     "groups": 26,
+     "singles": 2,
+     "h": 0.806,
+     "sil": 0.04,
+     "ari": 0.107,
+     "langAri": 0.008,
+     "cross": 0.178,
+     "mono": 0.185,
+     "pairs": 0.86
+    },
+    "beiWahremK": {
+     "k": 10,
+     "groups": 10,
+     "singles": 0,
+     "h": 0.864,
+     "sil": 0.021,
+     "ari": 0.057,
+     "langAri": 0.02,
+     "cross": 0.441,
+     "mono": 0.47,
+     "pairs": 0.92
+    }
+   },
+   "erste200": {
+    "n": 200,
+    "trueK": 10,
+    "silhouette": {
+     "k": 66,
+     "groups": 47,
+     "singles": 19,
+     "h": 0.682,
+     "sil": 0.105,
+     "ari": 0.068,
+     "langAri": 0.004,
+     "cross": 0.067,
+     "mono": 0.067,
+     "pairs": 1
+    },
+    "orakel": {
+     "k": 31,
+     "groups": 25,
+     "singles": 6,
+     "h": 0.764,
+     "sil": 0.048,
+     "ari": 0.14,
+     "langAri": 0.002,
+     "cross": 0.187,
+     "mono": 0.186,
+     "pairs": 1
+    },
+    "beiWahremK": {
+     "k": 10,
+     "groups": 9,
+     "singles": 1,
+     "h": 0.853,
+     "sil": 0.043,
+     "ari": 0.089,
+     "langAri": 0.015,
+     "cross": 0.435,
+     "mono": 0.458,
+     "pairs": 1
+    }
+   },
+   "erste50": {
+    "n": 50,
+    "trueK": 10,
+    "silhouette": {
+     "k": 15,
+     "groups": 11,
+     "singles": 4,
+     "h": 0.772,
+     "sil": 0.098,
+     "ari": 0.128,
+     "langAri": 0.022,
+     "cross": 0.167,
+     "mono": 0.275,
+     "pairs": null
+    },
+    "orakel": {
+     "k": 22,
+     "groups": 10,
+     "singles": 12,
+     "h": 0.704,
+     "sil": 0.065,
+     "ari": 0.136,
+     "langAri": 0.016,
+     "cross": 0.167,
+     "mono": 0.225,
+     "pairs": null
+    },
+    "beiWahremK": {
+     "k": 10,
+     "groups": 8,
+     "singles": 2,
+     "h": 0.816,
+     "sil": 0.072,
+     "ari": 0.092,
+     "langAri": 0.018,
+     "cross": 0.217,
+     "mono": 0.375,
+     "pairs": null
+    }
+   },
+   "wand:onboarding": {
+    "n": 250,
+    "trueK": 5,
+    "silhouette": {
+     "k": 2,
+     "groups": 2,
+     "singles": 0,
+     "h": 0.931,
+     "sil": 0.122,
+     "ari": 0.001,
+     "langAri": 0,
+     "cross": 0.97,
+     "mono": 0.97,
+     "pairs": 1
+    },
+    "orakel": {
+     "k": 21,
+     "groups": 18,
+     "singles": 3,
+     "h": 0.786,
+     "sil": 0.062,
+     "ari": 0.088,
+     "langAri": 0.012,
+     "cross": 0.179,
+     "mono": 0.184,
+     "pairs": 0.76
+    },
+    "beiWahremK": {
+     "k": 5,
+     "groups": 5,
+     "singles": 0,
+     "h": 0.883,
+     "sil": 0.033,
+     "ari": 0.021,
+     "langAri": 0.003,
+     "cross": 0.808,
+     "mono": 0.812,
+     "pairs": 1
+    }
+   },
+   "wand:stadtteil": {
+    "n": 250,
+    "trueK": 5,
+    "silhouette": {
+     "k": 83,
+     "groups": 57,
+     "singles": 26,
+     "h": 0.652,
+     "sil": 0.125,
+     "ari": 0.047,
+     "langAri": 0,
+     "cross": 0.044,
+     "mono": 0.04,
+     "pairs": 0.8
+    },
+    "orakel": {
+     "k": 27,
+     "groups": 25,
+     "singles": 2,
+     "h": 0.77,
+     "sil": 0.059,
+     "ari": 0.141,
+     "langAri": 0.005,
+     "cross": 0.198,
+     "mono": 0.197,
+     "pairs": 0.88
+    },
+    "beiWahremK": {
+     "k": 5,
+     "groups": 5,
+     "singles": 0,
+     "h": 0.868,
+     "sil": 0.003,
+     "ari": 0.012,
+     "langAri": 0.002,
+     "cross": 0.832,
+     "mono": 0.84,
+     "pairs": 1
+    }
+   }
+  },
+  "festerAbstand": {
+   "h aus onboarding": 0.79,
+   "ARI auf stadtteil": 0.115,
+   "h aus stadtteil": 0.77,
+   "ARI auf onboarding": 0.076,
+   "ARI alle500 bei mittlerem h": 0.102,
+   "k alle500 bei mittlerem h": 43
+  },
+  "dubletten": {
+   "dup": {
+    "de-de": {
+     "min": 0.615,
+     "med": 0.81,
+     "max": 0.984
+    },
+    "en-en": {
+     "min": 0.667,
+     "med": 0.848,
+     "max": 0.967
+    },
+    "de-en": {
+     "min": 0.403,
+     "med": 0.733,
+     "max": 0.919
+    }
+   },
+   "miss": {
+    "de-de": {
+     "min": 0.584,
+     "med": 0.794,
+     "max": 0.991
+    },
+    "en-en": {
+     "min": 0.511,
+     "med": 0.79,
+     "max": 0.945
+    },
+    "de-en": {
+     "min": 0.143,
+     "med": 0.775,
+     "max": 0.91
+    }
+   },
+   "best": {
+    "t": 0.84,
+    "acc": 0.6
+   },
+   "at": [
+    {
+     "t": 0.8,
+     "dupFound": 14,
+     "of": 30,
+     "falseMerges": 11
+    },
+    {
+     "t": 0.85,
+     "dupFound": 11,
+     "of": 30,
+     "falseMerges": 6
+    },
+    {
+     "t": 0.9,
+     "dupFound": 6,
+     "of": 30,
+     "falseMerges": 4
+    },
+    {
+     "t": 0.95,
+     "dupFound": 2,
+     "of": 30,
+     "falseMerges": 1
+    }
+   ]
+  },
+  "schmutzigTreffer": 0.517
+ },
+ "mac-chrome-minilm-q8-wasm-4t": {
+  "dim": 384,
+  "sets": {
+   "alle500": {
+    "n": 500,
+    "trueK": 10,
+    "silhouette": {
+     "k": 167,
+     "groups": 112,
+     "singles": 55,
+     "h": 0.626,
+     "sil": 0.114,
+     "ari": 0.042,
+     "langAri": 0.002,
+     "cross": 0.033,
+     "mono": 0.03,
+     "pairs": 0.7
+    },
+    "orakel": {
+     "k": 37,
+     "groups": 36,
+     "singles": 1,
+     "h": 0.795,
+     "sil": 0.044,
+     "ari": 0.087,
+     "langAri": 0.01,
+     "cross": 0.152,
+     "mono": 0.156,
+     "pairs": 0.78
+    },
+    "beiWahremK": {
+     "k": 10,
+     "groups": 10,
+     "singles": 0,
+     "h": 0.87,
+     "sil": -0.01,
+     "ari": 0.01,
+     "langAri": 0.011,
+     "cross": 0.687,
+     "mono": 0.705,
+     "pairs": 0.98
+    }
+   },
+   "erste200": {
+    "n": 200,
+    "trueK": 10,
+    "silhouette": {
+     "k": 2,
+     "groups": 2,
+     "singles": 0,
+     "h": 0.945,
+     "sil": 0.103,
+     "ari": 0.003,
+     "langAri": 0.002,
+     "cross": 0.94,
+     "mono": 0.952,
+     "pairs": 1
+    },
+    "orakel": {
+     "k": 27,
+     "groups": 24,
+     "singles": 3,
+     "h": 0.795,
+     "sil": 0.058,
+     "ari": 0.119,
+     "langAri": 0.004,
+     "cross": 0.208,
+     "mono": 0.199,
+     "pairs": 1
+    },
+    "beiWahremK": {
+     "k": 10,
+     "groups": 10,
+     "singles": 0,
+     "h": 0.854,
+     "sil": 0.03,
+     "ari": 0.083,
+     "langAri": -0.001,
+     "cross": 0.461,
+     "mono": 0.456,
+     "pairs": 1
+    }
+   },
+   "erste50": {
+    "n": 50,
+    "trueK": 10,
+    "silhouette": {
+     "k": 15,
+     "groups": 11,
+     "singles": 4,
+     "h": 0.754,
+     "sil": 0.098,
+     "ari": 0.116,
+     "langAri": 0.023,
+     "cross": 0.15,
+     "mono": 0.225,
+     "pairs": null
+    },
+    "orakel": {
+     "k": 16,
+     "groups": 11,
+     "singles": 5,
+     "h": 0.752,
+     "sil": 0.097,
+     "ari": 0.12,
+     "langAri": 0.024,
+     "cross": 0.15,
+     "mono": 0.225,
+     "pairs": null
+    },
+    "beiWahremK": {
+     "k": 10,
+     "groups": 7,
+     "singles": 3,
+     "h": 0.812,
+     "sil": 0.075,
+     "ari": 0.055,
+     "langAri": 0.008,
+     "cross": 0.233,
+     "mono": 0.25,
+     "pairs": null
+    }
+   },
+   "wand:onboarding": {
+    "n": 250,
+    "trueK": 5,
+    "silhouette": {
+     "k": 2,
+     "groups": 2,
+     "singles": 0,
+     "h": 0.947,
+     "sil": 0.124,
+     "ari": 0.001,
+     "langAri": 0,
+     "cross": 0.962,
+     "mono": 0.962,
+     "pairs": 1
+    },
+    "orakel": {
+     "k": 16,
+     "groups": 14,
+     "singles": 2,
+     "h": 0.819,
+     "sil": 0.039,
+     "ari": 0.117,
+     "langAri": 0.01,
+     "cross": 0.277,
+     "mono": 0.282,
+     "pairs": 0.72
+    },
+    "beiWahremK": {
+     "k": 5,
+     "groups": 4,
+     "singles": 1,
+     "h": 0.892,
+     "sil": 0.039,
+     "ari": 0.008,
+     "langAri": 0,
+     "cross": 0.858,
+     "mono": 0.855,
+     "pairs": 1
+    }
+   },
+   "wand:stadtteil": {
+    "n": 250,
+    "trueK": 5,
+    "silhouette": {
+     "k": 83,
+     "groups": 59,
+     "singles": 24,
+     "h": 0.65,
+     "sil": 0.12,
+     "ari": 0.053,
+     "langAri": 0.001,
+     "cross": 0.052,
+     "mono": 0.045,
+     "pairs": 0.8
+    },
+    "orakel": {
+     "k": 12,
+     "groups": 12,
+     "singles": 0,
+     "h": 0.83,
+     "sil": 0.037,
+     "ari": 0.177,
+     "langAri": 0.02,
+     "cross": 0.394,
+     "mono": 0.429,
+     "pairs": 0.92
+    },
+    "beiWahremK": {
+     "k": 5,
+     "groups": 5,
+     "singles": 0,
+     "h": 0.859,
+     "sil": 0.018,
+     "ari": 0.003,
+     "langAri": 0.002,
+     "cross": 0.776,
+     "mono": 0.777,
+     "pairs": 1
+    }
+   }
+  },
+  "festerAbstand": {
+   "h aus onboarding": 0.82,
+   "ARI auf stadtteil": 0.163,
+   "h aus stadtteil": 0.83,
+   "ARI auf onboarding": 0.054,
+   "ARI alle500 bei mittlerem h": 0.062,
+   "k alle500 bei mittlerem h": 23
+  },
+  "dubletten": {
+   "dup": {
+    "de-de": {
+     "min": 0.571,
+     "med": 0.802,
+     "max": 0.979
+    },
+    "en-en": {
+     "min": 0.637,
+     "med": 0.841,
+     "max": 0.962
+    },
+    "de-en": {
+     "min": 0.353,
+     "med": 0.731,
+     "max": 0.911
+    }
+   },
+   "miss": {
+    "de-de": {
+     "min": 0.561,
+     "med": 0.784,
+     "max": 0.982
+    },
+    "en-en": {
+     "min": 0.505,
+     "med": 0.786,
+     "max": 0.943
+    },
+    "de-en": {
+     "min": 0.124,
+     "med": 0.791,
+     "max": 0.886
+    }
+   },
+   "best": {
+    "t": 0.82,
+    "acc": 0.583
+   },
+   "at": [
+    {
+     "t": 0.8,
+     "dupFound": 14,
+     "of": 30,
+     "falseMerges": 11
+    },
+    {
+     "t": 0.85,
+     "dupFound": 11,
+     "of": 30,
+     "falseMerges": 6
+    },
+    {
+     "t": 0.9,
+     "dupFound": 5,
+     "of": 30,
+     "falseMerges": 3
+    },
+    {
+     "t": 0.95,
+     "dupFound": 2,
+     "of": 30,
+     "falseMerges": 1
+    }
+   ]
+  },
+  "schmutzigTreffer": 0.583
+ },
+ "vergleiche": [
+  {
+   "a": "mac-chrome-minilm-q8-wasm-4t",
+   "b": "mac-chrome-minilm-fp32-wasm-4t",
+   "cosMittel": 0.994,
+   "cosMin": 0.945,
+   "ariDerGruppierungen": 0
+  },
+  {
+   "a": "mac-chrome-minilm-fp16-webgpu",
+   "b": "mac-chrome-minilm-fp32-wasm-4t",
+   "cosMittel": 1,
+   "cosMin": 1,
+   "ariDerGruppierungen": 0.795
+  },
+  {
+   "a": "mac-chrome-gemma2-q4-wasm-4t",
+   "b": "mac-chrome-gemma2-q4-webgpu",
+   "cosMittel": 1,
+   "cosMin": 1,
+   "ariDerGruppierungen": 1
+  }
+ ]
+}

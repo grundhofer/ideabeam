@@ -1,0 +1,131 @@
+// guide.ts: what to do now on a wall, as a sentence under its state: one per role, and it changes with how the wall
+// stands. The owner looked at a wall with two people on it and asked how it goes on for the moderation; „2 Personen
+// sind da.“ did not say. Pure: which sentence, as its key in the string tables (`wall.guide.*`); and which form the
+// state sentence itself takes once the wall has groups (`wall.*`).
+//
+// While the notes are hidden (the phase `writing`, PLAN.md 2.1) the sentence says so first: everyone writes for
+// themselves and nobody reads along until the moderation reveals; to the moderation, that revealing is theirs. When
+// the clock of the writing has run out, the clock's own sentence right above says so (lib/clock.ts), and this one
+// says what it means: nothing is locked, and the moderation still decides when to reveal.
+//
+// Once the notes are revealed the moderation's next step is „Ordnen“ (PLAN.md 2.1), where there is something to
+// arrange: enough notes that lie in no group a person made by hand or renamed. The sentence leads there and names
+// doing it by hand as the equal way. After a run it says that the AI has arranged, what to do with the result, and
+// where the way back is.
+import { ARRANGE_MIN_NOTES } from "@ideabeam/shared";
+
+/** What the sentence depends on. */
+export type Standing = {
+  /** this person moderates */
+  admin: boolean;
+  /** how many notes lie on the wall; while they are hidden, the others' too, which this browser only counts */
+  notes: number;
+  /** how many people the wall knows, this one included: 1 means nobody else has come yet */
+  people: number;
+  /** how many groups the wall has; none when left out */
+  groups?: number;
+  /** how many of the notes lie in a group */
+  grouped?: number;
+  /** how many of the groups have no title yet */
+  untitled?: number;
+  /** the notes are hidden: the wall is in the phase `writing` */
+  hidden?: boolean;
+  /** the clock of the writing has run out */
+  timeUp?: boolean;
+  /** how many of the notes the AI may arrange: those in no group a person made by hand or renamed (lib/arrange.ts);
+   *  none when left out */
+  arrangeable?: number;
+  /** The AI arranged the wall last, and the run can still be taken back: `fresh` while nothing has changed since
+   *  (taking it back acts at once, from the action zone), `changed` after that (it asks first, from „Mehr“). null or
+   *  left out: no such run. */
+  arranged?: "fresh" | "changed" | null;
+};
+
+export type GuideKey =
+  | "adminAloneEmpty"
+  | "adminAloneNotes"
+  | "adminEmpty"
+  | "adminNotes"
+  | "adminSorting"
+  | "adminSorted"
+  | "adminArrange"
+  | "adminArrangeRest"
+  | "adminArrangedFresh"
+  | "adminArranged"
+  | "memberAlone"
+  | "memberEmpty"
+  | "memberNotes"
+  | "memberSorting"
+  | "memberSorted"
+  | "adminHiddenAlone"
+  | "adminHiddenEmpty"
+  | "adminHiddenNotes"
+  | "adminHiddenOver"
+  | "memberHiddenAlone"
+  | "memberHidden"
+  | "memberHiddenOver";
+
+/** The sentence that says what to do now. Alone, the next step is to bring the others in; with others, to write;
+ *  once notes lie there, to put what belongs together into a group; once groups stand, to move the rest together
+ *  and to name every group; and when every note lies in a named group, to write on if something is missing.
+ *  While the notes are hidden: to write, and who reveals; once the time is up, that it is, and what the moderation
+ *  can do about it.
+ *
+ *  To the moderation of a revealed wall with others on it: while enough notes lie there for the AI to arrange,
+ *  „Ordnen“ is the next step, and by hand is the equal way (`adminArrange`; with groups on the wall already, of
+ *  which a run leaves alone those made by hand or renamed: `adminArrangeRest`). After a run: what the AI did and
+ *  what to do with it, with the way back in the action zone (`adminArrangedFresh`) or, once the wall has changed
+ *  since, in „Mehr“ (`adminArranged`). */
+export function guide(standing: Standing): GuideKey {
+  const { admin, notes, people, groups = 0, grouped = 0, untitled = 0, hidden = false, timeUp = false } = standing;
+  const { arrangeable = 0, arranged = null } = standing;
+  const alone = people <= 1;
+  const empty = notes === 0;
+  if (hidden) {
+    if (admin) {
+      // alone, the link comes first, whatever the clock says
+      if (alone) return "adminHiddenAlone";
+      if (timeUp) return "adminHiddenOver";
+      return empty ? "adminHiddenEmpty" : "adminHiddenNotes";
+    }
+    if (alone) return "memberHiddenAlone";
+    return timeUp ? "memberHiddenOver" : "memberHidden";
+  }
+  // how far the sorting is: no group yet, under way, or every note in a group that has a name
+  const sorting = groups === 0 ? "Notes" : grouped < notes || untitled > 0 ? "Sorting" : "Sorted";
+  if (admin) {
+    if (alone) return empty ? "adminAloneEmpty" : "adminAloneNotes";
+    if (empty) return "adminEmpty";
+    if (arranged !== null) return arranged === "fresh" ? "adminArrangedFresh" : "adminArranged";
+    if (arrangeable >= ARRANGE_MIN_NOTES) return groups === 0 ? "adminArrange" : "adminArrangeRest";
+    return `admin${sorting}`;
+  }
+  if (alone) return "memberAlone";
+  return empty ? "memberEmpty" : `member${sorting}`;
+}
+
+/** The form of the state sentence's first half: how many notes, and what the groups hold.
+ *  - `none`: „Noch keine Zettel.“
+ *  - `plain`: „12 Zettel.“ (a wall without groups)
+ *  - `allGrouped`: „12 Zettel in 3 Gruppen.“ (every note lies in a group)
+ *  - `someGrouped`: „12 Zettel, 8 davon in 3 Gruppen.“
+ *  - `noneGrouped`: „12 Zettel und 3 leere Gruppen.“
+ *  - `noNotesGroups`: „Noch keine Zettel, 3 leere Gruppen.“
+ *  While the notes are hidden there are no groups, and the sentence names the phase:
+ *  - `hiddenNone`: „Verdecktes Schreiben: noch keine Zettel.“
+ *  - `hiddenNotes`: „Verdecktes Schreiben: 12 Zettel.“ (one's own and the others') */
+export type SummaryKey =
+  "none" | "plain" | "allGrouped" | "someGrouped" | "noneGrouped" | "noNotesGroups" | "hiddenNone" | "hiddenNotes";
+
+export function summary({
+  notes,
+  groups = 0,
+  grouped = 0,
+  hidden = false,
+}: Pick<Standing, "notes" | "groups" | "grouped" | "hidden">): SummaryKey {
+  if (hidden) return notes === 0 ? "hiddenNone" : "hiddenNotes";
+  if (groups === 0) return notes === 0 ? "none" : "plain";
+  if (notes === 0) return "noNotesGroups";
+  if (grouped === 0) return "noneGrouped";
+  return grouped >= notes ? "allGrouped" : "someGrouped";
+}

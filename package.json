@@ -1,0 +1,31 @@
+{
+  "name": "ideabeam",
+  "private": true,
+  "description": "IdeaBeam: a brainstorming wall without accounts. The workspace of the web app, the worker and their shared rules.",
+  "license": "AGPL-3.0-or-later",
+  "type": "module",
+  "packageManager": "pnpm@11.0.9",
+  "engines": {
+    "node": ">=22.22"
+  },
+  "scripts": {
+    "dev": "pnpm --filter @ideabeam/web dev",
+    "build": "pnpm --filter @ideabeam/web build",
+    "lint": "eslint apps/worker packages/shared packages/arrange",
+    "format": "prettier --write apps/worker packages/shared packages/arrange eslint.config.js",
+    "format:check": "prettier --check apps/worker packages/shared packages/arrange eslint.config.js",
+    "check": "pnpm --filter @ideabeam/shared --filter @ideabeam/arrange --filter @ideabeam/worker check",
+    "test": "pnpm --filter @ideabeam/shared --filter @ideabeam/arrange --filter @ideabeam/worker test",
+    "checks": "pnpm lint && pnpm format:check && pnpm check && pnpm test && pnpm --filter @ideabeam/web checks"
+  },
+  "devDependencies": {
+    "@eslint/js": "10.0.1",
+    "eslint": "10.14.0",
+    "prettier": "3.10.1",
+    "typescript": "6.0.3",
+    "typescript-eslint": "8.72.2"
+  },
+  "prettier": {
+    "printWidth": 120
+  }
+}
