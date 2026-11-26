@@ -12,12 +12,12 @@
   "dependencies": {
     "@ideabeam/arrange": "workspace:*",
     "@ideabeam/shared": "workspace:*",
-    "hono": "4.13.19"
+    "hono": "4.13.21"
   },
   "devDependencies": {
     "@cloudflare/vitest-pool-workers": "0.23.0",
     "typescript": "6.0.3",
     "vitest": "4.1.12",
-    "wrangler": "4.164.0"
+    "wrangler": "4.167.0"
   }
 }
