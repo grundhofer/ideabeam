@@ -1002,7 +1002,12 @@ Abnahme:
 - `release:check` besteht: kein Muster-Impressum.
 - Rauchtest auf der Produktionsadresse mit zwei Browsern.
 
-**Stand 25.11.2026: gebaut bis auf den Start, nichts deployt, von dir nicht abgenommen.** Zweig `etappe-5`.
+**Stand 26.11.2026: gestartet.** `https://ideabeam.de` läuft (Worker `ideabeam`, Version vom Commit `9539b13`), die
+Vorschau ist neu deployt (1.000 Neuronen, 5 Wände am Tag). Der Quellcode ist öffentlich:
+https://github.com/grundhofer/ideabeam, ein Commit ohne Vorgeschichte (7.2, Nr. 28 und 33); die Historie bis zum
+Start liegt im privaten `grundhofer/ideabeam-archiv` und lokal im Zweig `historie-bis-start`. Rauchtest auf
+`ideabeam.de` mit Chromium und Firefox bestanden, einmal ohne und einmal mit „Ordnen“ (echte KI, 2 Gruppen). Von dir
+nicht abgenommen. Der Stand vor dem Start folgt.
 `CI=1 pnpm checks` ist grün (mit Schritt C): 279 Tests im geteilten Paket, 126 in `packages/arrange`, 226 im Worker,
 280 in der App, 315 Ende-zu-Ende. Nichts ist übersprungen.
 
@@ -1038,21 +1043,21 @@ Offen für den Start, und wer es tun muss:
 
 | Was | Wer |
 |---|---|
-| `ideabeam.de` kaufen und die Zone ins persönliche Cloudflare-Konto legen (dasselbe Konto wie RetroBeam). Dazu www auf die Domain umleiten (Weiterleitungsregel der Zone, wie bei RetroBeam) | Du |
-| Die Rechtstexte mit einem Generator-Dienst abgleichen (7.2, Nr. 29), dann `NOTICE_REVIEWED` in `operator.ts`. Eine Liste der Punkte, die ein Generator nicht kennt (KI, eigener Schlüssel, Export), lege ich dir auf Wunsch vor | Du |
-| Die Cloudflare-Einstellungen der Zone im Dashboard prüfen (kein Web-Analytics-Beacon, keine Bot-Cookies, keine Challenges), dann `CLOUDFLARE_SETTINGS_CHECKED` | Du |
-| Das Repository öffentlich, mit einem einzigen Commit ohne Vorgeschichte (7.2, Nr. 28), dann `REPO_URL`. Der Deploy muss von genau diesem Commit kommen, denn die Fußzeile verlinkt ihn. Ich lese den Stand durch und bereite den Commit vor; Push und Freischalten auf dein Wort | Ich bereite vor, du gibst das Wort |
+| `ideabeam.de` kaufen und die Zone ins persönliche Cloudflare-Konto legen (dasselbe Konto wie RetroBeam). Dazu www auf die Domain umleiten (Weiterleitungsregel der Zone, wie bei RetroBeam) | Erledigt am 26.11.2026 |
+| Die Rechtstexte mit einem Generator-Dienst abgleichen (7.2, Nr. 29), dann `NOTICE_REVIEWED` in `operator.ts`. Eine Liste der Punkte, die ein Generator nicht kennt (KI, eigener Schlüssel, Export), lege ich dir auf Wunsch vor | Erledigt am 26.11.2026 |
+| Die Cloudflare-Einstellungen der Zone im Dashboard prüfen (kein Web-Analytics-Beacon, keine Bot-Cookies, keine Challenges), dann `CLOUDFLARE_SETTINGS_CHECKED` | Erledigt am 26.11.2026 |
+| Das Repository öffentlich, mit einem einzigen Commit ohne Vorgeschichte (7.2, Nr. 28), dann `REPO_URL`. Der Deploy muss von genau diesem Commit kommen, denn die Fußzeile verlinkt ihn. Ich lese den Stand durch und bereite den Commit vor; Push und Freischalten auf dein Wort | Erledigt am 26.11.2026 |
 | Das Zeichen des Produkts: Der Platzhalter bleibt zum Start (7.2, Nr. 30) | Erledigt |
-| Dein Wort zum Deploy, dann `production-deploy.sh` und der Rauchtest auf `https://ideabeam.de`; die Vorschau danach einmal neu deployen (1.000 Neuronen) | Du gibst das Wort, ich führe aus |
+| Deploy, Rauchtest, Vorschau neu deployen | Erledigt am 26.11.2026 (7.2, Nr. 32) |
 | Die Vorschau bekommt 5 Wände am Tag, das Produkt behält 25 (7.2, Nr. 32) | Erledigt in der Konfiguration, wirksam mit dem nächsten Deploy der Vorschau |
 
 | Abnahmepunkt | Stand |
 |---|---|
-| Die Adresse steht fest, bevor der erste öffentliche Link entsteht | **Entschieden, nicht gekauft:** `ideabeam.de` (7.2, Nr. 25), so in der Konfiguration. Öffentliche Links gibt es bisher nur zur Vorschau |
+| Die Adresse steht fest, bevor der erste öffentliche Link entsteht | **Erfüllt:** `ideabeam.de`, gekauft vom Inhaber bei netcup, Zone bei Cloudflare, www leitet um |
 | Die sebaro-Regel „fertig“ | **Teilweise:** Prüfungen grün, jede Sicht in Hell und Dunkel, schmal und breit durch `tests/screens.spec.ts`; `CHECKS.md` nennt, was nicht geprüft ist. Von dir angesehen ist Etappe 5 nicht |
 | Die Datenschutzerklärung nennt Host, Speicherort, Löschfrist und das Ordnen; jemand vom Fach hat sie gelesen | **Geschrieben, nicht gelesen.** Abgleich mit einem Generator durch dich (7.2, Nr. 29) |
 | `release:check` besteht | **Erfüllt** am 26.11.2026 |
-| Rauchtest auf der Produktionsadresse mit zwei Browsern | **Offen:** Skript gebaut und lokal grün, die Produktion gibt es noch nicht |
+| Rauchtest auf der Produktionsadresse mit zwei Browsern | **Erfüllt** am 26.11.2026, Chromium und Firefox, mit und ohne „Ordnen“ |
 
 Nicht geprüft: alles bei Cloudflare. Ob die eigene Domain anhängt, ob die Vorschau als Umgebung ihre Wände behält
 (gleicher Worker-Name, also dieselben Durable Objects), ob www umleitet. Die Deploy-Skripte liefen nur bis zu ihren
