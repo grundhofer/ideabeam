@@ -1,7 +1,7 @@
 // SPDX-FileCopyrightText: 2026 Sebastian Grundhöfer
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import type { Evidence, MethodId, Purpose, StepMode, StepVisibility } from "../domain/method.js";
+import type { MethodId, Purpose, StepMode, StepVisibility } from "../domain/method.js";
 import { CATALOGUE } from "./catalogue.js";
 
 // The words of the methods, in German and English (docs/methoden-katalog.md). They stand here, in the shared
@@ -39,8 +39,6 @@ export interface MethodTexts {
   when: string;
   /** What comes out. */
   result: string;
-  /** The sentence under the evidence word: what supports the method, from findings the research verified. */
-  evidence: string;
   /** A name it is widely known by, said as a description, never as the name of a template. */
   aka?: string;
   /** The words of its steps, by their key. */
@@ -48,8 +46,6 @@ export interface MethodTexts {
 }
 
 export interface CatalogueTexts {
-  /** The five evidence levels: the word, and what it means. */
-  evidence: Readonly<Record<Evidence, { label: string; meaning: string }>>;
   /** The headings of the choice on `/neu`. */
   purposes: Readonly<Record<Purpose, string>>;
   /** How a step is worked, and what is seen in it, as the steps of „Mehr dazu“ name them. */
@@ -63,28 +59,6 @@ export interface CatalogueTexts {
 
 export const METHOD_TEXTS: Readonly<Record<MethodLanguage, CatalogueTexts>> = {
   de: {
-    evidence: {
-      metaAnalysis: {
-        label: "Meta-Analyse",
-        meaning: "Mindestens eine Meta-Analyse stützt den Kern des Ablaufs.",
-      },
-      experiments: {
-        label: "Experimente",
-        meaning: "Kontrollierte Experimente stützen den Kern des Ablaufs.",
-      },
-      studies: {
-        label: "Studien",
-        meaning: "Nur indirekte Belege: Studien aus einem Nachbarfeld oder ohne Vergleichsgruppe.",
-      },
-      practice: {
-        label: "Praktikerkonsens",
-        meaning: "Keine Studien mit Vergleich, höchstens Fallberichte; in der Praxis erprobt.",
-      },
-      disputed: {
-        label: "umstritten",
-        meaning: "Die Studien sind gemischt oder ausdrücklich kritisch.",
-      },
-    },
     purposes: {
       collect: "Ideen sammeln",
       decide: "Entscheiden",
@@ -114,8 +88,6 @@ export const METHOD_TEXTS: Readonly<Record<MethodLanguage, CatalogueTexts>> = {
           "Alle schreiben Ideen verdeckt, die Ideen werden gebündelt, dann wählt jede Person verdeckt; heraus kommt eine Rangfolge.",
         when: "Wenn ihr zu einer offenen Frage viele Ideen braucht und am Ende wissen wollt, welche der Gruppe am wichtigsten sind.",
         result: "Alle Zettel in Gruppen mit Überschriften, Stimmen je Zettel und Gruppe, Rangfolge.",
-        evidence:
-          "Laut einer Meta-Analyse liefern Gruppen, die mündlich brainstormen, weniger Ideen als dieselben Leute allein; deshalb schreibt hier jede Person für sich. Die Punktwahl selbst ist nicht untersucht; sie läuft verdeckt, weil sichtbare Zwischenstände in einem großen Experiment spätere Bewertungen verzerrten.",
         aka: "Brainwriting mit Punktabfrage",
         steps: {
           write: { name: "Ideen schreiben" },
@@ -130,8 +102,6 @@ export const METHOD_TEXTS: Readonly<Record<MethodLanguage, CatalogueTexts>> = {
         short: "Erst allein, dann zu zweit, dann zu viert denken; jede Vierergruppe bringt ihre stärkste Idee ein.",
         when: "Wenn alle in kurzer Zeit zu Wort kommen sollen, auch in großen Runden.",
         result: "Je Vierergruppe eine Kernidee, dazu alle Zettel aus den Phasen davor.",
-        evidence:
-          "Die Methode selbst ist nicht getestet. Ihr Prinzip schon: In Experimenten wurden Gruppen besser, wenn jede Person zuerst allein schrieb oder antwortete und kleine Gruppen danach darüber sprachen.",
         steps: {
           alone: { name: "Allein nachdenken und notieren" },
           pairs: { name: "Zu zweit austauschen" },
@@ -146,8 +116,6 @@ export const METHOD_TEXTS: Readonly<Record<MethodLanguage, CatalogueTexts>> = {
         when: "Wenn ihr eine Zahl braucht, etwa Aufwand, Termin oder Wahrscheinlichkeit, und das Wissen auf viele Köpfe verteilt ist.",
         result:
           "Beide Runden mit Median und Spannweite, die Begründungen ohne Namen, die Veränderung zwischen den Runden.",
-        evidence:
-          "Eine systematische Übersicht fand, dass solche Runden meist genauer sind als der Mittelwert der ersten Schätzungen und als frei diskutierende Gruppen. Fast alle Tests nutzen Aufgaben mit einer richtigen Antwort.",
         steps: {
           estimate1: { name: "Erste Schätzung mit Begründung" },
           feedback: { name: "Rückmeldung: Median, Spannweite, Begründungen" },
@@ -162,8 +130,6 @@ export const METHOD_TEXTS: Readonly<Record<MethodLanguage, CatalogueTexts>> = {
           "Alle schreiben Zettel, die sofort für alle sichtbar sind, und ordnen sie gemeinsam, ohne festen Ablauf.",
         when: "Wenn ihr frei sammeln wollt, ohne Schritte und ohne verdecktes Schreiben, etwa für eine Liste, die nach und nach wächst.",
         result: "Alle Zettel, auf Wunsch in Gruppen mit Überschriften.",
-        evidence:
-          "In Experimenten übertraf elektronisches Brainstorming, bei dem alle mitlesen, mündliche Runden ab einer mittleren Gruppengröße. Diese Form selbst ist nicht untersucht.",
         steps: {
           wall: { name: "Schreiben und ordnen" },
         },
@@ -178,28 +144,6 @@ export const METHOD_TEXTS: Readonly<Record<MethodLanguage, CatalogueTexts>> = {
     },
   },
   en: {
-    evidence: {
-      metaAnalysis: {
-        label: "Meta-analysis",
-        meaning: "At least one meta-analysis supports the core of the method.",
-      },
-      experiments: {
-        label: "Experiments",
-        meaning: "Controlled experiments support the core of the method.",
-      },
-      studies: {
-        label: "Studies",
-        meaning: "Indirect evidence only, from a neighbouring field or without a control group.",
-      },
-      practice: {
-        label: "Practitioner consensus",
-        meaning: "No comparative studies, at most case reports; proven in practice.",
-      },
-      disputed: {
-        label: "Contested",
-        meaning: "Studies are mixed or explicitly critical.",
-      },
-    },
     purposes: {
       collect: "Collect ideas",
       decide: "Decide",
@@ -229,8 +173,6 @@ export const METHOD_TEXTS: Readonly<Record<MethodLanguage, CatalogueTexts>> = {
           "Everyone writes ideas in private, the ideas are grouped, then everyone votes in secret; you get a ranking.",
         when: "When you need many ideas on an open question and want to know which ones matter most to the group.",
         result: "All notes in titled groups, votes per note and group, ranking.",
-        evidence:
-          "A meta-analysis found that groups brainstorming out loud produce fewer ideas than the same people working alone, so here everyone writes on their own. Dot voting itself has not been studied; votes stay hidden because visible interim results skewed later ratings in a large experiment.",
         aka: "Brainwriting with dot voting",
         steps: {
           write: { name: "Write ideas" },
@@ -245,8 +187,6 @@ export const METHOD_TEXTS: Readonly<Record<MethodLanguage, CatalogueTexts>> = {
         short: "Think alone, then in pairs, then in fours; each group of four brings its strongest idea.",
         when: "When everyone should contribute in little time, also in large groups.",
         result: "One core idea per group of four, plus all notes from the earlier phases.",
-        evidence:
-          "The method itself has not been tested. Its principle has: in experiments, groups did better when everyone first wrote or answered alone and small groups talked it over afterwards.",
         steps: {
           alone: { name: "Think and write alone" },
           pairs: { name: "Share in pairs" },
@@ -260,8 +200,6 @@ export const METHOD_TEXTS: Readonly<Record<MethodLanguage, CatalogueTexts>> = {
           "Everyone estimates in private, you discuss the differences together, then everyone estimates again; you get a group estimate with its spread.",
         when: "When you need a number, such as effort, date or likelihood, and the knowledge is spread across many people.",
         result: "Both rounds with median and range, the reasons without names, the change between rounds.",
-        evidence:
-          "A systematic review found that such rounds are usually more accurate than the average of first estimates and than freely discussing groups. Almost all tests used tasks with a correct answer.",
         steps: {
           estimate1: { name: "First estimate with a reason" },
           feedback: { name: "Feedback: median, range, reasons" },
@@ -276,8 +214,6 @@ export const METHOD_TEXTS: Readonly<Record<MethodLanguage, CatalogueTexts>> = {
           "Everyone writes notes that everyone sees at once, and you arrange them together, with no fixed sequence.",
         when: "When you want to collect freely, without steps or hidden writing, for instance for a list that grows over time.",
         result: "All notes, in titled groups if you like.",
-        evidence:
-          "In experiments, electronic brainstorming, where everyone reads along, beat spoken rounds from medium group sizes on. This form itself has not been studied.",
         steps: {
           wall: { name: "Write and arrange" },
         },

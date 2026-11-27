@@ -147,7 +147,7 @@ describe("„Schätzen – Diskutieren – Schätzen“", () => {
     expect(steps[3]).toMatchObject({ vote: { kind: "estimate" }, output: "estimate" });
     expect(steps[3]?.noteKind).toBeUndefined();
     expect(checkAgenda(agenda)).toEqual([]);
-    expect(CATALOGUE.schaetzen).toMatchObject({ purpose: "decide", evidence: "experiments", groupSize: [5, 30] });
+    expect(CATALOGUE.schaetzen).toMatchObject({ purpose: "decide", groupSize: [5, 30] });
     const seconds = steps.reduce((sum, step) => sum + (step.durationSec ?? 0), 0);
     expect(CATALOGUE.schaetzen.minutes).toBe(Math.ceil(seconds / 300) * 5);
   });

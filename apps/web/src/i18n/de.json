@@ -210,8 +210,6 @@
     "total_other": "Gesamt etwa {{count}}\u00a0Minuten, {{min}}–{{max}}\u00a0Personen.",
     "totalOpen": "Ohne feste Dauer, {{min}}–{{max}}\u00a0Personen.",
     "result": "Ergebnis",
-    "evidence": "Belegt",
-    "level": "{{level}}: {{meaning}}",
     "aka": "Auch bekannt als",
     "making": "Wand wird angelegt …",
     "limited": "Von hier wurden gerade zu viele Wände angelegt. Deine Frage ist noch da; versuch es in einer Minute noch mal.",

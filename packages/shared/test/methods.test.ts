@@ -44,7 +44,7 @@ describe("every method of the catalogue is described, in both languages", () => 
         // one sentence
         expect(texts.short.trim().endsWith("."), texts.short).toBe(true);
         expect(texts.short.slice(0, -1), texts.short).not.toMatch(/[.!?]\s/);
-        for (const field of ["when", "result", "evidence"] as const) {
+        for (const field of ["when", "result"] as const) {
           expect(texts[field].trim(), `${id} ${language} ${field}`).not.toBe("");
         }
       }
@@ -63,14 +63,10 @@ describe("every method of the catalogue is described, in both languages", () => 
     });
   }
 
-  it("the words of the evidence levels, the purposes, the forms and the visibilities stand in both languages", () => {
+  it("the words of the purposes, the forms and the visibilities stand in both languages", () => {
     const [de, en] = [METHOD_TEXTS.de, METHOD_TEXTS.en];
-    for (const part of ["evidence", "purposes", "modes", "visibility"] as const) {
+    for (const part of ["purposes", "modes", "visibility"] as const) {
       expect(Object.keys(de[part]).sort(), part).toEqual(Object.keys(en[part]).sort());
-    }
-    for (const level of Object.values({ ...de.evidence, ...en.evidence })) {
-      expect(level.label.trim()).not.toBe("");
-      expect(level.meaning.trim()).not.toBe("");
     }
   });
 });

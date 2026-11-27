@@ -67,11 +67,6 @@ export type OutputKind = z.infer<typeof outputKindSchema>;
 export const noteKindSchema = z.enum(["idea", "reason", "action", "decision", "criterion"]);
 export type NoteKind = z.infer<typeof noteKindSchema>;
 
-/** How well the core of a method is supported (docs/methoden-katalog.md, „Evidenzstufen“), shown as a word with one
- *  sentence (the owner's decision 5, PLAN-METHODEN.md 7). */
-export const evidenceSchema = z.enum(["metaAnalysis", "experiments", "studies", "practice", "disputed"]);
-export type Evidence = z.infer<typeof evidenceSchema>;
-
 /** What a method is for: the heading it stands under in the choice on `/neu` (docs/methoden-katalog.md, (b)).
  *  `none`: the wall without a fixed sequence, the choice's last option. */
 export const PURPOSES = ["collect", "decide", "plan", "review", "risk", "none"] as const;
@@ -135,7 +130,6 @@ export interface Method {
   minutes: number | null;
   /** How many people it is made for, from and to. */
   groupSize: readonly [min: number, max: number];
-  evidence: Evidence;
   /** A licence that asks for a visible attribution (PLAN-METHODEN.md 7, question 6): „1-2-4-Alle“ (stage M4). The
    *  words of the attribution stand in methods/texts.ts (`ATTRIBUTION`). */
   attribution?: "liberatingStructures";

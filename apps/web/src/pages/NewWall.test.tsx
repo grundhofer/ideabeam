@@ -1,6 +1,6 @@
 import { fireEvent, screen, waitFor, within } from "@testing-library/react";
 import { afterEach, expect, test, vi } from "vitest";
-import { CATALOGUE, METHOD_ORDER, METHOD_TEXTS, methodTexts } from "@ideabeam/shared";
+import { CATALOGUE, METHOD_ORDER, methodTexts } from "@ideabeam/shared";
 import i18n from "../i18n";
 import { useWalls } from "../store/walls";
 import { renderApp } from "../test-app";
@@ -204,9 +204,8 @@ test.each(["de", "en"] as const)(
         const description = screen.getByText(short);
         expect(description.closest("[hidden]")).toBeNull();
         expect(option.getAttribute("aria-describedby")?.split(" ")).toContain(description.id);
-        // the facts: the time, the group size and the evidence level as a word
+        // the facts: the time and the group size, no evidence level (PLAN-METHODEN.md 7, question 5)
         const facts = document.getElementById(`app-method-${method}-facts`)?.textContent ?? "";
-        expect(facts).toContain(METHOD_TEXTS[lang].evidence[CATALOGUE[method].evidence].label);
         expect(facts).toContain(`${CATALOGUE[method].groupSize[0]}–${CATALOGUE[method].groupSize[1]}`);
       }
     } finally {
@@ -215,7 +214,7 @@ test.each(["de", "en"] as const)(
   },
 );
 
-test("„Mehr dazu“ is a key of its own: it opens the steps and the evidence, and chooses nothing", async () => {
+test("„Mehr dazu“ is a key of its own: it opens the steps and the result, and chooses nothing", async () => {
   renderApp("/neu");
   await screen.findByRole("heading", { level: 1, name: "Neue Wand" });
   const free = screen.getByRole<HTMLInputElement>("radio", { name: "Freie Wand" });
@@ -233,7 +232,7 @@ test("„Mehr dazu“ is a key of its own: it opens the steps and the evidence, 
     "Wählen · allein, nur Summe · 3\u00a0Min.",
     "Ergebnis besprechen · alle, alle · 5\u00a0Min.",
   ]);
-  expect(about.textContent).toContain("Meta-Analyse: Mindestens eine Meta-Analyse stützt den Kern des Ablaufs.");
+  expect(about.textContent).toContain(methodTexts("de", "still-sammeln").result);
   // the method that was chosen stays chosen
   expect(screen.getByRole<HTMLInputElement>("radio", { name: "Still sammeln, bündeln, verdeckt wählen" }).checked).toBe(
     true,

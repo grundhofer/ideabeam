@@ -992,7 +992,7 @@
 
 /* „Methode“ on `/neu` (components/MethodChoice.tsx, docs/methoden-katalog.md (b)): one group of option fields
    under headings by purpose. A row: the option field with the name, under it always the short description, then
-   the facts with the evidence word in an outlined tag and „Mehr dazu“ at their end. The description and the facts
+   the facts (time, group size) and „Mehr dazu“ at their end. The description and the facts
    stand under the name, not under the round mark (no sebaro token: the radio's mark is 20 px in sebaro.css, then
    the radio's gap). Flat rows with hairlines, as every list */
 .app-methods {

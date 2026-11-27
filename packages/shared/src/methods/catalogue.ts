@@ -96,7 +96,6 @@ export const CATALOGUE: Readonly<Record<MethodId, Method>> = {
     ],
     minutes: 25,
     groupSize: [3, 30],
-    evidence: "metaAnalysis",
   },
   "eins-zwei-vier": {
     id: "eins-zwei-vier",
@@ -144,7 +143,6 @@ export const CATALOGUE: Readonly<Record<MethodId, Method>> = {
     ],
     minutes: 15,
     groupSize: [4, 30],
-    evidence: "experiments",
     attribution: "liberatingStructures",
   },
   schaetzen: {
@@ -203,7 +201,6 @@ export const CATALOGUE: Readonly<Record<MethodId, Method>> = {
     ],
     minutes: 25,
     groupSize: [5, 30],
-    evidence: "experiments",
   },
   free: {
     id: "free",
@@ -222,7 +219,6 @@ export const CATALOGUE: Readonly<Record<MethodId, Method>> = {
     ],
     minutes: null,
     groupSize: [1, 30],
-    evidence: "studies",
   },
 };
 

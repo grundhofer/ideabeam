@@ -42,7 +42,7 @@ step = {
   noteKind?: "idea" | "reason" | "action" | "decision" | "criterion",
 }
 method = { id, version, items: Array<step | { method: methodId }>,   // nesting
-           minutes, groupSize, evidence: "metaAnalysis" | "experiments" | "studies" | "practice" | "disputed",
+           minutes, groupSize,   // no evidence level: the owner's decision of 2026-11-27 (PLAN-METHODEN.md 7, q. 5)
            attribution?: "liberatingStructures" | "leanCoffee" }
 agendaRequest = { items: Array<{ methodId, prompt?: string(≤140), minutes?: Record<stepKey, int> }> }  // 1..8
 resolvedStep  = step & { item: int, path: string, prompt: string }
@@ -149,7 +149,8 @@ voteConfig =
   teams, freeze options, clock). Back never hides, keeps ballots and results; reopening a counted vote is not in v1.
   Skipped steps count as reached.
 - `/neu`: the question first, then „Methode“ as a radio list with name, short description (always visible),
-  minutes, group size, evidence word; „Zeiten anpassen“; in M7 „Weitere Methode anhängen“.
+  minutes, group size (no evidence word, PLAN-METHODEN.md 7, question 5); „Zeiten anpassen“; in M7 „Weitere Methode
+  anhängen“.
 - Wall: the `app-state` area becomes the step header: „Schritt 2 von 5 · Still schreiben“ with the time; the
   instruction for this role; personal progress; the next step. `stepGuide(step, role, standing)` grows out of
   `guide()`. Primary action for the moderation „Weiter: <next>“ (in a vote: „Auszählen“, then „Weiter“); „Zurück“,

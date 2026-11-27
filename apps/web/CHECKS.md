@@ -148,9 +148,10 @@ run the rest; their result is the run itself. Keep this file current.
   `neu` and `neu-offen` (with „Mehr dazu“ open) and the existing walls show them. No end-to-end test goes back with
   „Zurück“ in a browser, and nobody has looked at the new header and the choice at 2000 px, light and dark, or at
   200 % in English. The keyboard reaches the choice (option fields and „Mehr dazu“ are native controls), but no
-  test walks it. The words of „Freie Wand“ are this stage's own, not the catalogue's, and the evidence sentences of
-  both methods were not checked again at their sources. „Still sammeln, bündeln, verdeckt wählen“ names a vote and a
-  ranking that come only with M2: until then its name and short description promise more than a wall does.
+  test walks it. The words of „Freie Wand“ are this stage's own, not the catalogue's. The choice shows no evidence
+  level and no evidence sentence (the owner's decision of 2026-11-27, PLAN-METHODEN.md 7, question 5). „Still
+  sammeln, bündeln, verdeckt wählen“ names a vote and a ranking that come only with M2: until then its name and short
+  description promise more than a wall does.
   A wall of schema 3 (before the methods) was played only in workerd's test pool, by rewriting a wall of this build
   into the old shape (`asSchemaThree`), never with a wall a deployed v0.1 made.
 - The hidden vote (stage M2): `tests/vote.spec.ts` reads every frame of a second browser before counting (no other

@@ -210,8 +210,6 @@
     "total_other": "About {{count}}\u00a0minutes in all, {{min}}–{{max}}\u00a0people.",
     "totalOpen": "No fixed duration, {{min}}–{{max}}\u00a0people.",
     "result": "Result",
-    "evidence": "Evidence",
-    "level": "{{level}}: {{meaning}}",
     "aka": "Also known as",
     "making": "Creating the wall …",
     "limited": "Too many walls were just created from here. Your question is still there; try again in a minute.",

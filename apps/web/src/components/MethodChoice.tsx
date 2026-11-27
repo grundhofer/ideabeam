@@ -1,12 +1,12 @@
 // MethodChoice.tsx: „Methode“ on `/neu`, the choice of the method a wall runs (docs/methoden-katalog.md, (b)). One
 // group of option fields under headings by purpose; the method that is chosen at first leads, „Freie Wand“ stands
 // last. Every row shows, in this order: the option field with the method's name as its label; under it, always, its
-// short description, which a screen reader reads with the name (`aria-describedby`); a line of facts: the time, the
-// group size and the evidence level as a word in an outlined tag (never colour alone); and „Mehr dazu“, a key of its
-// own outside the label, so pressing it chooses nothing. „Mehr dazu“ opens under the row: when it fits, its steps
-// with their form, visibility and minutes, what supports it with what the level means, the name it is known by, and
-// the attribution its licence asks for (Liberating Structures, CC BY-SA 4.0: „1-2-4-Alle“), with links to the source
-// and the licence.
+// short description, which a screen reader reads with the name (`aria-describedby`); a line of facts: the time and the
+// group size; and „Mehr dazu“, a key of its own outside the label, so pressing it chooses nothing. „Mehr dazu“ opens
+// under the row: when it fits, its steps with their form, visibility and minutes, what comes out, the name it is
+// known by, and the attribution its licence asks for (Liberating Structures, CC BY-SA 4.0: „1-2-4-Alle“), with links
+// to the source and the licence. No evidence level and no evidence sentence: the owner's decision of 2026-11-27
+// (PLAN-METHODEN.md 7, question 5).
 // The rule of PLAN-METHODEN.md 2: a method never stands here as a bare name (NewWall.test.tsx holds it).
 //
 // The words of the methods come from the shared package (packages/shared, methods/texts.ts), the words around them
@@ -81,8 +81,6 @@ export function MethodChoice({ lang, value, onChange }: Props) {
                       </span>
                       <span aria-hidden="true"> · </span>
                       <span>{t("new.people", { min: facts.groupSize[0], max: facts.groupSize[1] })}</span>
-                      <span aria-hidden="true"> · </span>
-                      <span className="sb-tag">{words.evidence[facts.evidence].label}</span>
                     </p>
                     <button
                       type="button"
@@ -118,14 +116,6 @@ export function MethodChoice({ lang, value, onChange }: Props) {
                     </p>
                     <h3 className="app-method__heading">{t("new.result")}</h3>
                     <p>{texts.result}</p>
-                    <h3 className="app-method__heading">{t("new.evidence")}</h3>
-                    <p>
-                      {t("new.level", {
-                        level: words.evidence[facts.evidence].label,
-                        meaning: words.evidence[facts.evidence].meaning,
-                      })}
-                    </p>
-                    <p>{texts.evidence}</p>
                     {texts.aka !== undefined && (
                       <>
                         <h3 className="app-method__heading">{t("new.aka")}</h3>

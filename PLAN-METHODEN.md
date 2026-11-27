@@ -12,7 +12,7 @@ ersetzt dort die Zeile „Vorlagen SWOT, Lean Canvas, Pre-Mortem“ in Abschnitt
 | Frage | Antwort |
 |---|---|
 | Was wird IdeaBeam? | Ein geführter Workshop-Raum. Die Moderation wählt beim Anlegen eine Methode, später eine Agenda aus mehreren. Die App führt alle durch die Schritte: allein, zu zweit, in Kleingruppen, alle zusammen, vorstellen. Am Ende steht ein Ergebnis, das sich sichern lässt |
-| Was ist anders als Miro? | Miro ist eine leere Fläche mit Vorlagen. IdeaBeam setzt die Regeln durch, die gut belegt sind: erst allein, verdeckt bis zum Aufdecken, verdeckt abstimmen. Und es sagt bei jeder Methode offen, wie gut sie belegt ist |
+| Was ist anders als Miro? | Miro ist eine leere Fläche mit Vorlagen. IdeaBeam setzt die Regeln durch, die gut belegt sind: erst allein, verdeckt bis zum Aufdecken, verdeckt abstimmen. Eine Bewertung der Methoden zeigt es nicht (deine Entscheidung vom 27.11.2026, Abschnitt 7, Frage 5) |
 | Was bleibt? | Ohne Konto, Speicherung in der EU, Löschung nach 30 Tagen, die Fläche, die Liste, das Ordnen mit KI, Deutsch und Englisch, `ideabeam.de` |
 | Was ist neu? | Ein Ablauf aus Schritten statt der zwei Phasen, verdeckte Abstimmungen und Rangfolgen, Schätzungen in Runden, Paare und Kleingruppen, Entscheidungen und Aufgaben im Ergebnis |
 | Wie viele Methoden? | 12 in v1, 7 Kandidaten für v1.1 (Katalog). Dazu die „Freie Wand“ ohne Ablauf |
@@ -25,9 +25,14 @@ ersetzt dort die Zeile „Vorlagen SWOT, Lean Canvas, Pre-Mortem“ in Abschnitt
   aufdecken, strukturiert besprechen, mechanisch zusammenfassen. Mündliches Brainstorming in der Runde ist schlechter
   als schriftliches Sammeln (Meta-Analyse). Sichtbare Zwischenstände verzerren (Experiment). Daraus folgen feste
   Voreinstellungen: Abstimmungen sind verdeckt und gleichzeitig, Ergebnisse erst nach dem Auszählen.
-- **Am besten belegt sind strukturierte Rückblicke** mit Ziel und Daten (zwei Meta-Analysen).
+- **Am besten belegt sind Rückblicke**, stärker mit objektiven Daten statt Erinnerung (zwei Meta-Analysen; korrigiert
+  am 27.11.2026 nach `docs/belege-pruefung.md`: „mit Ziel“ und „strukturiert“ trägt der Beleg nicht).
 - **Populär, aber schwach belegt** sind SWOT, „5 Whys“, offene Punktabstimmung und Canvas-Vorlagen. Sie kommen höchstens
-  in v1.1, mit dem Hinweis „umstritten“ und Leitplanken.
+  in v1.1, mit Leitplanken.
+- **Die App zeigt keine Bewertung der Methoden** (entschieden am 27.11.2026, Abschnitt 7, Frage 5): keine
+  Evidenzstufe, kein Belegsatz, weder auf `/neu` noch auf der Wand, im Export oder auf der Startseite. Die Recherche
+  bleibt die Begründung für die Regeln der Abläufe ([`docs/recherche-methoden.md`](docs/recherche-methoden.md),
+  [`docs/belege-pruefung.md`](docs/belege-pruefung.md)).
 - **Nichts aus der Recherche wird ungeprüft zitiert.** Die Recherche listet Quellen, die nur aus dem Gedächtnis stammen,
   und fünf Zahlen, die nie in der App stehen dürfen. Jede Quelle, die die App nennt, wird vorher am Original geprüft.
 - **Methoden sind frei, Namen und Texte nicht.** Alle Texte sind unsere eigenen. Gemieden werden geschützte Namen
@@ -40,8 +45,9 @@ Dein Auftrag vom 27.11.2026: Weil die Methoden neutrale deutsche Namen bekommen,
 kurze Umschreibung, wo sie gewählt oder gezeigt wird.
 
 - **Beim Anlegen (`/neu`):** Jede Zeile zeigt den Namen, darunter immer sichtbar die Kurzbeschreibung (ein Satz,
-  höchstens rund 20 Wörter: was man tut und was herauskommt), dann Dauer, Gruppengröße und die Evidenzstufe als Wort.
-  „Mehr dazu“ klappt auf: wann sie passt, die Schritte, warum sie so belegt ist, „auch bekannt als“, Namensnennung.
+  höchstens rund 20 Wörter: was man tut und was herauskommt), dann Dauer und Gruppengröße. „Mehr dazu“ klappt auf:
+  wann sie passt, die Schritte, was herauskommt, „auch bekannt als“, Namensnennung. Keine Evidenzstufe und kein
+  Belegsatz (Abschnitt 7, Frage 5).
   Ein Screenreader liest die Kurzbeschreibung mit dem Namen vor.
 - **Auf der Startseite:** ein Abschnitt „Geführte Methoden“ mit einer kurzen Einleitung („erst allein, dann
   gemeinsam“) und allen Methoden als Name und Kurzbeschreibung.
@@ -57,7 +63,7 @@ und das Muster der Auswahl.
 
 ## 3 Die Methoden
 
-Die zwölf für v1, nach Zweck. Kurzbeschreibungen, Schritte, Zeiten und Evidenz im Katalog.
+Die zwölf für v1, nach Zweck. Kurzbeschreibungen, Schritte und Zeiten im Katalog.
 
 | Zweck | Methoden |
 |---|---|
@@ -70,7 +76,7 @@ Die zwölf für v1, nach Zweck. Kurzbeschreibungen, Schritte, Zeiten und Evidenz
 Ohne Ablauf: **Freie Wand** (schreiben und ordnen, wie eine Wand heute ohne verdecktes Schreiben).
 
 Kandidaten für v1.1: Aufhören, was schadet · 15-%-Lösungen · Agenda aus der Runde · Lage in vier Feldern (geführte
-SWOT, „umstritten“) · Ursachenbaum (statt „5 Whys“) · Vier Zukünfte · Perspektivenrunden.
+SWOT) · Ursachenbaum (statt „5 Whys“) · Vier Zukünfte · Perspektivenrunden.
 
 ## 4 Bauweise
 
@@ -80,6 +86,7 @@ Ausführlich im Architekturvorschlag dieses Plans (Anhang A); hier das, was du w
   Methoden. Ein Schritt hat einen Typ (schreiben, aufdecken, ordnen, besprechen, abstimmen, Rangfolge, bewerten,
   schätzen, vorstellen, entscheiden, Rollenrunde, Zustimmung), eine Form (allein, zu zweit, Kleingruppe, alle,
   vorstellen), eine Sichtbarkeit (verdeckt, Gruppe, alle, nur Summe), eine vorgeschlagene Dauer und was er erzeugt.
+  Eine Methode trägt keine Evidenzstufe (Abschnitt 7, Frage 5).
 - **Jede Wand speichert ihren Ablauf** beim Anlegen als feste Kopie. Ein Update der App verschiebt keinen laufenden
   Workshop.
 - **Bestehende Wände laufen weiter.** Der heutige Ablauf wird die Methode „Still sammeln, bündeln, verdeckt wählen“
@@ -117,7 +124,7 @@ AT = Arbeitstag, mit Zuschlag ×1,7 wie in PLAN.md 6.
 | M4 | Paare und Kleingruppen | 5 | 8,5 |
 | M5 | Methoden, Paket A | 5 | 8,5 |
 | M6 | Methoden, Paket B | 6 | 10 |
-| M7 | Agenda aus mehreren Methoden, Startseite, Evidenz-Hinweise | 3 | 5 |
+| M7 | Agenda aus mehreren Methoden, Startseite | 3 | 5 |
 | | **Gesamt** | **30** | **51** |
 
 ### M1: Methoden-Motor
@@ -152,8 +159,8 @@ Abnahme:
 - Nicht geprüft: kein Ende-zu-Ende-Test geht im Browser „Zurück“ (das prüfen Worker-Tests auf Nachrichtenebene);
   Kopf und Auswahl nicht bei 2000 px, nicht bei 200 % auf Englisch angesehen; die Texte der „Freien Wand“ sind von
   M1, nicht aus dem Katalog, und ihre Evidenz („Studien“) ist ein Vorschlag; die Belegsätze nicht neu an den Quellen
-  geprüft; Name und Kurzbeschreibung von „Still sammeln“ versprechen bis M2 eine Wahl, die es noch nicht gibt; eine
-  Wand von Schema 3 nur im Testpool von workerd nachgestellt, nie mit einer echten v0.1-Wand.
+  geprüft (beides entfallen: seit 27.11.2026 zeigt die App keine Evidenz, Abschnitt 7, Frage 5); Name und
+  Kurzbeschreibung von „Still sammeln“ versprechen bis M2 eine Wahl, die es noch nicht gibt; eine Wand von Schema 3 nur im Testpool von workerd nachgestellt, nie mit einer echten v0.1-Wand.
 
 ### M2: Verdeckte Abstimmung
 
@@ -328,8 +335,8 @@ Abnahme je Methode: ein Ende-zu-Ende-Test, ein Export-Test, eine Zeile im Kosten
 ### M7: Agenda und Startseite
 
 Mehrere Methoden hintereinander auf einer Wand (anhängen, entfernen, verschieben ohne Ziehen), Schritte ändern, die
-noch nicht erreicht sind. Der Abschnitt „Geführte Methoden“ auf der Startseite. Die Evidenz-Hinweise und die
-Namensnennung für Liberating Structures bei der Methode und unter „Über“. Datenschutzerklärung und
+noch nicht erreicht sind. Der Abschnitt „Geführte Methoden“ auf der Startseite (Name und Kurzbeschreibung, keine
+Evidenz). Die Namensnennung für Liberating Structures bei der Methode und unter „Über“. Datenschutzerklärung und
 Barrierefreiheits-Erklärung angepasst.
 
 Abnahme: Eine Agenda aus drei Methoden läuft durch. Was eine Methode erzeugt, kommt in der nächsten an.
@@ -342,13 +349,14 @@ Abnahme: Eine Agenda aus drei Methoden läuft durch. Was eine Methode erzeugt, k
 | Zeilen im Gratisplan | Jede Methode mit Obergrenze im Kostentest. Bremse und Tagesbudget bleiben |
 | Barrierefreiheit | Plus/Minus statt Ziehen beim Punkten, Schrittwechsel und „Zeit um“ werden angesagt, Fokus springt nie, während jemand schreibt |
 | Rund 300 Texte je Sprache | Texte im geteilten Paket mit Gleichstands-Test DE/EN, nachgeladen, damit der Start nicht schwerer wird |
-| Ungeprüfte Belege in der App | Kein Beleg ohne Prüfung am Original; Stufen statt Zahlen |
+| Ungeprüfte Belege in der App | Entfällt: Seit dem 27.11.2026 zeigt die App keine Belege (Abschnitt 7, Frage 5). Die Regeln der Abläufe stützen sich auf die geprüfte Recherche |
 | Marken | Vor dem Bau von M5 eine Suche in TMview für die Namen mit „Register offen“ im Katalog |
 
 ## 7 Fragen an dich
 
 Jede mit Empfehlung zuerst. **Entschieden am 27.11.2026:** 1, 2, 5 und 8 von dir, jeweils wie empfohlen (IdeaBeam
-bleibt; die Moderation drückt „Weiter“; Evidenz als Wort mit einem Satz; erst M1 und M2). 3, 4, 6 und 7 sowie die
+bleibt; die Moderation drückt „Weiter“; Evidenz als Wort mit einem Satz; erst M1 und M2). Frage 5 hast du am
+27.11.2026 neu entschieden: ganz weglassen. 3, 4, 6 und 7 sowie die
 Einzelheiten in Anhang A gelten nach der Empfehlung, solange du nichts anderes sagst.
 
 1. **Name.** Bleibt es IdeaBeam?
@@ -366,7 +374,11 @@ Einzelheiten in Anhang A gelten nach der Empfehlung, solange du nichts anderes s
    - *Die App zufällig, die Moderation kann tauschen (empfohlen).* Pro: schnell und fair. Contra: Freunde landen
      getrennt.
    - Nur die Moderation. Pro: Kontrolle. Contra: langsam bei 20 Leuten.
-5. **Evidenz anzeigen?**
+5. **Evidenz anzeigen?** **Entschieden am 27.11.2026: ganz weglassen.** Keine Evidenzstufe („Meta-Analyse“,
+   „Experimente“, „Studien“, „Praktikerkonsens“, „umstritten“) und kein Belegsatz, nirgends: nicht auf `/neu`, nicht
+   auf der Wand, nicht im Export, nicht auf der Startseite, nicht im Datenmodell der Methoden. Die belegten Regeln
+   (erst allein, verdeckt bis zum Aufdecken, verdeckt abstimmen) bleiben in den Abläufen; die Kurzbeschreibung jeder
+   Methode (Abschnitt 2) bleibt. Die erste Antwort (wie empfohlen, als Wort mit Satz) ist damit aufgehoben.
    - *Ja, als Wort („Meta-Analyse“, „Experimente“, „Studien“, „Praktikerkonsens“, „umstritten“) mit einem Satz,
      jede Quelle vorher geprüft (empfohlen).* Pro: Das macht sonst niemand. Contra: Manche Methoden sehen schwach aus,
      und das Prüfen kostet Zeit.
