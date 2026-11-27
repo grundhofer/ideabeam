@@ -167,7 +167,7 @@ Abnahme:
 - Höchstens 15 Zeilen mehr je Abstimmung mit 8 Personen.
 - axe ohne Befund in Hell und Dunkel, schmal und breit, bei 200 %.
 
-**Stand M2 (27.11.2026, Branch `methoden-m2` auf M1 `8ddb34b`, nicht committet):** gebaut.
+**Stand M2 (27.11.2026, `84bf14e` auf M1 `8ddb34b`):** gebaut, von dir nicht abgenommen, nicht deployt.
 
 - `packages/shared/src/domain/vote.ts`: Arten Punkte, Auswahl, Rangfolge (Borda über die erfragten Plätze) und
   Bewertung 1 bis 5 (auch je Kriterium, Mittelwert); `optionsFor` (die Gruppen mit Zetteln nach „Bündeln“, dazu
@@ -195,7 +195,8 @@ Abnahme:
   nicht beim Anlegen oder per Migration: Eine Wand, die nie wählt, zahlt sie nicht; das Schema bleibt 4. (4) Ein
   Stimmzettel für einen verlassenen Schritt heißt `STALE`, nach dem Auszählen `PHASE`. (5) Eine Wand von Schema 3
   wird jetzt als „Still sammeln“ Version 2 gelesen, also mit Wahl.
-- Tests im letzten vollen Lauf (`CI=1 pnpm checks`): siehe Bericht an die führende Sitzung (unten ergänzt).
+- `CI=1 pnpm checks` grün: 333 Tests im geteilten Paket, 126 in `packages/arrange`, 242 im Worker, 290 in der App,
+  324 Ende-zu-Ende, keiner übersprungen.
   Kosten: eine Wahl mit 8 Personen 14 Zeilen (Schritt 1, Stimmzettel 8 + 1 geänderter + Tabelle 2, Auszählen 2);
   die typische Wand bleibt bei 397 Zeilen.
 - Nicht geprüft: kein Bildschirmleser, nicht bei 2000 px angesehen; die Stimme kann nur Punkte und Auswahl,
