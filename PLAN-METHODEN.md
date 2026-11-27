@@ -1,0 +1,236 @@
+# IdeaBeam: geführte Methoden (Plan für v0.2)
+
+Stand 27.11.2026. Entwurf, von dir noch nicht freigegeben. Grundlage: dein Auftrag vom 27.11.2026 („ein miro mit
+bewährten wissenschaftlichen und unternehmerischen konzepten … moderator wählt die agenda und das setup aus einer
+großen liste und man arbeitet dann kollaborativ oder einzeln für sich“), die Recherche
+[`docs/recherche-methoden.md`](docs/recherche-methoden.md) und der Methodenkatalog
+[`docs/methoden-katalog.md`](docs/methoden-katalog.md). Der Plan für v0.1 bleibt [`PLAN.md`](PLAN.md); dieser Plan
+ersetzt dort die Zeile „Vorlagen SWOT, Lean Canvas, Pre-Mortem“ in Abschnitt 2.2.
+
+## Kurzfassung
+
+| Frage | Antwort |
+|---|---|
+| Was wird IdeaBeam? | Ein geführter Workshop-Raum. Die Moderation wählt beim Anlegen eine Methode, später eine Agenda aus mehreren. Die App führt alle durch die Schritte: allein, zu zweit, in Kleingruppen, alle zusammen, vorstellen. Am Ende steht ein Ergebnis, das sich sichern lässt |
+| Was ist anders als Miro? | Miro ist eine leere Fläche mit Vorlagen. IdeaBeam setzt die Regeln durch, die gut belegt sind: erst allein, verdeckt bis zum Aufdecken, verdeckt abstimmen. Und es sagt bei jeder Methode offen, wie gut sie belegt ist |
+| Was bleibt? | Ohne Konto, Speicherung in der EU, Löschung nach 30 Tagen, die Fläche, die Liste, das Ordnen mit KI, Deutsch und Englisch, `ideabeam.de` |
+| Was ist neu? | Ein Ablauf aus Schritten statt der zwei Phasen, verdeckte Abstimmungen und Rangfolgen, Schätzungen in Runden, Paare und Kleingruppen, Entscheidungen und Aufgaben im Ergebnis |
+| Wie viele Methoden? | 12 in v1, 7 Kandidaten für v1.1 (Katalog). Dazu die „Freie Wand“ ohne Ablauf |
+| Aufwand | 30 Arbeitstage geschätzt, 51 mit Zuschlag, in sieben Etappen (M1 bis M7). Nach M2 ist das Produkt schon mit einer Methode samt Abstimmung nutzbar |
+| Kosten | Ein Methodenlauf schreibt 15 bis 60 Zeilen, wenig gegen das Ziehen von Zetteln. Jede Methode bekommt eine Obergrenze im Kostentest |
+
+## 1 Was wir aus der Recherche übernehmen
+
+- **Ablaufregeln sind besser belegt als Methoden mit Markennamen.** Erst jede Person allein, dann gleichzeitig
+  aufdecken, strukturiert besprechen, mechanisch zusammenfassen. Mündliches Brainstorming in der Runde ist schlechter
+  als schriftliches Sammeln (Meta-Analyse). Sichtbare Zwischenstände verzerren (Experiment). Daraus folgen feste
+  Voreinstellungen: Abstimmungen sind verdeckt und gleichzeitig, Ergebnisse erst nach dem Auszählen.
+- **Am besten belegt sind strukturierte Rückblicke** mit Ziel und Daten (zwei Meta-Analysen).
+- **Populär, aber schwach belegt** sind SWOT, „5 Whys“, offene Punktabstimmung und Canvas-Vorlagen. Sie kommen höchstens
+  in v1.1, mit dem Hinweis „umstritten“ und Leitplanken.
+- **Nichts aus der Recherche wird ungeprüft zitiert.** Die Recherche listet Quellen, die nur aus dem Gedächtnis stammen,
+  und fünf Zahlen, die nie in der App stehen dürfen. Jede Quelle, die die App nennt, wird vorher am Original geprüft.
+- **Methoden sind frei, Namen und Texte nicht.** Alle Texte sind unsere eigenen. Gemieden werden geschützte Namen
+  (Six Thinking Hats, RAPID, Value Proposition Canvas, Cynefin als Name). Methoden aus Liberating Structures stehen
+  unter CC BY-SA 4.0 und brauchen eine Namensnennung.
+
+## 2 Regel: Jede Methode wird überall kurz umschrieben
+
+Dein Auftrag vom 27.11.2026: Weil die Methoden neutrale deutsche Namen bekommen, steht bei jeder Methode immer eine
+kurze Umschreibung, wo sie gewählt oder gezeigt wird.
+
+- **Beim Anlegen (`/neu`):** Jede Zeile zeigt den Namen, darunter immer sichtbar die Kurzbeschreibung (ein Satz,
+  höchstens rund 20 Wörter: was man tut und was herauskommt), dann Dauer, Gruppengröße und die Evidenzstufe als Wort.
+  „Mehr dazu“ klappt auf: wann sie passt, die Schritte, warum sie so belegt ist, „auch bekannt als“, Namensnennung.
+  Ein Screenreader liest die Kurzbeschreibung mit dem Namen vor.
+- **Auf der Startseite:** ein Abschnitt „Geführte Methoden“ mit einer kurzen Einleitung („erst allein, dann
+  gemeinsam“) und allen Methoden als Name und Kurzbeschreibung.
+- **Auf der Wand:** Der Kopf nennt die Methode mit ihrer Kurzbeschreibung, jeder Schritt sagt in einem Satz, was jetzt
+  zu tun ist.
+- **Im Export:** Name und Kurzbeschreibung über den Ergebnissen der Methode.
+- **Durchgesetzt durch einen Test:** Jede Methode im Katalog des Codes hat Name und Kurzbeschreibung in beiden
+  Sprachen, die Kurzbeschreibung hat höchstens 25 Wörter, und die Startseite und `/neu` zeigen sie für jede Methode.
+  Eine Methode ohne Umschreibung lässt sich nicht bauen.
+
+Die Texte für alle 19 Methoden stehen im Katalog, deutsch und englisch, dazu der Entwurf des Startseiten-Abschnitts
+und das Muster der Auswahl.
+
+## 3 Die Methoden
+
+Die zwölf für v1, nach Zweck. Kurzbeschreibungen, Schritte, Zeiten und Evidenz im Katalog.
+
+| Zweck | Methoden |
+|---|---|
+| Ideen sammeln | Still sammeln, bündeln, verdeckt wählen (voreingestellt) · 1-2-4-Alle |
+| Entscheiden | Stille Ideenrunde mit Rangfolge · Kriterienbewertung · Schätzen – Diskutieren – Schätzen · Gegenposition prüfen · Entscheidungsprotokoll mit Zustimmungsrunde |
+| Planen und Ziele | Ziele mit messbaren Ergebnissen · Annahmen prüfen |
+| Rückblick | Rückblick nach Ziel und Daten · Was? Na und? Was nun? |
+| Risiken | Scheitern vorwegdenken |
+
+Ohne Ablauf: **Freie Wand** (schreiben und ordnen, wie eine Wand heute ohne verdecktes Schreiben).
+
+Kandidaten für v1.1: Aufhören, was schadet · 15-%-Lösungen · Agenda aus der Runde · Lage in vier Feldern (geführte
+SWOT, „umstritten“) · Ursachenbaum (statt „5 Whys“) · Vier Zukünfte · Perspektivenrunden.
+
+## 4 Bauweise
+
+Ausführlich im Architekturvorschlag dieses Plans (Anhang A); hier das, was du wissen musst.
+
+- **Methoden sind Daten im Code** (`packages/shared`): eine Methode ist eine Liste von Schritten oder anderen
+  Methoden. Ein Schritt hat einen Typ (schreiben, aufdecken, ordnen, besprechen, abstimmen, Rangfolge, bewerten,
+  schätzen, vorstellen, entscheiden, Rollenrunde, Zustimmung), eine Form (allein, zu zweit, Kleingruppe, alle,
+  vorstellen), eine Sichtbarkeit (verdeckt, Gruppe, alle, nur Summe), eine vorgeschlagene Dauer und was er erzeugt.
+- **Jede Wand speichert ihren Ablauf** beim Anlegen als feste Kopie. Ein Update der App verschiebt keinen laufenden
+  Workshop.
+- **Bestehende Wände laufen weiter.** Der heutige Ablauf wird die Methode „Still sammeln, bündeln, verdeckt wählen“
+  (ohne Wahl, bis M2), die Wand ohne verdecktes Schreiben die „Freie Wand“. Kein Umzug, keine geschriebene Zeile beim
+  Lesen.
+- **Sichtbarkeit wird nur weiter, nie enger.** Was gezeigt war, bleibt gezeigt, auch wenn die Moderation zurückgeht.
+  Das ist die heutige Regel „Aufdecken nimmt nichts zurück“, allgemein gemacht.
+- **Namen bleiben verborgen** (Entscheidung 14): Kein Schritt zeigt, wer was geschrieben hat. In einem Paar ist das
+  naturgemäß zu erraten; der Schritt sagt das.
+- **Abstimmungen:** Jede Person stimmt im Browser ab und sendet erst mit „Abgeben“. Der Server speichert eine Zeile je
+  Person, verrät bis zum Auszählen nur, wie viele abgegeben haben, und nie eine einzelne Stimme. Arten: Punkte mit
+  Budget, Auswahl, Rangfolge, Bewertung 1 bis 5 (auch nach Kriterien), Zahl schätzen (Median und Spanne, nie nur der
+  Mittelwert), Zustimmung mit Einwand.
+- **Paare und Kleingruppen** bleiben auf einer Wand, mit eigenen Bereichen. Die App bildet sie zufällig aus den
+  Anwesenden, die Moderation kann tauschen. Gesprochen wird im eigenen Videotool; die Moderation sieht die Teams, um
+  die Räume dort gleich zu besetzen.
+- **Zeit:** Jeder Schritt kann eine Uhr haben. Ob die App nach Ablauf selbst weitergeht, ist eine Frage an dich
+  (Abschnitt 7); gebaut wird es mit dem einen Wecker des Durable Objects, ohne Timer.
+- **Die Wand zeigt groß:** Schritt x von y und seinen Namen, die Zeit, was du jetzt tust, deinen Stand („Abgegeben.
+  5 von 8 haben gewählt.“), was danach kommt. Die Moderation hat „Weiter“ als Hauptaktion, „Zurück“, „Überspringen“
+  und den Ablauf unter „Mehr“.
+- **Ergebnis und Export:** je Methode ihre Ergebnisse: Gruppen, Rangfolgen mit Punkten, Schätzungen mit Median und
+  Spanne, Zustimmungen und Einwände, Entscheidungen und Aufgaben (wer, bis wann). Keine einzelnen Stimmen, keine
+  Namen.
+
+## 5 Etappen
+
+AT = Arbeitstag, mit Zuschlag ×1,7 wie in PLAN.md 6.
+
+| Etappe | Inhalt | AT | ×1,7 |
+|---|---|---|---|
+| M1 | Methoden-Motor und Umzug des heutigen Ablaufs | 5 | 8,5 |
+| M2 | Verdeckte Abstimmung, Rangfolge, Bewertung | 4 | 7 |
+| M3 | Schätzen in Runden | 2 | 3,5 |
+| M4 | Paare und Kleingruppen | 5 | 8,5 |
+| M5 | Methoden, Paket A | 5 | 8,5 |
+| M6 | Methoden, Paket B | 6 | 10 |
+| M7 | Agenda aus mehreren Methoden, Startseite, Evidenz-Hinweise | 3 | 5 |
+| | **Gesamt** | **30** | **51** |
+
+### M1: Methoden-Motor
+
+Methoden als Daten, Ablauf je Wand, Schritt statt Phase, Uhr je Schritt, Sichtbarkeit, die nur weiter wird,
+Umzug bestehender Wände, `/neu` mit der Auswahl aus „Still sammeln“ und „Freie Wand“ (mit Kurzbeschreibung), der
+Kopf der Wand als Schritt-Anzeige.
+
+Abnahme:
+- Alle heutigen Tests bestehen, nur mit „Schritt“ statt „Phase“ im Wortlaut. Bestehende Wände in beiden Zuständen
+  zeigen genau dasselbe wie vorher und schreiben beim Lesen keine Zeile.
+- Zurückgehen versteckt nichts wieder; ein Test liest dafür die Nachrichten selbst.
+- Der Kostentest einer typischen Wand liegt höchstens 5 Zeilen über heute.
+- Der Test der Umschreibungs-Regel (Abschnitt 2) besteht.
+
+### M2: Verdeckte Abstimmung
+
+Punkte, Auswahl, Rangfolge, Bewertung; Auszählen; Ergebnis; das Ergebnis im Export. „Still sammeln, bündeln, verdeckt
+wählen“ bekommt seine Wahl und ist damit vollständig.
+
+Abnahme:
+- Vor dem Auszählen steht in keiner Nachricht an einen Browser eine fremde Stimme oder ein Zwischenstand; ein
+  Ende-zu-Ende-Test liest alle Nachrichten.
+- Zweimal gesendet bleibt eine Stimme eine. Abstimmen geht ganz ohne Maus.
+- Höchstens 15 Zeilen mehr je Abstimmung mit 8 Personen.
+- axe ohne Befund in Hell und Dunkel, schmal und breit, bei 200 %.
+
+### M3: Schätzen in Runden
+
+Zahl schätzen, Median und Spanne, zweite Runde mit dem Ergebnis der ersten, Begründungen ohne Namen. Methode
+„Schätzen – Diskutieren – Schätzen“.
+
+Abnahme: Median und Quartile getestet mit gerader, ungerader und einer einzigen Schätzung. Die zweite Runde zeigt nur
+die Summe der ersten.
+
+### M4: Paare und Kleingruppen
+
+Teams bilden (zufällig, durch die Moderation, zusammenlegen, Nachzügler), Sichtbarkeit je Team, Bereiche, die Wahl
+eines Teams, Weitergehen nach Ablauf der Zeit. Methode „1-2-4-Alle“.
+
+Abnahme: Ein Team sieht kein fremdes Team (Test auf Nachrichtenebene). Zusammenlegen zeigt genau den Unterschied. Ein
+Workshop überlebt den Ruhezustand des Durable Objects mitten im Schritt. Höchstens 60 Zeilen für 8 Personen.
+
+### M5 und M6: die übrigen Methoden
+
+M5: Rückblick nach Ziel und Daten, Scheitern vorwegdenken, Stille Ideenrunde mit Rangfolge, Was? Na und? Was nun?
+M6: Kriterienbewertung, Gegenposition prüfen, Entscheidungsprotokoll mit Zustimmungsrunde, Annahmen prüfen, Ziele mit
+messbaren Ergebnissen.
+
+Abnahme je Methode: ein Ende-zu-Ende-Test, ein Export-Test, eine Zeile im Kostentest, ihre Texte in beiden Sprachen.
+
+### M7: Agenda und Startseite
+
+Mehrere Methoden hintereinander auf einer Wand (anhängen, entfernen, verschieben ohne Ziehen), Schritte ändern, die
+noch nicht erreicht sind. Der Abschnitt „Geführte Methoden“ auf der Startseite. Die Evidenz-Hinweise und die
+Namensnennung für Liberating Structures bei der Methode und unter „Über“. Datenschutzerklärung und
+Barrierefreiheits-Erklärung angepasst.
+
+Abnahme: Eine Agenda aus drei Methoden läuft durch. Was eine Methode erzeugt, kommt in der nächsten an.
+
+## 6 Risiken
+
+| Risiko | Gegenmittel |
+|---|---|
+| Die Wand wird überladen: jeder Schritttyp ist eine eigene Ansicht | Eine Hauptaktion je Schritt, der Kopf als einzige Wahrheit, Abstimmen als eigene Ansicht statt auf der Fläche |
+| Zeilen im Gratisplan | Jede Methode mit Obergrenze im Kostentest. Bremse und Tagesbudget bleiben |
+| Barrierefreiheit | Plus/Minus statt Ziehen beim Punkten, Schrittwechsel und „Zeit um“ werden angesagt, Fokus springt nie, während jemand schreibt |
+| Rund 300 Texte je Sprache | Texte im geteilten Paket mit Gleichstands-Test DE/EN, nachgeladen, damit der Start nicht schwerer wird |
+| Ungeprüfte Belege in der App | Kein Beleg ohne Prüfung am Original; Stufen statt Zahlen |
+| Marken | Vor dem Bau von M5 eine Suche in TMview für die Namen mit „Register offen“ im Katalog |
+
+## 7 Fragen an dich
+
+Jede mit Empfehlung zuerst. Alle anderen Einzelheiten (Anhang A, Abschnitt 7) entscheide ich nach der Empfehlung,
+wenn du nichts anderes sagst.
+
+1. **Name.** Bleibt es IdeaBeam?
+   - *Behalten (empfohlen).* Pro: Domain, Repo und Startseite sind da; „Idee“ passt zu Workshops. Contra: Der Name
+     klingt nach Ideensammeln, nicht nach Entscheiden.
+   - Neuer Name. Pro: passt zum größeren Anspruch. Contra: neue Domain, neue Recherche, Links brechen.
+2. **Geht die App nach Ablauf der Zeit selbst weiter?**
+   - *Nein, die Moderation drückt „Weiter“; nur in kurzen, getakteten Methoden wie 1-2-4-Alle automatisch
+     (empfohlen).* Pro: Niemand wird mitten im Satz abgeschnitten. Contra: ein Klick mehr.
+   - Immer automatisch. Pro: strenge Zeit. Contra: Überraschungen.
+3. **Sollen alle sehen, wie viele schon abgestimmt haben („5 von 8“)?**
+   - *Ja, nur die Zahl (empfohlen).* Pro: Alle wissen, wann es fertig ist. Contra: leichter Druck auf die Langsamen.
+   - Nein. Pro: kein Druck. Contra: Die Moderation rät, wann sie auszählt.
+4. **Wer bildet Paare und Teams?**
+   - *Die App zufällig, die Moderation kann tauschen (empfohlen).* Pro: schnell und fair. Contra: Freunde landen
+     getrennt.
+   - Nur die Moderation. Pro: Kontrolle. Contra: langsam bei 20 Leuten.
+5. **Evidenz anzeigen?**
+   - *Ja, als Wort („Meta-Analyse“, „Experimente“, „Studien“, „Praktikerkonsens“, „umstritten“) mit einem Satz,
+     jede Quelle vorher geprüft (empfohlen).* Pro: Das macht sonst niemand. Contra: Manche Methoden sehen schwach aus,
+     und das Prüfen kostet Zeit.
+   - Nein. Pro: weniger Text. Contra: Das Besondere geht verloren.
+6. **Namensnennung für Liberating Structures** („1-2-4-Alle“, „Was? Na und? Was nun?“): Die Lizenz verlangt eine
+   sichtbare Nennung.
+   - *Annehmen, Nennung bei der Methode und unter „Über“ (empfohlen).* Pro: Wer Workshops kennt, erkennt die Methoden.
+     Contra: eine Zeile mehr in der Oberfläche.
+   - Eigene Namen. Pro: keine Nennung. Contra: weniger wiedererkennbar.
+7. **Eine Methode je Wand zuerst, die Agenda aus mehreren Methoden erst in M7?**
+   - *Ja (empfohlen).* Pro: früher nutzbar, kleinere Oberfläche. Contra: Ein langer Workshop braucht bis M7 mehrere
+     Wände.
+   - Agenda von Anfang an. Pro: der volle Gedanke sofort. Contra: rund 3 AT später nutzbar, mehr Risiko in M1.
+8. **Reihenfolge der Arbeit.** Die offenen Punkte von v0.1 (Messung des eigenen Schlüssels, Reserve im Browser 4c)
+   warten, bis M2 fertig ist?
+   - *Ja (empfohlen).* Pro: Die neue Richtung bekommt die Kraft. Contra: Der eigene Schlüssel bleibt länger
+     unsichtbar.
+   - Erst v0.1 fertig. Pro: nichts bleibt halb. Contra: Die neue Richtung beginnt Wochen später.
+
+## Anhang A: Architekturvorschlag
+
+Der vollständige Vorschlag mit Datenmodell, Nachrichten, Speicher, Kosten und den Einzelfragen steht in
+[`docs/architektur-methoden.md`](docs/architektur-methoden.md) (27.11.2026). Er ist die Grundlage für M1 und wird
+beim Start von M1 gegen den Code geprüft, der dann gilt.

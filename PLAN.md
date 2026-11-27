@@ -141,7 +141,7 @@ dafür nicht nötig ist, wartet.
 | Idee | Anmerkung |
 |---|---|
 | Blind-Voting mit Top-N, Aufgaben | Muster aus RetroBeam |
-| Vorlagen SWOT, Lean Canvas, Pre-Mortem | Vorbelegte, feste Gruppen |
+| Geführte Methoden (ersetzt „Vorlagen SWOT, Lean Canvas, Pre-Mortem“) | Eigener Plan: [PLAN-METHODEN.md](PLAN-METHODEN.md), Entwurf vom 27.11.2026 |
 | Regler „gröber/feiner“ | Das Modell legt Themen zusammen oder teilt sie. Ein kurzer Aufruf über die Themenliste, ohne die Zettel neu zu lesen |
 | Bezahlte Stufe | Ordnen garantiert in der EU, ohne Speicherung. Entschieden: erst nach v0.1 (7.2, Nr. 9) |
 | Dubletten finden und stapeln | Per Schwelle auf Einbettungen geht es nicht (Messung). Neu zu prüfen: das Sprachmodell markiert sie beim Zuordnen |
