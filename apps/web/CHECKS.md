@@ -153,6 +153,13 @@ run the rest; their result is the run itself. Keep this file current.
   ranking that come only with M2: until then its name and short description promise more than a wall does.
   A wall of schema 3 (before the methods) was played only in workerd's test pool, by rewriting a wall of this build
   into the old shape (`asSchemaThree`), never with a wall a deployed v0.1 made.
+- The hidden vote (stage M2): `tests/vote.spec.ts` reads every frame of a second browser before counting (no other
+  person's ballot, no tally), sends a ballot twice, counts, and walks the ballot with the keyboard alone; the
+  screens `wand-wahl` and `wand-ergebnis` run axe in light at 390 px, dark at 1440 px and at 200 %. The ballot panel
+  offers points and choices (`dots`, `approval`); ranking (`rank`) and scores (`score`) are rules and Worker only,
+  without a panel: no method uses them yet. Nobody looked at the panel at 2000 px or with a screen reader; the guide
+  sentences speak of points, which is true for the one vote there is. „5 von 8“ counts the people here now, at least
+  as many as have voted.
 
 ## Waivers
 

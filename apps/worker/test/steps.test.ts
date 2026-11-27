@@ -78,9 +78,9 @@ describe("a step move", () => {
     const ben = await join(wallId, "Ben");
     expect(await answer(anna.socket, go(0, 1))).toMatchObject({ seq: 2 });
     const before = ben.socket.events.length;
-    expect(await answer(anna.socket, go(1, 3))).toMatchObject({ type: "ack", seq: 3 });
+    expect(await answer(anna.socket, go(1, 4))).toMatchObject({ type: "ack", seq: 3 });
     await settle();
-    expect(ben.socket.events.slice(before)).toEqual([{ type: "step.changed", seq: 3, step: 3, reach: 3 }]);
+    expect(ben.socket.events.slice(before)).toEqual([{ type: "step.changed", seq: 3, step: 4, reach: 4 }]);
   });
 
   it("names the step it was made in: sent again it changes nothing, made for a step the wall has left it is refused", async () => {
@@ -90,7 +90,7 @@ describe("a step move", () => {
     expect(await answer(anna.socket, go(0, 1))).toMatchObject({ type: "ack", seq: 2 });
     expect(await answer(anna.socket, go(0, 1))).toMatchObject({ type: "ack", seq: 2 });
     expect(await ask(anna.socket, go(0, 2))).toBe("STALE");
-    expect(await ask(anna.socket, go(1, 4))).toBe("INVALID");
+    expect(await ask(anna.socket, go(1, 5))).toBe("INVALID");
     expect(await ask(ben.socket, go(1, 2))).toBe("NOT_ADMIN");
     await settle();
     expect(ofType(ben.socket.events, "step.changed")).toHaveLength(1);

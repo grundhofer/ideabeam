@@ -68,24 +68,42 @@ export function methodOfStep(agenda: ResolvedAgenda, step: number): MethodId {
  *  - `move`: move notes (while they are hidden, one's own only: domain/rules.ts).
  *  - `group`: make, rename, move and delete groups.
  *  - `arrange`: „Ordnen“: ask for a proposal, apply it, take it back.
- *  - `clock`: the moderation's clock. In M1 the clock of the writing, as before: in a hidden writing step. */
+ *  - `clock`: the moderation's clock. In M1 the clock of the writing, as before: in a hidden writing step.
+ *  - `ballot`: vote (`ballot.cast`), and the moderation counts (`admin.step.count`): a step with a vote
+ *    (domain/vote.ts). Nothing is written, moved or grouped in it: the options are frozen. */
 export interface Capabilities {
   write: boolean;
   move: boolean;
   group: boolean;
   arrange: boolean;
   clock: boolean;
+  ballot: boolean;
 }
 
 const NOTE_STEPS = new Set<Step["type"]>(["impulse", "write", "reveal", "cluster", "discuss"]);
 const SORT_STEPS = new Set<Step["type"]>(["reveal", "cluster", "discuss"]);
 
-export function capabilities(step: Pick<Step, "type" | "visibility">): Capabilities {
+export function capabilities(step: Pick<Step, "type" | "visibility" | "vote">): Capabilities {
   const notes = NOTE_STEPS.has(step.type);
   // groups need the notes to be seen: while they are hidden, nobody sorts what nobody can read
   const sorts = SORT_STEPS.has(step.type) && levelOf(step.visibility) === "all";
-  return { write: notes, move: notes, group: sorts, arrange: sorts, clock: step.type === "write" };
+  return {
+    write: notes,
+    move: notes,
+    group: sorts,
+    arrange: sorts,
+    clock: step.type === "write",
+    ballot: step.vote !== undefined,
+  };
 }
+
+const VOTE_STEPS = new Set<Step["type"]>(["vote", "rank", "score"]);
+/** Which vote kinds a step type takes. */
+const VOTE_KINDS: Partial<Record<Step["type"], readonly string[]>> = {
+  vote: ["dots", "approval"],
+  rank: ["rank"],
+  score: ["score"],
+};
 
 // ───────────────────────── visibility ─────────────────────────
 
@@ -126,7 +144,12 @@ export type AgendaProblem =
   /** a step key twice within one method: its words could not be told apart */
   | { kind: "duplicateKey"; step: number }
   /** the notes of a hidden step are never shown: no later step widens what is seen */
-  | { kind: "neverShown"; step: number };
+  | { kind: "neverShown"; step: number }
+  /** a step of type vote, rank or score without its vote, one of another type with a vote, or a vote of a kind its
+   *  type does not take; or a vote that is not hidden until counted (`aggregate`, PLAN-METHODEN.md 1) */
+  | { kind: "voteShape"; step: number }
+  /** a vote would offer notes nobody but their writers has seen: no step up to it shows them */
+  | { kind: "voteUnseen"; step: number };
 
 export function checkAgenda(agenda: Pick<ResolvedAgenda, "steps">): AgendaProblem[] {
   const problems: AgendaProblem[] = [];
@@ -138,6 +161,15 @@ export function checkAgenda(agenda: Pick<ResolvedAgenda, "steps">): AgendaProble
     if (step.output === "notes" && noteLevel(agenda.steps, agenda.steps.length - 1, at) !== "all") {
       problems.push({ kind: "neverShown", step: at });
     }
+    const votes = VOTE_STEPS.has(step.type);
+    if (
+      votes !== (step.vote !== undefined) ||
+      (step.vote !== undefined && !(VOTE_KINDS[step.type] ?? []).includes(step.vote.kind)) ||
+      (votes && step.visibility !== "aggregate")
+    ) {
+      problems.push({ kind: "voteShape", step: at });
+    }
+    if (votes && noteLevel(agenda.steps, at) !== "all") problems.push({ kind: "voteUnseen", step: at });
   });
   return problems;
 }

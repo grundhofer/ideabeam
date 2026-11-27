@@ -21,6 +21,8 @@ export type RejectKey =
   | "staleClock"
   | "staleStep"
   | "staleUndo"
+  | "phaseBallot"
+  | "staleBallot"
   | "daySpent"
   | "notAdmin"
   | "rateLimit"
@@ -79,6 +81,8 @@ export function rejectKey(rejected: Rejected): RejectKey {
       // The step does not take it: a group or an arrangement while the notes are hidden (the wall offers neither
       // then), or a control of the clock that crossed somebody else's step move.
       if (command?.startsWith("group.")) return "phaseGroups";
+      // a ballot after the moderation counted, or counting that crossed a step move
+      if (command === "ballot.cast" || command === "admin.step.count") return "phaseBallot";
       if (applying || undoing) return "phaseArrange";
       return command?.startsWith("admin.clock.") ? "phaseClock" : "invalid";
     case "STALE":
@@ -86,6 +90,9 @@ export function rejectKey(rejected: Rejected): RejectKey {
       // wall has left meanwhile (another tab of the moderation moved first). Else: a control of the clock that was
       // made for a clock another control has changed meanwhile.
       if (undoing) return "staleUndo";
+      // a ballot made in a step the wall has left meanwhile
+      if (command === "ballot.cast") return "staleBallot";
+      if (command === "admin.step.count") return "staleStep";
       return command === "admin.step.go" ? "staleStep" : "staleClock";
     case "DAY_SPENT":
       // the wall's brake: its day's changes are written; the sentence names the time it goes on (`resetsAt`)

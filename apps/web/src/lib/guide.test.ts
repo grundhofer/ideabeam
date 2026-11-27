@@ -196,3 +196,24 @@ test("in a step to talk the result through, what to do now is the talking, once 
     "Besprecht die Gruppen gemeinsam: Was fällt auf, was fehlt, was folgt daraus?",
   );
 });
+
+test("in a step that votes: how to vote and that nobody sees a ballot; to the moderation, that counting is theirs", () => {
+  const vote = (admin: boolean, cast: boolean, counted: boolean) =>
+    guide({ admin, notes: 8, people: 4, step: "vote", vote: { cast, counted } });
+  expect([vote(true, false, false), vote(true, true, false), vote(true, true, true)]).toEqual([
+    "adminVote",
+    "adminVoteCast",
+    "adminCounted",
+  ]);
+  expect([vote(false, false, false), vote(false, true, false), vote(false, false, true)]).toEqual([
+    "memberVote",
+    "memberVoteCast",
+    "memberCounted",
+  ]);
+  expect(say({ admin: false, notes: 8, people: 4, vote: { cast: false, counted: false } })).toBe(
+    "Verteil deine Punkte auf das, was dir am wichtigsten ist, und drück „Abgeben“. Niemand sieht deine Punkte, nur das Ergebnis, wenn die Moderation auszählt.",
+  );
+  expect(say({ admin: true, notes: 8, people: 4, vote: { cast: false, counted: false } }, "en")).toContain(
+    "“Count votes” shows the result to everyone at once.",
+  );
+});

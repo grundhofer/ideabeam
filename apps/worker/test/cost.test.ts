@@ -555,3 +555,100 @@ describe("what a wall costs", { timeout: 120_000 }, () => {
     expect((await typical()).total.read).toBeLessThanOrEqual(10_000);
   });
 });
+
+// A vote (stage M2 of the methods, PLAN-METHODEN.md 5): „Still sammeln“ with 8 people goes from its grouping into its
+// vote, everybody casts a ballot, one person changes theirs and one sends the same ballot twice, and the moderation
+// counts. Counted are the rows the vote adds to the method: the step move into it, the ballots (the first of them
+// makes the table of ballots) and the counting. The acceptance of M2: at most 15 rows.
+describe("what a vote costs", { timeout: 60_000 }, () => {
+  /** The acceptance of M2: rows written a vote with 8 people. */
+  const VOTE_ROWS = 15;
+
+  it(`a vote with ${PEOPLE.length} people writes at most ${VOTE_ROWS} rows`, async () => {
+    const { wallId, stub } = newWall(env);
+    const adminToken = "d".repeat(32);
+    await runInDurableObject(stub, (instance) =>
+      instance.initialize({ wallId, question: "What slows us down?", adminToken, hidden: true }),
+    );
+    const sockets: TestSocket[] = [];
+    for (const name of PEOPLE) {
+      const socket = await connect(wallId);
+      socket.send({
+        type: "join",
+        name,
+        sessionKey: generateSessionKey(),
+        ...(name === "Anna" ? { adminToken } : {}),
+      });
+      await socket.waitFor((event) => event.type === "sync");
+      sockets.push(socket);
+    }
+    const said = async (socket: TestSocket, command: Record<string, unknown>) => {
+      const opId = generateHexId();
+      socket.send({ ...command, opId });
+      const answer = await socket.waitFor(
+        (event) => (event.type === "ack" || event.type === "reject") && event.opId === opId,
+      );
+      expect(answer.type, JSON.stringify(answer)).toBe("ack");
+    };
+    const moderation = sockets[0] as TestSocket;
+    // twelve notes, revealed, grouped: no group yet, so the options are the notes and the budget three points
+    const notes: string[] = [];
+    for (let n = 0; n < 12; n++) {
+      const noteId = generateHexId();
+      notes.push(noteId);
+      await said(sockets[n % sockets.length] as TestSocket, {
+        type: "note.create",
+        noteId,
+        text: `Point ${n + 1}`,
+        x: n * 10,
+        y: 0,
+      });
+    }
+    await said(moderation, { type: "admin.step.go", from: 0, to: 1 });
+    await said(moderation, { type: "admin.step.go", from: 1, to: 2 });
+
+    // from here on every row is counted
+    const rows = { step: 0, ballots: 0, count: 0 };
+    let into: keyof typeof rows = "step";
+    await runInDurableObject(stub, (instance) =>
+      counted(instance, (_read, written) => {
+        rows[into] += written;
+      }),
+    );
+    await said(moderation, { type: "admin.step.go", from: 2, to: 3 });
+    into = "ballots";
+    for (const [n, socket] of sockets.entries()) {
+      await said(socket, { type: "ballot.cast", step: 3, ballot: { kind: "dots", points: { [notes[n]!]: 3 } } });
+    }
+    // one person changes their mind, one sends the same ballot again
+    await said(sockets[1] as TestSocket, {
+      type: "ballot.cast",
+      step: 3,
+      ballot: { kind: "dots", points: { [notes[0]!]: 2, [notes[5]!]: 1 } },
+    });
+    await said(sockets[2] as TestSocket, {
+      type: "ballot.cast",
+      step: 3,
+      ballot: { kind: "dots", points: { [notes[2]!]: 3 } },
+    });
+    into = "count";
+    await said(moderation, { type: "admin.step.count", step: 3 });
+    expect(await runInDurableObject(stub, isCounted), "the wall's object was replaced on the way").toBe(true);
+
+    const total = rows.step + rows.ballots + rows.count;
+    // eslint-disable-next-line no-console -- the one test whose job is to say what it measured
+    console.log(
+      [
+        `a vote with ${PEOPLE.length} people (9 ballots sent, 1 of them the same again):`,
+        `  into the step ${rows.step}, ballots ${rows.ballots}, counting ${rows.count}: ${total} rows written`,
+      ].join("\n"),
+    );
+    // the step move is one row, as every step move; the result and the flow are two
+    expect(rows.step).toBe(1);
+    expect(rows.count).toBe(2);
+    // a row a ballot, the changed one written over, the same one again nothing; and the table, once: two rows, as
+    // every table the wall makes
+    expect(rows.ballots).toBe(PEOPLE.length + 1 + 2);
+    expect(total).toBeLessThanOrEqual(VOTE_ROWS);
+  });
+});

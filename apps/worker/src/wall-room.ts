@@ -4,8 +4,11 @@
 import { DurableObject } from "cloudflare:workers";
 import {
   agendaFor,
+  countedRounds,
   decide,
+  decideBallot,
   decideClock,
+  decideCount,
   decideStep,
   displayNameKey,
   eventFor,
@@ -19,22 +22,28 @@ import {
   methodOfStep,
   notesFor,
   numbersOf,
+  openRound,
   planJoin,
   PROTOCOL_VERSION,
   readClientFrame,
   readStoredFlow,
   revealedFor,
+  roundOf,
   stepContext,
+  tally,
   WALL_DAILY_ROWS,
   wallBrake,
   wallMarkdown,
   type AgendaRequest,
   type ArrangeLanguage,
   type ArrangeRecord,
+  type Ballot,
+  type BallotCommand,
   type ClientCommand,
   type ClockCommand,
   type ContentCommand,
   type ContentEvent,
+  type CountCommand,
   type DayMark,
   type ErrorCode,
   type Flow,
@@ -49,6 +58,9 @@ import {
   type StepContext,
   type StoredNote,
   type TitleSource,
+  type VoteOption,
+  type VoteResult,
+  type VoteRound,
   type WallInfo,
   type WallReader,
 } from "@ideabeam/shared";
@@ -159,6 +171,20 @@ const CONTENT_TABLES = [
     seq INTEGER NOT NULL
   ) WITHOUT ROWID`,
 ];
+
+// The ballots of hidden votes (stage M2 of the methods, packages/shared/src/domain/vote.ts): one row a person and
+// step, absolute, a second „Abgeben“ writes over the first. Who voted stands here and never leaves the object: what
+// a browser gets of the table is its own ballot and how many rows a step has; the moderation's counting reads the
+// ballots and stores one result (meta 'result:<step>'). The table is made with the first ballot a wall stores, in
+// the same transaction, not with the wall: a wall that never votes does not pay for it, and a wall without it has
+// no ballot (hasBallots()).
+const BALLOT_TABLE = `CREATE TABLE IF NOT EXISTS ballots (
+    step INTEGER NOT NULL,
+    voter TEXT NOT NULL,
+    ballot TEXT NOT NULL,
+    seq INTEGER NOT NULL,
+    PRIMARY KEY (step, voter)
+  ) WITHOUT ROWID`;
 
 const NOTE_COLUMNS = "id, author_id, text, x0, y0, created_at, updated_at, seq";
 const GROUP_COLUMNS = "id, title, title_source, locked, x, y, w, h, ord, seq";
@@ -345,6 +371,8 @@ export class WallRoom extends DurableObject<Env> {
       sight: stepContext(agenda, flow).sight,
       notes: content.notes,
       groups: content.groups,
+      // the counted votes' rankings, never a ballot
+      results: this.readResults(flow.votes),
       viewer: String(row.id),
       at,
       language,
@@ -453,6 +481,12 @@ export class WallRoom extends DurableObject<Env> {
         return;
       case "admin.step.go":
         this.handleStep(ws, participant, command);
+        return;
+      case "ballot.cast":
+        this.handleBallot(ws, participant, command);
+        return;
+      case "admin.step.count":
+        this.handleCount(ws, participant, command);
         return;
       case "admin.clock.start":
       case "admin.clock.pause":
@@ -860,7 +894,7 @@ export class WallRoom extends DurableObject<Env> {
          )`,
       )
       .one();
-    return Math.max(Number(row.seq ?? 0), this.readFlow().flow.seq);
+    return Math.max(Number(row.seq ?? 0), this.readFlow().flow.seq, this.ballotSeq());
   }
 
   // ───────────────────────── the step, the clock, the brake ─────────────────────────
@@ -872,7 +906,11 @@ export class WallRoom extends DurableObject<Env> {
    *  These are two frames with two numbers, so revealing takes two: a browser counts every frame it gets
    *  (packages/shared/src/domain/wall.ts), and none of them may stand for two. Any other move is one frame with one
    *  number. Going back hides nothing: what is seen follows the furthest step reached. Sent again, the command finds
-   *  the wall in its step and changes nothing. The brake never refuses it. */
+   *  the wall in its step and changes nothing. The brake never refuses it.
+   *
+   *  Into a step that votes (stage M2), the first time: its options are frozen into the same row (`openRound`,
+   *  packages/shared/src/domain/vote.ts), and the step's frame carries its vote, how many have voted in it and each
+   *  person's own ballot in it, so every browser gets a frame of its own there. */
   private handleStep(ws: WebSocket, participant: Participant, command: StepCommand): void {
     const state = this.readFlow();
     const decision = decideStep(state.flow, state.agenda, command, participant);
@@ -886,19 +924,45 @@ export class WallRoom extends DurableObject<Env> {
       return;
     }
     const changedSeq = decision.widens ? seq + 2 : seq + 1;
-    this.writeFlow(state, { v: 2, ...decision.flow, seq: changedSeq });
-    const changed = JSON.stringify({
-      type: "step.changed",
-      seq: changedSeq,
-      step: decision.flow.step,
-      reach: decision.flow.reach,
-    } satisfies ServerEvent);
-    if (!decision.widens) {
-      this.deliver(changedSeq, () => ({ frames: [changed] }));
+    // Into a step that votes for the first time: what may be chosen is frozen now, in the same row (stage M2).
+    const to = decision.flow.step;
+    const config = state.agenda.steps[to]?.vote;
+    const content = decision.widens || decision.opens ? this.readContent() : null;
+    let votes = state.flow.votes;
+    if (decision.opens && config !== undefined && content !== null) {
+      const sight = stepContext(state.agenda, decision.flow).sight;
+      votes = [...(votes ?? []), openRound(to, config, content, sight === "all")];
+    }
+    this.writeFlow(state, { v: 2, ...decision.flow, seq: changedSeq, ...(votes === undefined ? {} : { votes }) });
+    // A step that votes: every browser gets its vote, how many have voted in it, and its own ballot in it (one
+    // voted there before the wall left the step). Nobody else's.
+    const round = roundOf(votes, to);
+    const ballots = round === null ? null : this.readBallots(to);
+    const changedFor = new Map<string, string>();
+    const changed = (viewer: string): string => {
+      const key = ballots === null || !ballots.has(viewer) ? "" : viewer;
+      let frame = changedFor.get(key);
+      if (frame === undefined) {
+        const event: ServerEvent = {
+          type: "step.changed",
+          seq: changedSeq,
+          step: to,
+          reach: decision.flow.reach,
+          ...(round === null || ballots === null
+            ? {}
+            : { round, voted: ballots.size, ballot: ballots.get(viewer) ?? null }),
+        };
+        frame = JSON.stringify(event);
+        changedFor.set(key, frame);
+      }
+      return frame;
+    };
+    if (!decision.widens || content === null) {
+      this.deliver(changedSeq, (viewer) => ({ frames: [changed(viewer)] }));
       this.ack(ws, command.opId, changedSeq);
       return;
     }
-    const { notes } = this.readContent();
+    const { notes } = content;
     // one text per person, however many tabs they have open
     const revealed = new Map<string, string>();
     this.deliver(changedSeq, (viewer) => {
@@ -908,9 +972,135 @@ export class WallRoom extends DurableObject<Env> {
         frame = JSON.stringify(event);
         revealed.set(viewer, frame);
       }
-      return { frames: [frame, changed], hidden: 0 };
+      return { frames: [frame, changed(viewer)], hidden: 0 };
     });
     this.ack(ws, command.opId, changedSeq);
+  }
+
+  /** A ballot (`ballot.cast`, stage M2): the rules decide (packages/shared/src/domain/vote.ts), this stores it and
+   *  tells. One row written: the person's ballot of the step, with the number of the change; the first ballot of a
+   *  wall makes the table beside it. Its sender's sockets get the ballot as stored and how many have voted now
+   *  (`ballot.stored`), everybody else that number alone (`votes.count`): no ballot and no tally leaves for anybody
+   *  else, the moderation included. The same ballot again writes nothing and tells nobody. A ballot is a change of
+   *  the wall: the brake of the wall's day counts it and may refuse it. */
+  private handleBallot(ws: WebSocket, participant: Participant, command: BallotCommand): void {
+    const now = Date.now();
+    const state = this.readFlow();
+    const stored = this.readBallots(command.step, participant.id).get(participant.id) ?? null;
+    const decision = decideBallot(state.flow, state.agenda.steps, command, stored);
+    if (decision.kind === "refused") {
+      this.reject(ws, command.opId, decision.code);
+      return;
+    }
+    const seq = this.currentSeq();
+    if (decision.kind === "unchanged") {
+      this.ack(ws, command.opId, seq);
+      return;
+    }
+    const brake = wallBrake(this.readDayMark(), seq, now, this.dailyRows);
+    if (!brake.allowed) {
+      this.send(ws, { type: "reject", opId: command.opId, code: "DAY_SPENT", resetsAt: brake.resetsAt });
+      return;
+    }
+    const next = seq + 1;
+    const fresh = !this.hasBallots();
+    this.ctx.storage.transactionSync(() => {
+      if (brake.fresh) this.setMeta("day", JSON.stringify(brake.mark));
+      if (fresh) this.sql.exec(BALLOT_TABLE);
+      this.sql.exec(
+        `INSERT INTO ballots (step, voter, ballot, seq) VALUES (?, ?, ?, ?)
+         ON CONFLICT(step, voter) DO UPDATE SET ballot = excluded.ballot, seq = excluded.seq`,
+        command.step,
+        participant.id,
+        JSON.stringify(decision.ballot),
+        next,
+      );
+    });
+    const voted = this.votedIn(command.step);
+    const own = JSON.stringify({
+      type: "ballot.stored",
+      seq: next,
+      step: command.step,
+      ballot: decision.ballot,
+      voted,
+    } satisfies ServerEvent);
+    const count = JSON.stringify({ type: "votes.count", seq: next, step: command.step, voted } satisfies ServerEvent);
+    this.deliver(next, (viewer) => ({ frames: [viewer === participant.id ? own : count] }));
+    this.ack(ws, command.opId, next);
+  }
+
+  /** The moderation counts (`admin.step.count`, stage M2): the rules decide, `tally` counts the stored ballots, and
+   *  the result goes to everybody at once (`results.published`). Two rows written: the result (meta
+   *  'result:<step>', with the words of the options as they stand now) and the flow, in which the vote is counted
+   *  from now on, with the number of the change. Sent again it finds the vote counted and changes nothing. As a
+   *  step move, counting is never refused by the brake: a workshop is not stopped short of its result. */
+  private handleCount(ws: WebSocket, participant: Participant, command: CountCommand): void {
+    const state = this.readFlow();
+    const decision = decideCount(state.flow, state.agenda.steps, command, participant);
+    if (decision.kind === "refused") {
+      this.reject(ws, command.opId, decision.code);
+      return;
+    }
+    const seq = this.currentSeq();
+    if (decision.kind === "unchanged") {
+      this.ack(ws, command.opId, seq);
+      return;
+    }
+    const { notes, groups } = this.readContent();
+    const texts = new Map<string, string>([
+      ...notes.map((note): [string, string] => [note.id, note.text]),
+      ...groups.map((group): [string, string] => [group.id, group.title]),
+    ]);
+    const label = (option: VoteOption) => texts.get(option.id) ?? "";
+    const ballots = [...this.readBallots(command.step).values()];
+    const result = tally(decision.round, decision.config, ballots, label);
+    const next = seq + 1;
+    this.writeFlow(state, { ...state.flow, votes: countedRounds(state.flow.votes, command.step), seq: next }, () =>
+      this.setMeta(`result:${command.step}`, JSON.stringify(result)),
+    );
+    const frame = JSON.stringify({ type: "results.published", seq: next, result } satisfies ServerEvent);
+    this.deliver(next, () => ({ frames: [frame] }));
+    this.ack(ws, command.opId, next);
+  }
+
+  /** Whether the wall has stored a ballot ever: the table is made with the first one. */
+  private hasBallots(): boolean {
+    return this.sql.exec("SELECT 1 FROM sqlite_master WHERE type = 'table' AND name = 'ballots'").toArray().length > 0;
+  }
+
+  /** The ballots of a step by who cast them; with `voter`, that person's alone. Never leaves the object as it is. */
+  private readBallots(step: number, voter?: string): Map<string, Ballot> {
+    const ballots = new Map<string, Ballot>();
+    if (!this.hasBallots()) return ballots;
+    const rows =
+      voter === undefined
+        ? this.sql.exec("SELECT voter, ballot FROM ballots WHERE step = ?", step).toArray()
+        : this.sql.exec("SELECT voter, ballot FROM ballots WHERE step = ? AND voter = ?", step, voter).toArray();
+    for (const row of rows) ballots.set(String(row.voter), JSON.parse(String(row.ballot)) as Ballot);
+    return ballots;
+  }
+
+  /** How many people have voted in a step: a number, the one thing the others learn before counting. */
+  private votedIn(step: number): number {
+    if (!this.hasBallots()) return 0;
+    return Number(this.sql.exec("SELECT COUNT(*) AS n FROM ballots WHERE step = ?", step).one().n);
+  }
+
+  /** The largest number a ballot's row carries (currentSeq()). */
+  private ballotSeq(): number {
+    if (!this.hasBallots()) return 0;
+    return Number(this.sql.exec("SELECT MAX(seq) AS seq FROM ballots").one().seq ?? 0);
+  }
+
+  /** The results of the counted votes, in the order of their steps. */
+  private readResults(rounds: readonly VoteRound[] | undefined): VoteResult[] {
+    return (rounds ?? [])
+      .filter((round) => round.counted)
+      .sort((a, b) => a.step - b.step)
+      .flatMap((round) => {
+        const stored = this.getMeta(`result:${round.step}`);
+        return stored === null ? [] : [JSON.parse(stored) as VoteResult];
+      });
   }
 
   /** A control of the clock: the rules decide (packages/shared/src/domain/clock.ts), this stores the clock and
@@ -957,9 +1147,11 @@ export class WallRoom extends DurableObject<Env> {
 
   /** Writes the flow in the shape of now. A wall of schema 3 that has not changed its flow since writes, in the same
    *  transaction and once, the agenda its old phase stood for and its schema: from then on it is a wall of schema 4.
-   *  Two rows more, once, for a wall that was made before the methods. */
-  private writeFlow(state: FlowState, flow: Flow): void {
+   *  Two rows more, once, for a wall that was made before the methods. `beside` writes in the same transaction:
+   *  counting stores its result so. */
+  private writeFlow(state: FlowState, flow: Flow, beside?: () => void): void {
     this.ctx.storage.transactionSync(() => {
+      beside?.();
       this.setMeta("flow", JSON.stringify(flow));
       if (!state.legacy) return;
       this.setMeta("agenda", JSON.stringify(state.agenda));
@@ -1079,6 +1271,9 @@ export class WallRoom extends DurableObject<Env> {
     const { flow, agenda } = this.readFlow();
     const content = this.readContent();
     const view = notesFor(content.notes, stepContext(agenda, flow).sight, participantId);
+    // a step that votes: one's own ballot in it and how many have voted, never anybody else's ballot; and the
+    // results of what is counted
+    const round = roundOf(flow.votes, flow.step);
     return {
       type: "sync",
       protocolVersion: PROTOCOL_VERSION,
@@ -1088,7 +1283,7 @@ export class WallRoom extends DurableObject<Env> {
       you: { participantId },
       // A snapshot reads every row anyway, so it knows the number as the storage has it and takes the larger of
       // the two: sockets and storage agree, and where they ever did not, the snapshot puts it right.
-      seq: Math.max(this.carriedSeq() ?? 0, content.seq, flow.seq),
+      seq: Math.max(this.carriedSeq() ?? 0, content.seq, flow.seq, this.ballotSeq()),
       agenda,
       step: flow.step,
       reach: flow.reach,
@@ -1097,6 +1292,10 @@ export class WallRoom extends DurableObject<Env> {
       notes: view.notes,
       groups: content.groups,
       arrangeRun: this.readArranged()?.runId ?? null,
+      votes: flow.votes ?? [],
+      ballot: round === null ? null : (this.readBallots(flow.step, participantId).get(participantId) ?? null),
+      voted: round === null ? 0 : this.votedIn(flow.step),
+      results: this.readResults(flow.votes),
     };
   }
 

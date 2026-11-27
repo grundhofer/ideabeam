@@ -18,6 +18,7 @@ import {
   type Flow,
   type Participant,
   type ResolvedAgenda,
+  type ResolvedStep,
 } from "../src/index.js";
 import { HIDDEN_AGENDA, OPEN, OPEN_AGENDA, WRITING } from "./steps.js";
 
@@ -35,8 +36,8 @@ describe("a wall's agenda", () => {
   });
 
   it("is a copy of the steps, with the method's version: what a wall stores and sends", () => {
-    expect(HIDDEN_AGENDA.items).toEqual([{ methodId: "still-sammeln", version: 1 }]);
-    expect(HIDDEN_AGENDA.steps.map((step) => step.key)).toEqual(["write", "reveal", "cluster", "discuss"]);
+    expect(HIDDEN_AGENDA.items).toEqual([{ methodId: "still-sammeln", version: 2 }]);
+    expect(HIDDEN_AGENDA.steps.map((step) => step.key)).toEqual(["write", "reveal", "cluster", "vote", "discuss"]);
     expect(HIDDEN_AGENDA.steps.every((step) => step.item === 0)).toBe(true);
     expect(resolvedAgendaSchema.safeParse(JSON.parse(JSON.stringify(HIDDEN_AGENDA))).success).toBe(true);
     // a wall's stored copy stays small: one row
@@ -66,21 +67,42 @@ describe("a wall's agenda", () => {
     const twice: ResolvedAgenda = { items: HIDDEN_AGENDA.items, steps: [write, write, HIDDEN_AGENDA.steps[1]!] };
     expect(checkAgenda(twice)).toEqual([{ kind: "duplicateKey", step: 1 }]);
   });
+
+  it("a vote is hidden until counted, of a kind its type takes, and never offers notes nobody has seen", () => {
+    const [write, reveal, , vote] = HIDDEN_AGENDA.steps as [ResolvedStep, ResolvedStep, ResolvedStep, ResolvedStep];
+    const run = (steps: ResolvedStep[]) => checkAgenda({ steps });
+    expect(run([write, reveal, vote])).toEqual([]);
+    // before revealing: the options would be notes only their writers have read
+    expect(run([write, { ...vote, key: "vote" }, reveal])).toEqual([{ kind: "voteUnseen", step: 1 }]);
+    expect(run([write, reveal, { ...vote, visibility: "all" }])).toEqual([{ kind: "voteShape", step: 2 }]);
+    expect(run([write, reveal, { ...vote, vote: undefined }])).toEqual([{ kind: "voteShape", step: 2 }]);
+    expect(run([write, reveal, { ...vote, type: "rank" }])).toEqual([{ kind: "voteShape", step: 2 }]);
+    expect(run([write, { ...reveal, vote: { kind: "approval", max: 2 } }])).toEqual([{ kind: "voteShape", step: 1 }]);
+    expect(run([write, reveal, { ...vote, type: "rank", vote: { kind: "rank", top: 3 } }])).toEqual([]);
+    expect(run([write, reveal, { ...vote, type: "score", vote: { kind: "score", criteria: ["impact"] } }])).toEqual([]);
+  });
 });
 
 describe("what a step allows", () => {
   it("writing hidden: notes and the clock, no groups and no arranging, and nobody reads the others' notes", () => {
     expect(WRITING).toEqual({
       sight: "hidden",
-      can: { write: true, move: true, group: false, arrange: false, clock: true },
+      can: { write: true, move: true, group: false, arrange: false, clock: true, ballot: false },
     });
   });
 
-  it("every step after revealing, and the free wall: notes, groups and arranging, no clock", () => {
-    for (const step of [1, 2, 3]) {
+  it("every step after revealing but the vote, and the free wall: notes, groups and arranging, no clock", () => {
+    for (const step of [1, 2, 4]) {
       expect(stepContext(HIDDEN_AGENDA, at(step)), String(step)).toEqual(OPEN);
     }
     expect(stepContext(OPEN_AGENDA, at(0))).toEqual(OPEN);
+  });
+
+  it("the vote: ballots, and nothing else: no note, no move, no group, no clock; the notes stay seen", () => {
+    expect(stepContext(HIDDEN_AGENDA, at(3))).toEqual({
+      sight: "all",
+      can: { write: false, move: false, group: false, arrange: false, clock: false, ballot: true },
+    });
   });
 
   it("a step that sorts but hides sorts nothing: nobody groups what nobody can read", () => {
@@ -147,8 +169,24 @@ describe("moving between steps", () => {
   });
 
   it("no step past the agenda's last", () => {
-    expect(decideStep(at(0), HIDDEN_AGENDA, go(0, 4), anna)).toEqual({ kind: "refused", code: "INVALID" });
+    expect(decideStep(at(0), HIDDEN_AGENDA, go(0, 5), anna)).toEqual({ kind: "refused", code: "INVALID" });
     expect(decideStep(at(0), OPEN_AGENDA, go(0, 1), anna)).toEqual({ kind: "refused", code: "INVALID" });
+  });
+
+  it("into a step that votes, the first time: its options are to be frozen; once frozen, never again", () => {
+    expect(decideStep(at(2), HIDDEN_AGENDA, go(2, 3), anna)).toMatchObject({ kind: "changed", opens: true });
+    expect(decideStep(at(2), HIDDEN_AGENDA, go(2, 4), anna)).toMatchObject({ kind: "changed", opens: false });
+    const voted: Flow = {
+      ...at(4),
+      votes: [{ step: 3, options: [], omitted: 0, limit: 2, counted: false }],
+    };
+    expect(decideStep(voted, HIDDEN_AGENDA, go(4, 3), anna)).toMatchObject({ kind: "changed", opens: false });
+  });
+
+  it("the votes of a flow are read back as stored, and left out when there are none", () => {
+    const votes = [{ step: 3, options: [], omitted: 0, limit: 2, counted: true }];
+    expect(readStoredFlow({ ...at(4), votes }, HIDDEN_AGENDA).flow.votes).toEqual(votes);
+    expect("votes" in readStoredFlow({ ...at(4), votes: [] }, HIDDEN_AGENDA).flow).toBe(false);
   });
 
   it("a move stops the clock of the step, and keeps its revision", () => {

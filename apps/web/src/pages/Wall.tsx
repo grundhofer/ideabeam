@@ -19,6 +19,13 @@
 // computed, before anything is sent. The last arrangement can be taken back: at once while nothing has changed
 // since, after a question once something has.
 //
+// A step that votes (stage M2, „Wählen“ in „Still sammeln“) shows a ballot in the place of the surface
+// (components/Ballot.tsx): the options with − and +, the points left, and „Abgeben“ as the primary action; the
+// moderation's primary action is „Auszählen“, with „Abgeben“ beside it. The state says the person's own standing and
+// how many have voted („Abgegeben. 5 von 8 haben abgegeben.“), never what. Once counted, everybody sees the result
+// as a ranked list at once; the moderation goes on with „Weiter“, and in the steps after it the result stands beside
+// the surface.
+//
 // With a key of its own (PLAN.md 4.5, „Eigener KI-Schlüssel“ in „Mehr“, store/key.ts) the moderation's browser asks
 // its own provider instead: the line under the action then names that provider, and a quiet line at the wall's top
 // says so and how to go back.
@@ -34,6 +41,7 @@ import {
   methodOfStep,
   methodTexts,
   nameInitials,
+  roundOf,
   self,
   shown,
   stepContextOf,
@@ -41,9 +49,11 @@ import {
   stepWidens,
   WALL_DAILY_RUNS,
   WALL_ID_PATTERN,
+  type Ballot,
   type Participant,
   type WallInfo,
 } from "@ideabeam/shared";
+import { BallotPanel, Results, type Marks } from "../components/Ballot";
 import { ClockControls } from "../components/ClockControls";
 import { CopyKey } from "../components/CopyKey";
 import { OwnKeyAsk, providerFacts } from "../components/OwnKeyAsk";
@@ -402,7 +412,8 @@ function OnWall({ wallId }: { wallId: string }) {
   const lang = useLang();
   const { state, status, outdated, rejected, skew, now, arranged } = useWall();
   // the store's actions: they are the same functions as long as the app runs
-  const { look, deleteWall, erase, send, goStep, setClock, dismissRejected } = useWall.getState();
+  const { look, deleteWall, erase, send, goStep, setClock, dismissRejected, castBallot, countVotes } =
+    useWall.getState();
   const adminToken = useWalls((walls) => walls.adminTokens[wallId]);
   // the session key this browser joined the wall with: it says who asks for the wall as a file
   const sessionKey = useWalls((walls) => walls.walls.find((wall) => wall.id === wallId)?.sessionKey);
@@ -477,6 +488,50 @@ function OnWall({ wallId }: { wallId: string }) {
   useClockTurns(state.clock, skew, look);
   const time = clockLine(state.clock, now);
 
+  // A step that votes (domain/vote.ts): its options and budget, frozen when the wall entered it; this person's
+  // ballot as the wall stored it; the draft of „Abgeben“, which stays in this browser until it is sent; and, once
+  // counted, the result.
+  const voteConfig = steps[state.step]?.vote;
+  const round = voteConfig === undefined ? null : roundOf(state.votes, state.step);
+  const voting = step.can.ballot && round !== null;
+  const result = state.results.find((one) => one.step === state.step) ?? null;
+  const counted = voting && round.counted && result !== null;
+  const ballotKind = voteConfig?.kind === "dots" || voteConfig?.kind === "approval" ? voteConfig.kind : null;
+  const cap = voteConfig?.kind === "dots" ? (voteConfig.maxPerOption ?? round?.limit ?? 0) : 1;
+  const [draft, setDraft] = useState<Marks | null>(null);
+  const [voteProblem, setVoteProblem] = useState<string | null>(null);
+  // a ballot the wall stored (this tab's, or another tab's of the same person) and another step put the draft away
+  const [draftOf, setDraftOf] = useState({ ballot: state.ballot, step: state.step });
+  if (draftOf.ballot !== state.ballot || draftOf.step !== state.step) {
+    setDraftOf({ ballot: state.ballot, step: state.step });
+    setDraft(null);
+    setVoteProblem(null);
+  }
+  const marks = draft ?? marksOf(state.ballot);
+  const submit = () => {
+    const ballot = ballotKind === null ? null : ballotOf(ballotKind, marks);
+    if (ballot === null) {
+      setVoteProblem(t(ballotKind === "approval" ? "vote.choices.empty" : "vote.points.empty"));
+      return;
+    }
+    setVoteProblem(null);
+    castBallot(ballot);
+  };
+  // the result arrived while this browser was on the wall: said once, with what came first
+  const [resultsKnown, setResultsKnown] = useState(state.results.length);
+  if (resultsKnown !== state.results.length) {
+    setResultsKnown(state.results.length);
+    const newest = state.results.at(-1);
+    const first = newest?.rows[0];
+    if (newest !== undefined) {
+      setSaid(
+        newest.voters === 0 || first === undefined
+          ? t("wall.vote.saidNone")
+          : t("wall.vote.said", { name: first.label.trim() === "" ? t("group.untitled") : first.label }),
+      );
+    }
+  }
+
   // The wall moved to another step while this browser was on it: said once. Where the notes were revealed with it,
   // that is said, for all of them (PLAN.md 3.7), and a question about revealing that still stood is answered.
   const [was, setWas] = useState({ step: state.step, sight: step.sight });
@@ -537,6 +592,7 @@ function OnWall({ wallId }: { wallId: string }) {
     timeUp: time?.is === "over",
     arrangeable: Number(open),
     arranged: state.arrangeRun === null ? null : undoAsksFirst ? ("changed" as const) : ("fresh" as const),
+    vote: voting ? { cast: state.ballot !== null, counted } : null,
   };
   // the first half of the state sentence: how many notes, and once the wall has groups, what the groups hold
   const noteCount = t("wall.noteCount", { count: standing.notes });
@@ -562,8 +618,20 @@ function OnWall({ wallId }: { wallId: string }) {
           loose: t("wall.noteCount", { count: preview.loose }),
         });
   const trouble = stood === "outdated" ? t("wall.outdated") : stood === "reconnecting" ? t("wall.reconnecting") : null;
+  // in a step that votes the state says this person's standing and how many have voted, never what
+  const voteSentence = !voting
+    ? null
+    : counted
+      ? t("wall.vote.counted", { count: result.voters })
+      : t(state.ballot === null ? "wall.vote.open" : "wall.vote.cast", {
+          voted: state.voted,
+          of: Math.max(state.voted, Number(present)),
+        });
   const sentence =
-    trouble ?? proposal ?? t("wall.summary", { notes: holds, people: t("wall.count", { count: Number(present) }) });
+    trouble ??
+    proposal ??
+    voteSentence ??
+    t("wall.summary", { notes: holds, people: t("wall.count", { count: Number(present) }) });
   // after a run: how many runs 24 hours allow a wall and how many of them this one has left now, said to the
   // moderation in a quiet line
   const runs =
@@ -777,7 +845,7 @@ function OnWall({ wallId }: { wallId: string }) {
       name="wand"
       wall
       wide
-      type={mode === "list" ? "list" : "tool"}
+      type={voting ? (counted ? "result" : "form") : mode === "list" ? "list" : "tool"}
       title={question}
       tab={tab}
       tools={<CopyKey quiet word={t("wall.copyLink")} text={link} />}
@@ -819,7 +887,45 @@ function OnWall({ wallId }: { wallId: string }) {
         ],
       }}
       zone={
-        arranges ? (
+        voting ? (
+          // a step that votes: „Abgeben“, and the moderation's „Auszählen“; once counted, „Weiter“ for the
+          // moderation and keeping the result for everybody
+          <ActionZone hint={counted ? t("wall.exportHint") : t("wall.vote.hint")}>
+            {!counted ? (
+              admin ? (
+                <div className="app-zone-actions">
+                  <button className="sb-secondary-action" type="button" onClick={submit}>
+                    {t("wall.vote.submit")}
+                  </button>
+                  <button className="sb-primary-action" type="button" onClick={countVotes}>
+                    <span className="sb-primary-action__label">{t("wall.vote.count")}</span>
+                  </button>
+                </div>
+              ) : (
+                <button className="sb-primary-action" type="button" onClick={submit}>
+                  <span className="sb-primary-action__label">{t("wall.vote.submit")}</span>
+                </button>
+              )
+            ) : admin && nextStep !== null ? (
+              <button className="sb-primary-action" type="button" onClick={goNext}>
+                <Icon name="arrow-right" />
+                <span className="sb-primary-action__label">{t("wall.step.forward", { name: nameOf(nextStep) })}</span>
+              </button>
+            ) : (
+              <button
+                className="sb-primary-action"
+                type="button"
+                aria-busy={saving === "busy" || undefined}
+                onClick={saveMarkdown}
+              >
+                <Icon name="download" />
+                <span className="sb-primary-action__label">
+                  {saving === "busy" ? t("wall.exporting") : t("wall.export")}
+                </span>
+              </button>
+            )}
+          </ActionZone>
+        ) : arranges ? (
           <ActionZone>
             <div className="app-zone-actions">
               {/* right after an arrangement, while nothing has changed since: taking it back loses nothing. A quiet
@@ -962,7 +1068,7 @@ function OnWall({ wallId }: { wallId: string }) {
                       </button>
                     </div>
                   )}
-                  {state.arrangeRun !== null ? (
+                  {voting ? null : state.arrangeRun !== null ? (
                     // The wall is arranged: it is the result now (`result`, docs/ANSICHTEN.md), and what one does
                     // with a result is to keep it. For everybody, right under what to do now; the zone keeps the
                     // wall's own actions (docs/sebaro-luecken.md, A20)
@@ -1005,16 +1111,19 @@ function OnWall({ wallId }: { wallId: string }) {
           {clocked && (
             <ClockControls line={time} canExtend={extendClock(state.clock, now) !== null} onControl={setClock} />
           )}
-          <Segmented
-            legend={t("wall.view")}
-            quiet
-            options={[
-              { value: "surface", label: t("wall.viewSurface") },
-              { value: "list", label: t("wall.viewList") },
-            ]}
-            value={mode}
-            onChange={choose}
-          />
+          {/* a step that votes shows its ballot or its result, neither the surface nor the list */}
+          {!voting && (
+            <Segmented
+              legend={t("wall.view")}
+              quiet
+              options={[
+                { value: "surface", label: t("wall.viewSurface") },
+                { value: "list", label: t("wall.viewList") },
+              ]}
+              value={mode}
+              onChange={choose}
+            />
+          )}
           {/* groups come in a step that sorts: while the notes are hidden there are none (PLAN.md 2.1); and none is
               made while the moderation waits for a proposal or looks at one */}
           {step.can.group && !paused && (
@@ -1027,7 +1136,34 @@ function OnWall({ wallId }: { wallId: string }) {
       </div>
       {/* the wall's content: the notes and groups as a surface or as a list, and the people beside or under it */}
       <div className="app-wall">
-        {wall && (mode === "list" ? <WallList {...wall} /> : <Surface {...wall} />)}
+        {wall &&
+          (voting ? (
+            counted ? (
+              <Results result={result} notes={stored.notes} />
+            ) : ballotKind !== null ? (
+              <BallotPanel
+                round={round}
+                kind={ballotKind}
+                cap={cap}
+                marks={marks}
+                notes={stored.notes}
+                groups={stored.groups}
+                problem={voteProblem ?? problem}
+                onDismiss={() => {
+                  setVoteProblem(null);
+                  dismissRejected();
+                }}
+                onChange={(next) => {
+                  setVoteProblem(null);
+                  setDraft(next);
+                }}
+              />
+            ) : null
+          ) : mode === "list" ? (
+            <WallList {...wall} />
+          ) : (
+            <Surface {...wall} />
+          ))}
         <section className="app-wall__people" aria-labelledby="app-h-people">
           {/* the method the wall runs, with its short description: never its name alone (PLAN-METHODEN.md 2). It
               stands at the head of the people's column, where it takes none of the surface's height: beside the
@@ -1037,6 +1173,8 @@ function OnWall({ wallId }: { wallId: string }) {
               {t("wall.step.method", { name: method.name, short: method.short })}
             </p>
           )}
+          {/* in the steps after a vote, its result beside the surface: what „Ergebnis besprechen“ talks about */}
+          {!voting && state.results.map((one) => <Results key={one.step} result={one} notes={stored.notes} compact />)}
           <details className="app-people" open={listed} onToggle={(event) => setListed(event.currentTarget.open)}>
             <summary className="app-people__head">
               <h2 className="sb-list-header" id="app-h-people">
@@ -1181,4 +1319,21 @@ function OnWall({ wallId }: { wallId: string }) {
       </Dialog>
     </View>
   );
+}
+
+/** The draft a stored ballot stands for: its marks by option. */
+function marksOf(ballot: Ballot | null): Marks {
+  if (ballot === null) return {};
+  if (ballot.kind === "dots") return ballot.points;
+  if (ballot.kind === "approval") return Object.fromEntries(ballot.chosen.map((id) => [id, 1]));
+  return {};
+}
+
+/** The ballot a draft makes, or null: it gives nothing, and an empty ballot is no vote (domain/vote.ts). */
+function ballotOf(kind: "dots" | "approval", marks: Marks): Ballot | null {
+  const given = Object.entries(marks).filter(([, value]) => value > 0);
+  if (given.length === 0) return null;
+  return kind === "dots"
+    ? { kind: "dots", points: Object.fromEntries(given) }
+    : { kind: "approval", chosen: given.map(([id]) => id) };
 }

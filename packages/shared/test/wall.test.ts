@@ -73,6 +73,10 @@ const sync: Sync = {
   notes: [],
   groups: [],
   arrangeRun: null,
+  votes: [],
+  ballot: null,
+  voted: 0,
+  results: [],
 };
 
 /** A wall this browser is on as Ben, with what it holds and the number it stands at. */
@@ -734,5 +738,45 @@ describe("arranging", () => {
       expect(shown(back)).toMatchObject({ groups: [old], notes });
       expect(back.pending).toEqual([]);
     });
+  });
+});
+
+describe("a vote (stage M2)", () => {
+  const option = "c".repeat(32);
+  const round = { step: 3, options: [{ id: option, kind: "note" as const }], omitted: 0, limit: 2, counted: false };
+  const result = {
+    step: 3,
+    kind: "dots" as const,
+    limit: 2,
+    voters: 2,
+    rows: [{ id: option, kind: "note" as const, label: "Weniger Termine", points: 3, by: 2, rank: 1 }],
+  };
+
+  it("entering the step brings its vote, how many have voted and one's own ballot; leaving it forgets the last two", () => {
+    const ballot = { kind: "dots" as const, points: { [option]: 2 } };
+    const inside = apply(
+      [{ type: "step.changed", seq: 11, step: 3, reach: 3, round, voted: 1, ballot }],
+      wallOf([], [], 10),
+    );
+    expect(inside).toMatchObject({ step: 3, votes: [round], voted: 1, ballot, gap: false });
+    const after = apply([{ type: "step.changed", seq: 12, step: 4, reach: 4 }], inside);
+    expect(after).toMatchObject({ votes: [round], voted: 0, ballot: null });
+  });
+
+  it("one's own ballot stored, the others' count, and the result: each a number of its own, nothing missed", () => {
+    const inside = apply([{ type: "step.changed", seq: 11, step: 3, reach: 3, round, voted: 0 }], wallOf([], [], 10));
+    const ballot = { kind: "dots" as const, points: { [option]: 1 } };
+    const voted = apply(
+      [
+        { type: "votes.count", seq: 12, step: 3, voted: 1 },
+        { type: "ballot.stored", seq: 13, step: 3, ballot, voted: 2 },
+        { type: "results.published", seq: 14, result },
+      ],
+      inside,
+    );
+    expect(voted).toMatchObject({ voted: 2, ballot, results: [result], gap: false, seq: 14 });
+    expect(voted.votes).toEqual([{ ...round, counted: true }]);
+    // a count of another step than the one the wall is in moves the number and nothing else
+    expect(apply([{ type: "votes.count", seq: 15, step: 1, voted: 7 }], voted).voted).toBe(2);
   });
 });

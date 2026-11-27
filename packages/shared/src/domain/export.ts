@@ -6,6 +6,7 @@ import type { ArrangeLanguage, Group } from "../protocol.js";
 import type { NoteLevel } from "./agenda.js";
 import type { MethodId } from "./method.js";
 import { notesFor, type StoredNote } from "./visibility.js";
+import type { VoteKind, VoteResult } from "./vote.js";
 
 // The export of a wall as Markdown (PLAN.md 2.1, „Export: Markdown: Gruppen als Überschriften“; 3.2, `GET
 // /api/walls/:id/export`). Its model is RetroBeam's `packages/shared/src/domain/export.ts` (docs/HERKUNFT.md): the
@@ -28,6 +29,10 @@ import { notesFor, type StoredNote } from "./visibility.js";
 //    text is then its target, so nothing is hidden behind other words.
 //  - **The method above the results** (PLAN-METHODEN.md 2): its name and its short description, in a line of their
 //    own under the date, so a reader knows how the notes came about.
+//  - **The results of the counted votes** (stage M2), under the method: each a ranking with places and points, and a
+//    line that names how it was counted (points with a budget, choices, Borda, the mean of scores) and how many
+//    ballots there were. Never a single ballot, never who voted (PLAN-METHODEN.md 4). A vote that is not counted is
+//    not in the file at all.
 //  - **The fixed words in the language of whoever asks** (`de` or `en`, as „Ordnen“ takes it: a wall has no
 //    language of its own). They stand in the table below and nowhere else; the Worker writes the file, so they
 //    cannot come from the app's string tables.
@@ -42,12 +47,29 @@ export interface ExportInput {
   /** Every note of the wall, with its writer: what of it goes into the file is decided here, by `notesFor`. */
   notes: readonly StoredNote[];
   groups: readonly Group[];
+  /** The results of the wall's counted votes, in the order of their steps. Left out: none. */
+  results?: readonly VoteResult[];
   /** The participant the export is for. */
   viewer: string;
   /** The moment of the export, milliseconds since 1970: the date in the file and in its name. */
   at: number;
   language: ArrangeLanguage;
 }
+
+/** How a vote was counted, in a sentence: what the file names above a ranking. */
+const COUNTED_DE: Record<VoteKind, (limit: number) => string> = {
+  dots: (limit) => `Gezählt nach Punkten: ${limit === 1 ? "1 Punkt" : `${limit} Punkte`} je Person, frei verteilt.`,
+  approval: (limit) => `Gezählt nach Zustimmung: bis zu ${limit} Stimmen je Person, eine je Option.`,
+  rank: (limit) =>
+    `Gezählt nach Borda: Jede Person ordnet ihre ersten ${limit}, Platz 1 bekommt ${limit} Punkte, der letzte 1.`,
+  score: () => "Gezählt als Mittelwert der Bewertungen von 1 bis 5.",
+};
+const COUNTED_EN: Record<VoteKind, (limit: number) => string> = {
+  dots: (limit) => `Counted by points: ${limit === 1 ? "1 point" : `${limit} points`} a person, spread freely.`,
+  approval: (limit) => `Counted by approval: up to ${limit} votes a person, one per option.`,
+  rank: (limit) => `Counted by Borda: everyone ranks their first ${limit}, place 1 gets ${limit} points, the last 1.`,
+  score: () => "Counted as the mean of scores from 1 to 5.",
+};
 
 const WORDS = {
   de: {
@@ -63,6 +85,23 @@ const WORDS = {
     ungrouped: "Ohne Gruppe",
     notes: "Zettel",
     own: "Deine Zettel",
+    result: "Ergebnis der Wahl",
+    resultOf: (step: number) => `Ergebnis der Wahl (Schritt ${step})`,
+    counted: (kind: VoteKind, limit: number, voters: number) =>
+      `${COUNTED_DE[kind](limit)} Verdeckt abgegeben, zugleich ausgezählt: ${voters === 1 ? "1 Stimmzettel" : `${voters} Stimmzettel`}.`,
+    place: (rank: number, label: string, amount: string) => `Platz ${rank}: ${label} · ${amount}`,
+    amount: (kind: VoteKind, points: number, by: number) =>
+      kind === "score"
+        ? by === 0
+          ? "keine Bewertung"
+          : `Mittelwert ${String(points).replace(".", ",")}`
+        : kind === "approval"
+          ? points === 1
+            ? "1 Stimme"
+            : `${points} Stimmen`
+          : points === 1
+            ? "1 Punkt"
+            : `${points} Punkte`,
   },
   en: {
     stand: (date: string) => `IdeaBeam · As of ${date}`,
@@ -77,6 +116,23 @@ const WORDS = {
     ungrouped: "Without a group",
     notes: "Notes",
     own: "Your notes",
+    result: "Result of the vote",
+    resultOf: (step: number) => `Result of the vote (step ${step})`,
+    counted: (kind: VoteKind, limit: number, voters: number) =>
+      `${COUNTED_EN[kind](limit)} Cast in secret, counted at once: ${voters === 1 ? "1 ballot" : `${voters} ballots`}.`,
+    place: (rank: number, label: string, amount: string) => `Place ${rank}: ${label} · ${amount}`,
+    amount: (kind: VoteKind, points: number, by: number) =>
+      kind === "score"
+        ? by === 0
+          ? "not scored"
+          : `mean ${points}`
+        : kind === "approval"
+          ? points === 1
+            ? "1 vote"
+            : `${points} votes`
+          : points === 1
+            ? "1 point"
+            : `${points} points`,
   },
 } as const;
 
@@ -134,6 +190,16 @@ export function wallMarkdown(input: ExportInput): string {
     `**${escapeMarkdown(method.name)}:** ${escapeMarkdown(method.short)}`,
     "",
   ];
+  const results = input.results ?? [];
+  for (const result of results) {
+    lines.push(`## ${results.length === 1 ? words.result : words.resultOf(result.step + 1)}`, "");
+    lines.push(`_${words.counted(result.kind, result.limit, result.voters)}_`, "");
+    for (const row of result.rows) {
+      const label = row.label.trim() === "" ? words.untitled : escapeMarkdown(row.label);
+      lines.push(`- ${words.place(row.rank, label, words.amount(result.kind, row.points, row.by))}`);
+    }
+    lines.push("");
+  }
   if (writing && view.hidden > 0) lines.push(`_${words.hidden(view.hidden)}_`, "");
   if (notes.length === 0 && groups.length === 0) lines.push(`_${writing ? words.noneOwn : words.none}_`, "");
 

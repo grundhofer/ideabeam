@@ -75,11 +75,18 @@ describe("every method of the catalogue is described, in both languages", () => 
   });
 });
 
-describe("the methods of stage M1", () => {
-  it("„Still sammeln“ writes hidden first, then reveals, groups and discusses: its vote comes in M2", () => {
+describe("the methods of stages M1 and M2", () => {
+  it("„Still sammeln“ writes hidden first, then reveals, groups, votes in secret with points and discusses", () => {
     const steps = CATALOGUE["still-sammeln"].steps;
-    expect(steps.map((step) => step.type)).toEqual(["write", "reveal", "cluster", "discuss"]);
-    expect(steps.map((step) => step.visibility)).toEqual(["hidden", "all", "all", "all"]);
+    expect(steps.map((step) => step.type)).toEqual(["write", "reveal", "cluster", "vote", "discuss"]);
+    expect(steps.map((step) => step.visibility)).toEqual(["hidden", "all", "all", "aggregate", "all"]);
+    // the vote of the catalogue: points, a quarter of the options a person and at least two (the default), alone
+    expect(steps[3]).toMatchObject({
+      mode: "individual",
+      output: "ranking",
+      vote: { kind: "dots", perPerson: null, maxPerOption: null },
+    });
+    expect(CATALOGUE["still-sammeln"].version).toBe(2);
     expect(steps.every((step) => step.advance === "moderation")).toBe(true);
     // its minutes are the sum of its steps, rounded up to five
     const seconds = steps.reduce((sum, step) => sum + (step.durationSec ?? 0), 0);

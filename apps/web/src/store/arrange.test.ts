@@ -72,6 +72,10 @@ const sync = (notes: Note[] = NOTES, seq = notes.length): ServerEvent => ({
   notes,
   groups: [],
   arrangeRun: null,
+  votes: [],
+  ballot: null,
+  voted: 0,
+  results: [],
 });
 
 /** What the Worker answers to „Ordnen“: set by each test, asked for by the app's request. */

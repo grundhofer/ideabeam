@@ -29,6 +29,7 @@
 import { expect, test, type Page } from "@playwright/test";
 import {
   enter,
+  enterVote,
   GROUPS,
   join,
   know,
@@ -1425,6 +1426,38 @@ const screens: Screen[] = [
             "„Abbrechen“ beendet die Anfragen an Mistral. Was bis dahin gerechnet ist, kann Mistral deinem Konto trotzdem berechnen.",
           ]),
       ),
+    ),
+  },
+  {
+    // a step that votes (stage M2): the ballot in the place of the surface, the options with − and +, two points
+    // given of two, „Abgeben“ as the primary action. Also at 200 %
+    name: "wand-wahl",
+    largeText: true,
+    path: "/",
+    heading: QUESTION,
+    view: '[data-sb-view="wand"][data-sb-view-type="form"]',
+    overlay: null,
+    prepare: then(
+      (page) => enterVote(page),
+      (page) => page.getByRole("button", { name: "Einen Punkt mehr: Abstimmung" }).click(),
+      (page) => page.getByRole("button", { name: "Einen Punkt mehr: Fokuszeit am Vormittag" }).click(),
+      (page) => expect(page.locator(".app-ballot__left")).toHaveText("Alle Punkte verteilt."),
+      (page) => expect(page.locator(".sb-primary-action")).toHaveText("Abgeben"),
+    ),
+  },
+  {
+    // the vote counted: the result as a ranked list with places and points, no bars; keeping it is the primary
+    // action. Also at 200 %
+    name: "wand-ergebnis",
+    largeText: true,
+    path: "/",
+    heading: QUESTION,
+    view: '[data-sb-view="wand"][data-sb-view-type="result"]',
+    overlay: null,
+    prepare: then(
+      (page) => enterVote(page, { counted: true }),
+      (page) => expect(page.locator(".app-results__row").first()).toContainText("Abstimmung"),
+      (page) => expect(page.locator(".sb-primary-action")).toHaveText("Als Markdown sichern"),
     ),
   },
   {

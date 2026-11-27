@@ -284,6 +284,17 @@
     "revealText_one": "Auf der Wand liegt 1\u00a0Zettel. Nach dem Aufdecken sehen alle jeden Zettel, auch jeden, der noch dazukommt.",
     "revealText_other": "Auf der Wand liegen {{count}}\u00a0Zettel. Nach dem Aufdecken sehen alle jeden Zettel, auch jeden, der noch dazukommt.",
     "revealClock": "Die Uhr endet damit.",
+    "vote": {
+      "open": "Noch nicht abgegeben. {{voted}} von {{of}} haben abgegeben.",
+      "cast": "Abgegeben. {{voted}} von {{of}} haben abgegeben.",
+      "counted_one": "Ausgezählt: 1\u00a0Stimmzettel.",
+      "counted_other": "Ausgezählt: {{count}}\u00a0Stimmzettel.",
+      "submit": "Abgeben",
+      "count": "Auszählen",
+      "hint": "Niemand sieht deine Punkte, auch die Moderation nicht: Alle sehen nur das Ergebnis, wenn ausgezählt ist.",
+      "said": "Ausgezählt. Platz 1: {{name}}.",
+      "saidNone": "Ausgezählt. Es hat niemand abgestimmt."
+    },
     "step": {
       "positionNext": "Schritt {{n}} von {{of}}: {{name}} · danach {{next}}",
       "positionLast": "Schritt {{n}} von {{of}}: {{name}} · der letzte Schritt",
@@ -362,7 +373,13 @@
       "memberHidden": "Schreib deine Ideen auf Zettel. Niemand liest mit, bis die Moderation aufdeckt.",
       "memberHiddenOver": "Du kannst weiterschreiben, bis die Moderation aufdeckt.",
       "adminDiscuss": "Du moderierst: Geht die Gruppen gemeinsam durch: Was fällt auf, was fehlt, was folgt daraus? Das Ergebnis sicherst du unter „Mehr“ als Markdown.",
-      "memberDiscuss": "Besprecht die Gruppen gemeinsam: Was fällt auf, was fehlt, was folgt daraus?"
+      "memberDiscuss": "Besprecht die Gruppen gemeinsam: Was fällt auf, was fehlt, was folgt daraus?",
+      "adminVote": "Du moderierst: Alle verteilen ihre Punkte für sich, du auch, und drücken „Abgeben“. Niemand sieht, wer wie gewählt hat. Wenn alle abgegeben haben, zeigt „Auszählen“ allen das Ergebnis zugleich.",
+      "adminVoteCast": "Du moderierst: Deine Punkte sind abgegeben, ändern geht bis zum Auszählen. Wenn alle abgegeben haben, zeigt „Auszählen“ allen das Ergebnis zugleich.",
+      "adminCounted": "Du moderierst: Das Ergebnis steht, für alle zugleich. Mit „Weiter“ geht es in den nächsten Schritt; sichern kannst du es unter „Mehr“ als Markdown.",
+      "memberVote": "Verteil deine Punkte auf das, was dir am wichtigsten ist, und drück „Abgeben“. Niemand sieht deine Punkte, nur das Ergebnis, wenn die Moderation auszählt.",
+      "memberVoteCast": "Deine Punkte sind abgegeben. Ändern geht, bis die Moderation auszählt, und niemand sieht sie.",
+      "memberCounted": "Das Ergebnis steht: Alle sehen dieselbe Rangfolge. Gezählt sind die Punkte, nicht wer sie gab."
     },
     "adminLinkCopied": "Moderationslink kopiert. Wer ihn hat, moderiert diese Wand und kann sie löschen: Gib ihn nur weiter, wenn jemand mit dir moderieren soll."
   },
@@ -486,7 +503,59 @@
     "cancelHintKey": "„Abbrechen“ beendet die Anfragen an {{provider}}. Was bis dahin gerechnet ist, kann {{provider}} deinem Konto trotzdem berechnen.",
     "saidCancelledKey": "Abgebrochen: Die Anfragen an {{provider}} sind beendet."
   },
+  "vote": {
+    "points": {
+      "heading_one": "Deine Stimme: 1\u00a0Punkt zu verteilen",
+      "heading_other": "Deine Stimme: {{count}}\u00a0Punkte zu verteilen",
+      "left_one": "Noch 1\u00a0Punkt",
+      "left_other": "Noch {{count}}\u00a0Punkte",
+      "none": "Alle Punkte verteilt.",
+      "less": "Einen Punkt weniger: {{name}}",
+      "more": "Einen Punkt mehr: {{name}}",
+      "given_one": "1\u00a0Punkt",
+      "given_other": "{{count}}\u00a0Punkte",
+      "empty": "Verteil mindestens einen Punkt, dann drück „Abgeben“."
+    },
+    "choices": {
+      "heading_one": "Deine Stimme: 1 Wahl",
+      "heading_other": "Deine Stimme: bis zu {{count}} wählen",
+      "left_one": "Noch 1\u00a0Stimme",
+      "left_other": "Noch {{count}}\u00a0Stimmen",
+      "none": "Alle Stimmen vergeben.",
+      "less": "Abwählen: {{name}}",
+      "more": "Wählen: {{name}}",
+      "given_one": "gewählt",
+      "given_other": "nicht gewählt",
+      "empty": "Wähl mindestens eine Option, dann drück „Abgeben“."
+    },
+    "omitted_one": "1 Zettel steht nicht zur Wahl: Eine Wahl hat höchstens 80 Optionen. Bündelt die Zettel, dann passen alle.",
+    "omitted_other": "{{count}} Zettel stehen nicht zur Wahl: Eine Wahl hat höchstens 80 Optionen. Bündelt die Zettel, dann passen alle.",
+    "noOptions": "Es gibt nichts zu wählen: Als dieser Schritt begann, lag kein Zettel auf der Wand.",
+    "result": {
+      "heading": "Ergebnis der Wahl",
+      "how": {
+        "dots_one": "Gezählt nach Punkten: 1\u00a0Punkt je Person.",
+        "dots_other": "Gezählt nach Punkten: {{count}}\u00a0Punkte je Person.",
+        "approval_one": "Gezählt nach Zustimmung: 1\u00a0Stimme je Person.",
+        "approval_other": "Gezählt nach Zustimmung: bis zu {{count}}\u00a0Stimmen je Person.",
+        "rank_one": "Gezählt nach Borda: Platz 1 bekommt 1\u00a0Punkt.",
+        "rank_other": "Gezählt nach Borda: Platz 1 bekommt {{count}}\u00a0Punkte, der letzte 1.",
+        "score_one": "Gezählt als Mittelwert der Bewertungen von 1 bis 5.",
+        "score_other": "Gezählt als Mittelwert der Bewertungen von 1 bis 5."
+      },
+      "voters_one": "1\u00a0Stimmzettel, verdeckt abgegeben.",
+      "voters_other": "{{count}}\u00a0Stimmzettel, verdeckt abgegeben.",
+      "points_one": "1\u00a0Punkt",
+      "points_other": "{{count}}\u00a0Punkte",
+      "votes_one": "1\u00a0Stimme",
+      "votes_other": "{{count}}\u00a0Stimmen",
+      "mean": "Mittelwert {{value}}",
+      "unscored": "keine Bewertung"
+    }
+  },
   "reject": {
+    "phaseBallot": "Die Wahl ist schon ausgezählt: Deine Stimme wurde nicht mehr übernommen. Das Ergebnis steht auf der Wand.",
+    "staleBallot": "Die Wand war im selben Moment schon im nächsten Schritt: Deine Stimme wurde nicht übernommen.",
     "notAuthorEdit": "Den Text eines Zettels ändert nur, wer ihn geschrieben hat.",
     "notAuthorDelete": "Einen Zettel löscht nur, wer ihn geschrieben hat, oder die Moderation.",
     "notFound": "Diesen Zettel gibt es nicht mehr: Jemand hat ihn gelöscht.",

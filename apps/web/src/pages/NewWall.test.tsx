@@ -165,6 +165,7 @@ test("„Mehr dazu“ is a key of its own: it opens the steps and the evidence, 
     "Ideen schreiben · allein, verdeckt · 7\u00a0Min.",
     "Aufdecken · alle, alle · 1\u00a0Min.",
     "Bündeln · alle, alle · 6\u00a0Min.",
+    "Wählen · allein, nur Summe · 3\u00a0Min.",
     "Ergebnis besprechen · alle, alle · 5\u00a0Min.",
   ]);
   expect(about.textContent).toContain("Meta-Analyse: Mindestens eine Meta-Analyse stützt den Kern des Ablaufs.");

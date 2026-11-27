@@ -13,7 +13,7 @@ import type { Evidence, MethodId, Purpose, StepMode, StepVisibility } from "../d
 // (test/methods.test.ts). A step's words are keyed by its method and its key (`Step.key`).
 //
 // „Still sammeln, bündeln, verdeckt wählen“: the catalogue's texts, word for word; its steps without „Frage stellen“
-// (part of „Ideen schreiben“, methods/catalogue.ts) and without the vote of M2. „Freie Wand“: the catalogue names it
+// (part of „Ideen schreiben“, methods/catalogue.ts), its vote („Wählen“) since stage M2. „Freie Wand“: the catalogue names it
 // and has no texts for it; these are the stage's own, for the owner to read.
 
 export type MethodLanguage = "de" | "en";
@@ -105,6 +105,7 @@ export const METHOD_TEXTS: Readonly<Record<MethodLanguage, CatalogueTexts>> = {
           write: { name: "Ideen schreiben" },
           reveal: { name: "Aufdecken" },
           cluster: { name: "Bündeln" },
+          vote: { name: "Wählen" },
           discuss: { name: "Ergebnis besprechen" },
         },
       },
@@ -181,6 +182,7 @@ export const METHOD_TEXTS: Readonly<Record<MethodLanguage, CatalogueTexts>> = {
           write: { name: "Write ideas" },
           reveal: { name: "Reveal" },
           cluster: { name: "Group" },
+          vote: { name: "Vote" },
           discuss: { name: "Discuss the result" },
         },
       },

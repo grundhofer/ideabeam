@@ -284,6 +284,17 @@
     "revealText_one": "There is 1 note on the wall. Once revealed, everyone sees every note, also every note that is written later.",
     "revealText_other": "There are {{count}} notes on the wall. Once revealed, everyone sees every note, also every note that is written later.",
     "revealClock": "The clock ends with it.",
+    "vote": {
+      "open": "Not cast yet. {{voted}} of {{of}} have voted.",
+      "cast": "Cast. {{voted}} of {{of}} have voted.",
+      "counted_one": "Counted: 1\u00a0ballot.",
+      "counted_other": "Counted: {{count}}\u00a0ballots.",
+      "submit": "Cast vote",
+      "count": "Count votes",
+      "hint": "Nobody sees your points, not even the moderation: everyone sees only the result once the votes are counted.",
+      "said": "Counted. Place 1: {{name}}.",
+      "saidNone": "Counted. Nobody voted."
+    },
     "step": {
       "positionNext": "Step {{n}} of {{of}}: {{name}} · then {{next}}",
       "positionLast": "Step {{n}} of {{of}}: {{name}} · the last step",
@@ -362,7 +373,13 @@
       "memberHidden": "Write your ideas on notes. Nobody reads along until the facilitator reveals the notes.",
       "memberHiddenOver": "You can keep writing until the facilitator reveals the notes.",
       "adminDiscuss": "You facilitate: go through the groups together: what stands out, what is missing, what follows? Save the result as Markdown under “More”.",
-      "memberDiscuss": "Talk the groups through together: what stands out, what is missing, what follows?"
+      "memberDiscuss": "Talk the groups through together: what stands out, what is missing, what follows?",
+      "adminVote": "You moderate: everyone gives their points on their own, you too, and presses “Cast vote”. Nobody sees who voted how. Once everyone has voted, “Count votes” shows the result to everyone at once.",
+      "adminVoteCast": "You moderate: your points are cast, and you can change them until the votes are counted. Once everyone has voted, “Count votes” shows the result to everyone at once.",
+      "adminCounted": "You moderate: the result stands, for everyone at once. “Next” leads to the next step; you can save it as Markdown under “More”.",
+      "memberVote": "Give your points to what matters most to you and press “Cast vote”. Nobody sees your points, only the result once the moderation counts.",
+      "memberVoteCast": "Your points are cast. You can change them until the moderation counts, and nobody sees them.",
+      "memberCounted": "The result stands: everyone sees the same ranking. What was counted are the points, not who gave them."
     },
     "adminLinkCopied": "Facilitator link copied. Anyone who has it facilitates this wall and can delete it: share it only if someone should facilitate with you."
   },
@@ -486,7 +503,59 @@
     "cancelHintKey": "“Cancel” ends the requests to {{provider}}. {{provider}} may still bill your account for what was computed until then.",
     "saidCancelledKey": "Cancelled: the requests to {{provider}} have ended."
   },
+  "vote": {
+    "points": {
+      "heading_one": "Your vote: 1\u00a0point to give",
+      "heading_other": "Your vote: {{count}}\u00a0points to give",
+      "left_one": "1\u00a0point left",
+      "left_other": "{{count}}\u00a0points left",
+      "none": "All points given.",
+      "less": "One point less: {{name}}",
+      "more": "One point more: {{name}}",
+      "given_one": "1\u00a0point",
+      "given_other": "{{count}}\u00a0points",
+      "empty": "Give at least one point, then press “Cast vote”."
+    },
+    "choices": {
+      "heading_one": "Your vote: 1 choice",
+      "heading_other": "Your vote: choose up to {{count}}",
+      "left_one": "1\u00a0vote left",
+      "left_other": "{{count}}\u00a0votes left",
+      "none": "All votes given.",
+      "less": "Unchoose: {{name}}",
+      "more": "Choose: {{name}}",
+      "given_one": "chosen",
+      "given_other": "not chosen",
+      "empty": "Choose at least one option, then press “Cast vote”."
+    },
+    "omitted_one": "1 note is not up for the vote: a vote has at most 80 options. Group the notes, and all of them fit.",
+    "omitted_other": "{{count}} notes are not up for the vote: a vote has at most 80 options. Group the notes, and all of them fit.",
+    "noOptions": "There is nothing to choose: no note was on the wall when this step began.",
+    "result": {
+      "heading": "Result of the vote",
+      "how": {
+        "dots_one": "Counted by points: 1\u00a0point a person.",
+        "dots_other": "Counted by points: {{count}}\u00a0points a person.",
+        "approval_one": "Counted by approval: 1\u00a0vote a person.",
+        "approval_other": "Counted by approval: up to {{count}}\u00a0votes a person.",
+        "rank_one": "Counted by Borda: place 1 gets 1\u00a0point.",
+        "rank_other": "Counted by Borda: place 1 gets {{count}}\u00a0points, the last 1.",
+        "score_one": "Counted as the mean of scores from 1 to 5.",
+        "score_other": "Counted as the mean of scores from 1 to 5."
+      },
+      "voters_one": "1\u00a0ballot, cast in secret.",
+      "voters_other": "{{count}}\u00a0ballots, cast in secret.",
+      "points_one": "1\u00a0point",
+      "points_other": "{{count}}\u00a0points",
+      "votes_one": "1\u00a0vote",
+      "votes_other": "{{count}}\u00a0votes",
+      "mean": "mean {{value}}",
+      "unscored": "not scored"
+    }
+  },
   "reject": {
+    "phaseBallot": "The vote is counted already: your vote was not taken any more. The result is on the wall.",
+    "staleBallot": "The wall had moved on to the next step at the same moment: your vote was not taken.",
     "notAuthorEdit": "Only the person who wrote a note can change its text.",
     "notAuthorDelete": "Only the person who wrote a note, or the facilitator, can delete it.",
     "notFound": "This note no longer exists: somebody has deleted it.",

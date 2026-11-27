@@ -250,3 +250,55 @@ describe("the method above the results", () => {
     expect(english.indexOf("**Write alone")).toBeGreaterThan(english.indexOf("As of"));
   });
 });
+
+describe("the results of a counted vote (stage M2)", () => {
+  const result = {
+    step: 3,
+    kind: "dots" as const,
+    limit: 3,
+    voters: 4,
+    rows: [
+      { id: id("7"), kind: "group" as const, label: "Zeit", points: 7, by: 3, rank: 1 },
+      { id: id("9"), kind: "group" as const, label: "", points: 3, by: 2, rank: 2 },
+      { id: id("4"), kind: "note" as const, label: "*Kaffee*", points: 1, by: 1, rank: 3 },
+      { id: id("5"), kind: "note" as const, label: "Tee", points: 1, by: 1, rank: 3 },
+    ],
+  };
+
+  it("a ranking with places and points under the method, with how it was counted and how many ballots there were", () => {
+    const text = wallMarkdown(input({ results: [result] }));
+    expect(text).toContain(
+      [
+        "## Ergebnis der Wahl",
+        "",
+        "_Gezählt nach Punkten: 3 Punkte je Person, frei verteilt. Verdeckt abgegeben, zugleich ausgezählt: 4 Stimmzettel._",
+        "",
+        "- Platz 1: Zeit · 7 Punkte",
+        "- Platz 2: Ohne Titel · 3 Punkte",
+        "- Platz 3: \\*Kaffee\\* · 1 Punkt",
+        "- Platz 3: Tee · 1 Punkt",
+      ].join("\n"),
+    );
+    expect(text.indexOf("## Ergebnis der Wahl")).toBeGreaterThan(text.indexOf(METHOD_LINE));
+  });
+
+  it("names the counting method in English too, and never a ballot or a name", () => {
+    const text = wallMarkdown(
+      input({ language: "en", results: [{ ...result, kind: "rank", rows: result.rows.slice(0, 1) }] }),
+    );
+    expect(text).toContain("## Result of the vote");
+    expect(text).toContain(
+      "_Counted by Borda: everyone ranks their first 3, place 1 gets 3 points, the last 1. Cast in secret, counted at once: 4 ballots._",
+    );
+    expect(text).toContain("- Place 1: Zeit · 7 points");
+    const score = wallMarkdown(
+      input({ results: [{ ...result, kind: "score", rows: [{ ...result.rows[0]!, points: 4.25 }] }] }),
+    );
+    expect(score).toContain("Gezählt als Mittelwert der Bewertungen von 1 bis 5.");
+    expect(score).toContain("- Platz 1: Zeit · Mittelwert 4,25");
+  });
+
+  it("no vote counted: no word about voting", () => {
+    expect(wallMarkdown(input({}))).not.toContain("Wahl");
+  });
+});

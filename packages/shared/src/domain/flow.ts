@@ -5,6 +5,7 @@ import type { Clock, RejectCode, StepCommand } from "../protocol.js";
 import { agendaOf, capabilities, noteLevel, type Capabilities, type NoteLevel, type ResolvedAgenda } from "./agenda.js";
 import { NO_CLOCK, stoppedClock } from "./clock.js";
 import type { Actor } from "./rules.js";
+import { roundOf, type VoteRound } from "./vote.js";
 
 // Where a wall stands in its agenda (docs/architektur-methoden.md 1, 4): the step it is in, the furthest step it has
 // reached, and the clock of the step. One row holds it (`meta 'flow'`), as the phase and the clock did before: every
@@ -24,8 +25,13 @@ export interface Flow {
   reach: number;
   /** The clock of the step. A step move stops it. */
   clock: Clock;
-  /** The number of the change that wrote this row last: a step move, or a control of the clock. */
+  /** The number of the change that wrote this row last: a step move, a control of the clock, or counting a vote. */
   seq: number;
+  /** The votes of the steps the wall has entered that vote (stage M2, domain/vote.ts): each with its options,
+   *  frozen when the wall first entered its step, and whether it is counted. Kept for every such step, also after
+   *  the wall has moved on: going back and forth neither freezes the options again nor opens a counted vote. Left
+   *  out while there is none. No ballot stands here: they have a table of their own. */
+  votes?: VoteRound[];
 }
 
 /** The row as the builds before methods wrote it (schema 3): the phase and the clock. */
@@ -58,6 +64,7 @@ export function readStoredFlow(stored: unknown, agenda: ResolvedAgenda | null): 
       reach: Math.max(value.reach ?? 0, value.step ?? 0),
       clock: value.clock ?? NO_CLOCK,
       seq: value.seq ?? 0,
+      ...(Array.isArray(value.votes) && value.votes.length > 0 ? { votes: value.votes } : {}),
     };
     return { flow, legacy: agenda === null ? agendaOf("still-sammeln") : null };
   }
@@ -86,7 +93,7 @@ export interface StepContext {
 /** Nothing may be done and nothing of others is seen: what a browser takes before it knows the wall. */
 export const NO_STEP: StepContext = {
   sight: "hidden",
-  can: { write: false, move: false, group: false, arrange: false, clock: false },
+  can: { write: false, move: false, group: false, arrange: false, clock: false, ballot: false },
 };
 
 /** The step context of a wall that stands at `flow` in `agenda`. */
@@ -103,8 +110,9 @@ export type StepDecision =
   /** The wall is in that step already: the command sent a second time. */
   | { kind: "unchanged" }
   /** The flow after the move, and whether what is seen of the notes widens with it: then every browser gets the
-   *  notes it did not have (`notes.revealed`) before the step. */
-  | { kind: "changed"; flow: Pick<Flow, "step" | "reach" | "clock">; widens: boolean };
+   *  notes it did not have (`notes.revealed`) before the step. `opens`: the step moved to votes and the wall enters
+   *  it for the first time: its options are frozen now (domain/vote.ts, `openRound`), in the same row. */
+  | { kind: "changed"; flow: Pick<Flow, "step" | "reach" | "clock">; widens: boolean; opens: boolean };
 
 /** What the moderation's `admin.step.go` makes of a wall's flow (docs/architektur-methoden.md 4): forward, back or
  *  past a step, the moderation's alone. `from` names the step the command was made in: sent a second time, it finds
@@ -125,6 +133,7 @@ export function decideStep(
     kind: "changed",
     flow: { step: command.to, reach, clock: stoppedClock(flow.clock) },
     widens: noteLevel(agenda.steps, reach) !== noteLevel(agenda.steps, flow.reach),
+    opens: agenda.steps[command.to]?.vote !== undefined && roundOf(flow.votes, command.to) === null,
   };
 }
 

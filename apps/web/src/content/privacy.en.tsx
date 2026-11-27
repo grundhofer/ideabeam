@@ -3,7 +3,8 @@
 // (stages 2 and 3 included: the surface, the list, groups, hidden writing, revealing, the clock, the brake, no writer
 // on any frame; state 68a1204; stage 4a, arranging by Workers AI on the server: state c63573e, recipe 588552c, counter
 // a0796b5; stage 4b, the facilitator's own key, section 3.5: state 60284aa; stage 5, step A, “Save as Markdown” and the
-// QR code, sections 2.1, 3.1, 3.6, 4 and 7: state d3cc22a, read again against the code on 2026-11-25), and a draft
+// QR code, sections 2.1, 3.1, 3.6, 4 and 7: state d3cc22a, read again against the code on 2026-11-25; stage M2 of the
+// methods, the hidden vote, sections 3.1 and 3.3), and a draft
 // until the operator has read it. Who is responsible for a run with a key of one's own (section 3.5, “Who is responsible”, and section 6) is the
 // operator's understanding and an open point for a legal review. The German version is the one the operator reads
 // and releases; where the two differ, it is the German one that was meant.
@@ -136,6 +137,13 @@ export function PrivacyEn() {
           (section 3.4): whether the title comes from a person or from the AI and whether grouping leaves the group
           untouched. Who created or changed a group is not stored.
         </li>
+        <li>
+          <strong>Votes:</strong> in a step in which people vote, one ballot per person: which options (groups or notes)
+          it gives how many points, the identifier of the person and the running number of the change. Casting again
+          overwrites one’s own ballot. When the votes are counted, the wall stores the result: for each option its title
+          or text, its points, its place and how many ballots gave it anything, and the number of ballots, without
+          identifiers. What is up for the vote the wall fixes when the step begins.
+        </li>
       </ul>
       <p>
         For every note, every group and the layout of the notes the wall also keeps the running number of the last
@@ -149,6 +157,13 @@ export function PrivacyEn() {
         many there are. Revealing is the facilitator’s, asks first and cannot be taken back; after it everyone sees all
         notes. Only the facilitator sets the clock of the writing phase; everyone sees the time left. When it runs out,
         nothing happens by itself.
+      </p>
+      <p>
+        <strong>Voting in secret.</strong> People vote in their own browser; only “Cast vote” sends the ballot to the
+        server. The server sends a ballot only to the browser of the person who cast it. Everybody else, the facilitator
+        included, gets only a number until the votes are counted: how many have voted. Nobody sees a single ballot, not
+        after counting either: counting is the facilitator’s, and then everyone gets only the result, all at once. The
+        file of “Save as Markdown” holds only the result too.
       </p>
       <p>
         <strong>Who can do what.</strong> Every person who has joined the wall can write notes. While notes are written
@@ -170,16 +185,17 @@ export function PrivacyEn() {
       <p>
         <strong>Save as Markdown.</strong> Every person on the wall can fetch it onto their device as a file with “Save
         as Markdown”. The server puts the file together only at this request, from exactly what the person may see on
-        the wall: the question, the groups with their titles and the texts of the notes; while notes are written hidden,
-        only their own notes and the number of the others’. No names are in it, nor who wrote a note. Your browser
-        identifies itself with its session key for this (section 4). The server stores nothing about this request and
-        does not keep the file; afterwards the file lies on your device alone, and what happens to it is your decision.
+        the wall: the question, the groups with their titles, the texts of the notes and the result of a counted vote,
+        never a ballot; while notes are written hidden, only their own notes and the number of the others’. No names are
+        in it, nor who wrote a note. Your browser identifies itself with its session key for this (section 4). The
+        server stores nothing about this request and does not keep the file; afterwards the file lies on your device
+        alone, and what happens to it is your decision.
       </p>
       <p>
         <strong>The wall’s brake.</strong> A wall stores at most 1,500 changes on one day in UTC (writing, changing,
-        moving and deleting notes, groups). After that it takes no further change until 00:00 UTC; joining, revealing,
-        the clock and deleting the wall go on. It counts the numbers of the changes for this, not persons. Purpose and
-        legal basis are the same as for the daily budget (section 2.2).
+        moving and deleting notes, groups, ballots). After that it takes no further change until 00:00 UTC; joining, the
+        steps with revealing, counting the votes, the clock and deleting the wall go on. It counts the numbers of the
+        changes for this, not persons. Purpose and legal basis are the same as for the daily budget (section 2.2).
       </p>
       <p>
         The question, the display name, the texts of the notes and the titles of the groups are free text: write nothing
@@ -202,8 +218,9 @@ export function PrivacyEn() {
           A wall deletes itself <strong>30 days after the last time a person joined, automatically</strong>. Coming back
           and every automatic reconnection count as joining too. The deadline moves at most once a day; so the deletion
           lies 29 to 30 days after the last join. If nobody joins, the wall deletes itself 30 days after it was created.
-          The application then deletes the whole storage of the wall, with all notes and groups. After that the link
-          leads to “Unknown wall”, as for a wall that never existed.
+          The application then deletes the whole storage of the wall, with all notes, groups, ballots and results. Until
+          then the ballots stay stored per person. After that the link leads to “Unknown wall”, as for a wall that never
+          existed.
         </li>
         <li>
           The facilitator can delete the wall <strong>at any time</strong> (“Delete wall”): at once and completely, with
@@ -214,9 +231,10 @@ export function PrivacyEn() {
           menu, after a question: the server then at once removes their display name, their role, their identifier and
           their session key, and their browser removes the wall from its list, with the facilitator key if it held one.
           The person’s notes stay on the wall, without a name: they still carry the identifier they had, which then is
-          matched to no display name any more, and they are nobody’s. Nobody can change them afterwards. While notes are
-          written hidden, they stay hidden, and nobody can delete them, the facilitator neither; after revealing the
-          facilitator can delete them. Whoever does not want to leave their notes on the wall deletes them first.
+          matched to no display name any more, and they are nobody’s. Nobody can change them afterwards. Their ballots
+          likewise stay stored under that identifier and count when the votes are counted. While notes are written
+          hidden, they stay hidden, and nobody can delete them, the facilitator neither; after revealing the facilitator
+          can delete them. Whoever does not want to leave their notes on the wall deletes them first.
         </li>
         <li>
           The server deletes a <strong>single note</strong> at the command of the person who wrote it, or, after

@@ -9,8 +9,11 @@ import {
   generateSessionKey,
   initialWallState,
   PROTOCOL_VERSION,
+  type Ballot,
+  type BallotCommand,
   type ClockCommand,
   type ContentCommand,
+  type CountCommand,
   type RejectCode,
   type ServerEvent,
   type StepCommand,
@@ -26,9 +29,10 @@ import { useWalls } from "./walls";
 /** Why the wall did not let this browser on. */
 export type Refusal = "NAME_TAKEN" | "WALL_FULL";
 
-/** The moderation's commands of the wall's flow: a step move (revealing among them), and the controls of the
- *  writing's clock. */
-type FlowCommand = StepCommand | ClockCommand;
+/** The commands of the wall's flow, whose result shows once the wall has said so, to everyone at once: the
+ *  moderation's step moves (revealing among them), the controls of the writing's clock and counting a vote; and
+ *  everybody's ballot, which shows as stored once the wall has stored it (stage M2). */
+type FlowCommand = StepCommand | ClockCommand | BallotCommand | CountCommand;
 
 /** A change of this browser that the wall did not take, and so is taken back: the reason, and the kind of command
  *  it was (null: neither a change of the wall's content nor a step of its flow). Beside the wall's own reasons:
@@ -121,6 +125,12 @@ type Live = {
   /** The moderation's: a control of the writing's clock, made for the clock as this browser knows it. Nothing shows
    *  before the wall has said so. */
   setClock(control: ClockControl): void;
+  /** „Abgeben“: this person's whole ballot for the step the wall is in, as this browser knows it. It shows as cast
+   *  once the wall has stored it (`state.ballot`); nobody else learns more than that one more has voted. */
+  castBallot(ballot: Ballot): void;
+  /** The moderation's „Auszählen“: the vote of the step the wall is in is counted, and everybody gets the result at
+   *  once. */
+  countVotes(): void;
   /** The reason of the last reject has been read. */
   dismissRejected(): void;
 };
@@ -367,6 +377,12 @@ export const useWall = create<Live>()((set, get) => {
           ? { type: "admin.clock.start", opId, rev, minutes: control.minutes }
           : { type: `admin.clock.${control.type}`, opId, rev },
       );
+    },
+    castBallot(ballot) {
+      ask({ type: "ballot.cast", opId: generateHexId(), step: get().state.step, ballot });
+    },
+    countVotes() {
+      ask({ type: "admin.step.count", opId: generateHexId(), step: get().state.step });
     },
     look() {
       set((live) => ({ now: workerTime(Date.now(), live.skew) }));

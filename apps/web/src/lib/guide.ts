@@ -14,7 +14,8 @@
 // where the way back is.
 //
 // In a step of a method that is about talking (`discuss`, PLAN-METHODEN.md), the sentence says what to talk about,
-// once somebody else is there.
+// once somebody else is there. In a step that votes (stage M2) it says how to vote, that nobody sees a ballot, and,
+// to the moderation, that counting is theirs and shows the result to everybody at once; once counted, what now.
 import { ARRANGE_MIN_NOTES, type StepType } from "@ideabeam/shared";
 
 /** What the sentence depends on. */
@@ -44,6 +45,8 @@ export type Standing = {
    *  (taking it back acts at once, from the action zone), `changed` after that (it asks first, from „Mehr“). null or
    *  left out: no such run. */
   arranged?: "fresh" | "changed" | null;
+  /** In a step that votes: whether this person's ballot is stored, and whether the vote is counted. */
+  vote?: { cast: boolean; counted: boolean } | null;
 };
 
 export type GuideKey =
@@ -70,7 +73,13 @@ export type GuideKey =
   | "memberHidden"
   | "memberHiddenOver"
   | "adminDiscuss"
-  | "memberDiscuss";
+  | "memberDiscuss"
+  | "adminVote"
+  | "adminVoteCast"
+  | "adminCounted"
+  | "memberVote"
+  | "memberVoteCast"
+  | "memberCounted";
 
 /** The sentence that says what to do now. Alone, the next step is to bring the others in; with others, to write;
  *  once notes lie there, to put what belongs together into a group; once groups stand, to move the rest together
@@ -97,6 +106,12 @@ export function guide(standing: Standing): GuideKey {
     }
     if (alone) return "memberHiddenAlone";
     return timeUp ? "memberHiddenOver" : "memberHidden";
+  }
+  // a step that votes: how, and who counts
+  const vote = standing.vote ?? null;
+  if (vote !== null) {
+    const state = vote.counted ? "Counted" : vote.cast ? "VoteCast" : "Vote";
+    return `${admin ? "admin" : "member"}${state}`;
   }
   // a step to talk the result through, with others on the wall
   if (standing.step === "discuss" && !alone) return admin ? "adminDiscuss" : "memberDiscuss";

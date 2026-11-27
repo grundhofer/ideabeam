@@ -167,6 +167,41 @@ Abnahme:
 - Höchstens 15 Zeilen mehr je Abstimmung mit 8 Personen.
 - axe ohne Befund in Hell und Dunkel, schmal und breit, bei 200 %.
 
+**Stand M2 (27.11.2026, Branch `methoden-m2` auf M1 `8ddb34b`, nicht committet):** gebaut.
+
+- `packages/shared/src/domain/vote.ts`: Arten Punkte, Auswahl, Rangfolge (Borda über die erfragten Plätze) und
+  Bewertung 1 bis 5 (auch je Kriterium, Mittelwert); `optionsFor` (die Gruppen mit Zetteln nach „Bündeln“, dazu
+  die Zettel ohne Gruppe, sonst die Zettel; höchstens 80, der Rest gezählt), `limitOf` (Punkte: ein Viertel der
+  Optionen, mindestens 2), `checkBallot`, `canonicalBallot` (derselbe Zettel zweimal ist eine Zeile), `tally`
+  (geteilte Plätze bei gleichen Punkten), `decideBallot`, `decideCount`. „Still sammeln“ in Version 2 mit dem
+  Schritt „Wählen“ (Punkte, verdeckt, `aggregate`) vor „Ergebnis besprechen“; `checkAgenda` prüft, dass eine Wahl
+  verdeckt bis zum Auszählen ist und keine Zettel anbietet, die niemand gesehen hat. Ein Wahlschritt erlaubt keine
+  Zettel, kein Verschieben, keine Gruppen und kein Löschen (`capabilities.ballot`).
+- Worker: Tabelle `ballots` (eine Zeile je Person und Schritt, neu abgeben überschreibt), angelegt mit dem ersten
+  Stimmzettel einer Wand; Auszählen schreibt das Ergebnis (`meta 'result:<Schritt>'`) und den Ablauf. Protokoll 8:
+  `ballot.cast`, `admin.step.count`, `ballot.stored` (nur an die eigenen Sockets), `votes.count` (nur die Zahl, an
+  alle anderen, auch die Moderation), `results.published` (an alle), `sync` mit `votes`, eigenem `ballot`, `voted`,
+  `results`; `step.changed` in einen Wahlschritt trägt die Wahl, die Zahl und den eigenen Stimmzettel.
+  Stimmzettel zählen gegen die Bremse; Auszählen wird wie ein Schrittwechsel nie gebremst.
+- App: die Stimme statt der Fläche (`components/Ballot.tsx`, −/+ als Tasten, „Noch 2 Punkte“, „Abgeben“), danach
+  die Rangliste mit Zahlen; der Stand sagt „Abgegeben. 5 von 8 haben abgegeben.“; Hauptaktion der Moderation
+  „Auszählen“, dann „Weiter“. In den Schritten danach steht das Ergebnis in der Spalte der Personen. Export: die
+  Rangliste mit Punkten und der Zählweise, nie ein Stimmzettel, nie ein Name. Datenschutzerklärung 3.1 und 3.3 in
+  beiden Sprachen.
+- Abweichungen von `docs/architektur-methoden.md` 3.1: (1) Der Ablauf hält statt `stage` und `options` eine Liste
+  `votes` (je Wahlschritt Optionen, Budget, gezählt), damit Zurück und Weiter die Optionen nicht neu einfriert und
+  eine gezählte Wahl nicht wieder öffnet. (2) Leere Stimmzettel und Zurückziehen gibt es nicht: Ein Stimmzettel
+  braucht mindestens eine Marke, ändern geht durch neu abgeben. (3) Die Tabelle entsteht mit dem ersten Stimmzettel,
+  nicht beim Anlegen oder per Migration: Eine Wand, die nie wählt, zahlt sie nicht; das Schema bleibt 4. (4) Ein
+  Stimmzettel für einen verlassenen Schritt heißt `STALE`, nach dem Auszählen `PHASE`. (5) Eine Wand von Schema 3
+  wird jetzt als „Still sammeln“ Version 2 gelesen, also mit Wahl.
+- Tests im letzten vollen Lauf (`CI=1 pnpm checks`): siehe Bericht an die führende Sitzung (unten ergänzt).
+  Kosten: eine Wahl mit 8 Personen 14 Zeilen (Schritt 1, Stimmzettel 8 + 1 geänderter + Tabelle 2, Auszählen 2);
+  die typische Wand bleibt bei 397 Zeilen.
+- Nicht geprüft: kein Bildschirmleser, nicht bei 2000 px angesehen; die Stimme kann nur Punkte und Auswahl,
+  Rangfolge und Bewertung haben Regeln und Worker, aber keine Oberfläche (keine Methode nutzt sie); die Sätze der
+  Anleitung sprechen von Punkten.
+
 ### M3: Schätzen in Runden
 
 Zahl schätzen, Median und Spanne, zweite Runde mit dem Ergebnis der ersten, Begründungen ohne Namen. Methode

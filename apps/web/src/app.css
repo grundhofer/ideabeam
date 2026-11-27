@@ -1060,3 +1060,59 @@
     display: none;
   }
 }
+
+/* A step that votes (components/Ballot.tsx, stage M2): in the place of the surface, one column of rows, each option
+   with − and + and its points between them as a number; the points left above them, said when they change. After
+   counting the same column holds the result: place, words, points, all as text and numbers, no bars. Beside the
+   surface in the later steps the result stands in the people's column, without the notes under each group. */
+.app-ballot,
+.app-results {
+  display: flex;
+  flex-direction: column;
+  min-inline-size: 0;
+  /* no sebaro token: a reading width for the ballot's rows, a rem, so it grows with the text */
+  max-inline-size: 48rem;
+}
+.app-ballot__left {
+  margin: 0 0 var(--sb-space-2);
+  font: var(--sb-type-body-strong);
+  letter-spacing: var(--sb-type-body-strong-tracking);
+}
+.app-ballot__note {
+  margin: 0 0 var(--sb-space-2);
+  color: var(--sb-color-text-muted);
+}
+.app-ballot__row .sb-list-row__title,
+.app-results__row .sb-list-row__title {
+  overflow-wrap: anywhere;
+}
+.app-ballot__row .sb-list-row__meta,
+.app-results__row .sb-list-row__meta {
+  overflow-wrap: anywhere;
+}
+.app-ballot__stepper {
+  display: flex;
+  flex: none;
+  align-items: center;
+  gap: var(--sb-space-1);
+}
+.app-ballot__value {
+  /* no sebaro token: room for two digits, so the number does not shift the buttons */
+  min-inline-size: 2ch;
+  text-align: center;
+  font: var(--sb-type-body-strong);
+  letter-spacing: var(--sb-type-body-strong-tracking);
+}
+.app-results__place {
+  /* no sebaro token: room for a place such as „12.“, so the titles stand in one column */
+  min-inline-size: 3ch;
+  font: var(--sb-type-body-strong);
+  letter-spacing: var(--sb-type-body-strong-tracking);
+}
+.app-results__points {
+  flex: none;
+  white-space: nowrap;
+}
+.app-results--side {
+  margin-block: 0 var(--sb-space-4);
+}

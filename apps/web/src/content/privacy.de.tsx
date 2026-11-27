@@ -9,7 +9,8 @@
 // stays in the tab, the three providers' own statements), section 3.5, state 60284aa, and stage 5, step A („Als
 // Markdown sichern“ through the Worker with the session key, sections 2.1, 3.1, 4 and 7; the QR code drawn in the
 // browser, section 3.6), state d3cc22a, read again end to end against the code on 2026-11-25. Stage M1 of the methods
-// (PLAN-METHODEN.md): the wall's method with its steps and the step it stands in, section 3.1. Arranging in the
+// (PLAN-METHODEN.md): the wall's method with its steps and the step it stands in, section 3.1; stage M2: the hidden
+// vote, its ballots per person and its result, sections 3.1 and 3.3. Arranging in the
 // browser (4c) is not built: section 3.4 names it as a plan. Who is responsible for a run with a key of one's own
 // (section 3.5, „Wer verantwortlich ist“, and section 6) is the operator's understanding and an open point for a legal
 // review. It is a draft until the operator has read it (operator.ts, NOTICE_REVIEWED), and no lawyer has reviewed it.
@@ -151,6 +152,13 @@ export function PrivacyDe() {
           ob der Titel von einer Person oder von der KI stammt und ob das Ordnen die Gruppe unberührt lässt. Wer eine
           Gruppe angelegt oder geändert hat, wird nicht gespeichert.
         </li>
+        <li>
+          <strong>Stimmen:</strong> in einem Schritt, in dem gewählt wird, je Person ein Stimmzettel: welche Optionen
+          (Gruppen oder Zettel) sie wie viele Punkte gibt, die Kennung der Person und die laufende Nummer der Änderung.
+          Wer neu abgibt, überschreibt den eigenen Stimmzettel. Beim Auszählen speichert die Wand das Ergebnis: je
+          Option ihren Titel oder Text, ihre Punkte, ihren Platz und wie viele Stimmzettel ihr etwas gaben, dazu die
+          Zahl der Stimmzettel, ohne Kennungen. Was zur Wahl steht, hält die Wand beim Beginn des Schritts fest.
+        </li>
       </ul>
       <p>
         Zu jedem Zettel, zu jeder Gruppe und zur Lage der Zettel hält die Wand außerdem die laufende Nummer der letzten
@@ -164,6 +172,13 @@ export function PrivacyDe() {
         viele es sind. Das Aufdecken ist Sache der Moderation, fragt vorher und lässt sich nicht zurücknehmen; danach
         sehen alle alle Zettel. Die Uhr der Schreibphase stellt nur die Moderation; alle sehen die Restzeit. Läuft sie
         ab, geschieht nichts von selbst.
+      </p>
+      <p>
+        <strong>Verdeckt wählen.</strong> Gewählt wird im eigenen Browser; erst „Abgeben“ sendet den Stimmzettel an den
+        Server. Der Server sendet einen Stimmzettel nur an den Browser der Person, die ihn abgegeben hat. Alle anderen,
+        auch die Moderation, bekommen bis zum Auszählen nur eine Zahl: wie viele abgegeben haben. Einzelne Stimmzettel
+        sieht niemand, auch nach dem Auszählen nicht: Das Auszählen ist Sache der Moderation, und dann bekommen alle
+        zugleich nur das Ergebnis. Auch die Datei von „Als Markdown sichern“ enthält nur das Ergebnis.
       </p>
       <p>
         <strong>Wer was tun kann.</strong> Jede Person, die der Wand beigetreten ist, kann Zettel schreiben. Solange
@@ -187,17 +202,18 @@ export function PrivacyDe() {
       <p>
         <strong>Als Markdown sichern.</strong> Jede Person auf der Wand kann sie über „Als Markdown sichern“ als Datei
         auf ihr Gerät holen. Der Server stellt die Datei erst auf diese Anfrage zusammen, aus genau dem, was die Person
-        auf der Wand sehen darf: die Frage, die Gruppen mit ihren Titeln und die Texte der Zettel; solange verdeckt
-        geschrieben wird, nur ihre eigenen Zettel und die Zahl der anderen. Namen stehen nicht darin, auch nicht, wer
-        einen Zettel geschrieben hat. Ihr Browser weist sich dabei mit seinem Sitzungsschlüssel aus (Abschnitt 4). Der
-        Server speichert zu dieser Anfrage nichts und merkt sich die Datei nicht; die Datei liegt danach nur auf Ihrem
-        Gerät, und was mit ihr geschieht, entscheiden Sie.
+        auf der Wand sehen darf: die Frage, die Gruppen mit ihren Titeln, die Texte der Zettel und das Ergebnis einer
+        ausgezählten Wahl, nie einen Stimmzettel; solange verdeckt geschrieben wird, nur ihre eigenen Zettel und die
+        Zahl der anderen. Namen stehen nicht darin, auch nicht, wer einen Zettel geschrieben hat. Ihr Browser weist sich
+        dabei mit seinem Sitzungsschlüssel aus (Abschnitt 4). Der Server speichert zu dieser Anfrage nichts und merkt
+        sich die Datei nicht; die Datei liegt danach nur auf Ihrem Gerät, und was mit ihr geschieht, entscheiden Sie.
       </p>
       <p>
         <strong>Die Bremse der Wand.</strong> Eine Wand speichert höchstens 1.500 Änderungen an einem Tag nach UTC
-        (Zettel schreiben, ändern, verschieben, löschen, Gruppen). Danach nimmt sie bis 00:00 Uhr UTC keine weitere
-        Änderung an; Beitreten, Aufdecken, die Uhr und das Löschen der Wand gehen weiter. Sie zählt dafür die Nummern
-        der Änderungen, nicht Personen. Zweck und Rechtsgrundlage sind dieselben wie beim Tagesbudget (Abschnitt 2.2).
+        (Zettel schreiben, ändern, verschieben, löschen, Gruppen, Stimmzettel). Danach nimmt sie bis 00:00 Uhr UTC keine
+        weitere Änderung an; Beitreten, die Schritte mit dem Aufdecken, das Auszählen, die Uhr und das Löschen der Wand
+        gehen weiter. Sie zählt dafür die Nummern der Änderungen, nicht Personen. Zweck und Rechtsgrundlage sind
+        dieselben wie beim Tagesbudget (Abschnitt 2.2).
       </p>
       <p>
         Die Frage, der Anzeigename, die Texte der Zettel und die Titel der Gruppen sind freier Text: Schreiben Sie
@@ -221,7 +237,8 @@ export function PrivacyDe() {
           Beitritt zählt auch das Wiederkommen und jede automatische Neuverbindung. Die Frist rückt höchstens einmal am
           Tag weiter; die Löschung liegt deshalb 29 bis 30 Tage nach dem letzten Beitritt. Tritt niemand bei, löscht
           sich die Wand 30 Tage nach dem Anlegen. Die Anwendung löscht dabei den gesamten Speicher der Wand, mit allen
-          Zetteln und Gruppen. Der Link führt danach zu „Unbekannte Wand“, wie bei einer Wand, die es nie gab.
+          Zetteln, Gruppen, Stimmzetteln und Ergebnissen. Bis dahin bleiben die Stimmzettel je Person gespeichert. Der
+          Link führt danach zu „Unbekannte Wand“, wie bei einer Wand, die es nie gab.
         </li>
         <li>
           Die Moderation kann die Wand <strong>jederzeit löschen</strong> („Wand löschen“): sofort und vollständig, mit
@@ -233,9 +250,10 @@ export function PrivacyDe() {
           ihren Sitzungsschlüssel, und ihr Browser entfernt die Wand aus seiner Liste, mit dem Moderationsschlüssel,
           falls er einen hielt. Die Zettel der Person bleiben auf der Wand, ohne Namen: Sie tragen weiter die bisherige
           Kennung, die dann keinem Anzeigenamen mehr zugeordnet ist, und gehören niemandem mehr. Ändern kann sie danach
-          niemand. Solange verdeckt geschrieben wird, bleiben sie verdeckt, und niemand kann sie löschen, auch die
-          Moderation nicht; nach dem Aufdecken kann die Moderation sie löschen. Wer seine Zettel nicht auf der Wand
-          lassen will, löscht sie vorher.
+          niemand. Ebenso bleiben ihre Stimmzettel unter dieser Kennung gespeichert und zählen beim Auszählen mit.
+          Solange verdeckt geschrieben wird, bleiben sie verdeckt, und niemand kann sie löschen, auch die Moderation
+          nicht; nach dem Aufdecken kann die Moderation sie löschen. Wer seine Zettel nicht auf der Wand lassen will,
+          löscht sie vorher.
         </li>
         <li>
           Einen <strong>einzelnen Zettel</strong> löscht der Server auf den Befehl der Person, die ihn geschrieben hat,

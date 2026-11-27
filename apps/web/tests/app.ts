@@ -113,6 +113,12 @@ export type Guest = {
   move(moves: Array<{ noteId: string; x: number; y: number; groupId: string | null }>): Promise<void>;
   /** The moderation's: sets the writing's clock to so many minutes and lets it run. */
   startClock(minutes: number): Promise<void>;
+  /** The moderation's: moves the wall from one step to another. */
+  go(from: number, to: number): Promise<void>;
+  /** A ballot for a step that votes (stage M2). */
+  cast(step: number, ballot: Record<string, unknown>): Promise<void>;
+  /** The moderation's: counts the vote of the step the wall is in. */
+  count(step: number): Promise<void>;
 };
 
 /** Somebody on the wall who is no browser: a socket of the test itself; with the wall's admin token, its
@@ -167,6 +173,9 @@ export function join(wallId: string, name: string, adminToken?: string): Promise
         },
         move: (moves) => ask({ type: "notes.move", moves }),
         startClock: (minutes) => ask({ type: "admin.clock.start", rev, minutes }),
+        go: (from, to) => ask({ type: "admin.step.go", from, to }),
+        cast: (step, ballot) => ask({ type: "ballot.cast", step, ballot }),
+        count: (step) => ask({ type: "admin.step.count", step }),
       });
     });
     ws.addEventListener("error", () => reject(new Error(`${name}: the socket failed`)));
@@ -342,4 +351,44 @@ export async function takeOwnKey(page: Page, provider: string, key: string) {
   await dialog.getByLabel("Schlüssel", { exact: true }).fill(key);
   await dialog.getByRole("button", { name: "Übernehmen", exact: true }).click();
   await expect(dialog).toBeHidden();
+}
+
+/** „Still sammeln“ in its vote (stage M2): write 0, reveal 1, group 2, vote 3, discuss 4. */
+export const VOTE_STEP = 3;
+/** The texts of the notes of a wall in its vote: the first two lie in the group „Abstimmung“. */
+export const VOTE_NOTES = [
+  "Weniger Termine",
+  "Entscheidungen aufschreiben",
+  "Fokuszeit am Vormittag",
+  "Mehr Pausen",
+  "Ein Board für alles",
+];
+
+/** A wall of „Still sammeln“ that has reached its vote, made by a moderation that is no browser (Ben): five notes,
+ *  the first two in the group „Abstimmung“, so the options are that group and the three other notes, and the budget
+ *  is two points. With `counted`, Ben gives the group two points and counts. Ben leaves; the page goes onto the wall
+ *  as Anna, with the wall's admin token where `admin` says so. Returns the wall, the group and the notes. */
+export async function enterVote(page: Page, options: { counted?: boolean; admin?: boolean; question?: string } = {}) {
+  const { counted = false, admin = false, question = QUESTION } = options;
+  const wall = await makeWall(page, question);
+  const ben = await join(wall.wallId, "Ben", wall.adminToken);
+  const notes: string[] = [];
+  for (const [n, text] of VOTE_NOTES.entries()) notes.push(await ben.write(text, n * 256, 400));
+  await ben.go(0, 1);
+  await ben.go(1, 2);
+  const groupId = await ben.group("Abstimmung", { x: 0, y: 0, w: 528, h: 280 });
+  await ben.move(notes.slice(0, 2).map((noteId, n) => ({ noteId, x: 16 + n * 256, y: 40, groupId })));
+  await ben.go(2, VOTE_STEP);
+  if (counted) {
+    await ben.cast(VOTE_STEP, { kind: "dots", points: { [groupId]: 2 } });
+    await ben.count(VOTE_STEP);
+  }
+  await ben.leave();
+  await know(page, [{ id: wall.wallId, question, as: "Anna", ...(admin ? { adminToken: wall.adminToken } : {}) }]);
+  await page.goto(`/w/${wall.wallId}`);
+  await page
+    .locator(counted ? ".app-results" : ".app-ballot")
+    .first()
+    .waitFor();
+  return { ...wall, groupId, notes };
 }

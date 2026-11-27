@@ -54,7 +54,7 @@ export async function createHiddenWall(question = "What should we build next?"):
 
 // What a `sync` says of where a wall stands (packages/shared, domain/flow.ts): in the hidden writing step of
 // „Still sammeln“, revealed (its next step), or at the one step of „Freie Wand“, a wall made without hidden writing.
-const STILL = { items: [{ methodId: "still-sammeln", version: 1 }] };
+const STILL = { items: [{ methodId: "still-sammeln", version: 2 }] };
 export const WRITING = { agenda: STILL, step: 0, reach: 0 };
 export const REVEALED = { agenda: STILL, step: 1, reach: 1 };
 export const FREE = { agenda: { items: [{ methodId: "free", version: 1 }] }, step: 0, reach: 0 };

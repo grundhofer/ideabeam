@@ -7,12 +7,15 @@ import type { Method, MethodId } from "../domain/method.js";
 // English, stand in methods/texts.ts; a test holds both against this list, and a method without its name and short
 // description in both languages does not build (PLAN-METHODEN.md 2).
 //
-// Stage M1 has two:
+// Two methods so far:
 //
-//  - „Still sammeln, bündeln, verdeckt wählen“ (docs/methoden-katalog.md, method 2) without its vote, which comes
-//    in M2 with a new version. Its first step of the catalogue, „Frage stellen“, is part of „Ideen schreiben“ here:
-//    a wall shows its question from the start, and people write from the moment they arrive, hidden, as every wall
-//    with hidden writing did before. So a wall starts where it starts today, and revealing is one step on.
+//  - „Still sammeln, bündeln, verdeckt wählen“ (docs/methoden-katalog.md, method 2), complete since stage M2
+//    (version 2: its vote). Its first step of the catalogue, „Frage stellen“, is part of „Ideen schreiben“ here: a
+//    wall shows its question from the start, and people write from the moment they arrive, hidden, as every wall
+//    with hidden writing did before. So a wall starts where it starts today, and revealing is one step on. The vote
+//    gives points, a quarter of the options a person and at least two, hidden and all at once; the options are the
+//    groups after „Bündeln“, and the notes in no group (domain/vote.ts). Version 1 (stage M1, without the vote)
+//    stands on no wall outside the tests: a wall keeps the copy it was made with (domain/agenda.ts).
 //  - „Freie Wand“: one step, writing and arranging, every note there for everyone at once: the wall made without
 //    hidden writing.
 //
@@ -23,7 +26,7 @@ const MINUTE = 60;
 export const CATALOGUE: Readonly<Record<MethodId, Method>> = {
   "still-sammeln": {
     id: "still-sammeln",
-    version: 1,
+    version: 2,
     purpose: "collect",
     steps: [
       {
@@ -54,6 +57,16 @@ export const CATALOGUE: Readonly<Record<MethodId, Method>> = {
         output: "groups",
       },
       {
+        key: "vote",
+        type: "vote",
+        mode: "individual",
+        visibility: "aggregate",
+        durationSec: 3 * MINUTE,
+        advance: "moderation",
+        output: "ranking",
+        vote: { kind: "dots", perPerson: null, maxPerOption: null },
+      },
+      {
         key: "discuss",
         type: "discuss",
         mode: "plenary",
@@ -63,7 +76,7 @@ export const CATALOGUE: Readonly<Record<MethodId, Method>> = {
         output: "none",
       },
     ],
-    minutes: 20,
+    minutes: 25,
     groupSize: [3, 30],
     evidence: "metaAnalysis",
   },

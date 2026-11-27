@@ -37,6 +37,7 @@ type Props = {
     | "detail"
     | "form"
     | "tool"
+    | "result"
     | "settings"
     | "about"
     | "state-empty"

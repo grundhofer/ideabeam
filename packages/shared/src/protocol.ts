@@ -4,6 +4,7 @@
 import * as z from "zod/mini";
 import { agendaRequestSchema, resolvedAgendaSchema } from "./domain/agenda.js";
 import { MAX_STEPS } from "./domain/method.js";
+import { ballotSchema, voteResultSchema, voteRoundSchema } from "./domain/vote.js";
 import { hexIdSchema, wallIdSchema } from "./ids.js";
 import { sessionKeySchema } from "./session-key.js";
 
@@ -26,11 +27,13 @@ z.config({ jitless: true });
 // the groups and where the notes lie, stage 3 hidden writing, revealing, the clock of the writing and the brake of a
 // wall's day, stage 4 arranging: the moderation applies a proposal and takes it back. Stage M1 of the methods
 // (PLAN-METHODEN.md 5) turned the two phases into the steps of a wall's agenda: `admin.step.go`, `step.changed`.
+// Stage M2 brought hidden voting (domain/vote.ts): `ballot.cast`, `admin.step.count`, and to the browsers
+// `ballot.stored` (the voter's own), `votes.count` (a number), `results.published` (once counted).
 
 // The version of these frames. A deploy disconnects every socket, and a tab that reconnects still runs the old
 // script: the worker names its version in every `sync`, and a browser that reads another one asks for a reload
 // instead of guessing. Raised with every change a running tab cannot read (PLAN.md 3.4).
-export const PROTOCOL_VERSION = 7;
+export const PROTOCOL_VERSION = 8;
 
 // The admin's capability, minted with the wall and kept in the creating browser: 128 bits of hex. Anything else
 // cannot be one and is refused before it is compared.
@@ -413,6 +416,23 @@ export const clientCommandSchema = z.discriminatedUnion("type", [
   // no clock any more
   z.object({ type: z.literal("admin.clock.clear"), opId: hexIdSchema, rev: clockSchema.shape.rev }),
 
+  // Everybody's, in a step that votes (domain/vote.ts): the sender's whole ballot for the step the wall is in, sent
+  // with „Abgeben“. Absolute: sent again, it replaces the one stored, and the same ballot twice is one. `step` is the
+  // step it was made in: made for a step the wall has left, it is refused (`STALE`); once the vote is counted,
+  // nothing more is taken (`PHASE`).
+  z.object({
+    type: z.literal("ballot.cast"),
+    opId: hexIdSchema,
+    step: z.int().check(z.minimum(0), z.maximum(MAX_STEPS - 1)),
+    ballot: ballotSchema,
+  }),
+  // The moderation's: counts the vote of the step the wall is in, and everybody gets the result at once. Once.
+  z.object({
+    type: z.literal("admin.step.count"),
+    opId: hexIdSchema,
+    step: z.int().check(z.minimum(0), z.maximum(MAX_STEPS - 1)),
+  }),
+
   // The moderation's: a whole arrangement in one frame (PLAN.md 3.4). The groups it makes, each with its frame, its
   // title and its notes, and where every note it touches goes: into one of these groups, or to a place without a
   // group. Both halves have to say the same about which note lies in which group. The command's `opId` is the
@@ -453,6 +473,12 @@ export type ContentCommand = Extract<
 /** The moderation's command that moves the wall to another step. */
 export type StepCommand = Extract<ClientCommand, { type: "admin.step.go" }>;
 
+/** A ballot, cast. */
+export type BallotCommand = Extract<ClientCommand, { type: "ballot.cast" }>;
+
+/** The moderation's command that counts a vote. */
+export type CountCommand = Extract<ClientCommand, { type: "admin.step.count" }>;
+
 /** The moderation's controls of the clock. */
 export type ClockCommand = Extract<
   ClientCommand,
@@ -471,9 +497,11 @@ export type ClockCommand = Extract<
  *    person's: a note that lies in a locked group, or a group id that is taken.
  *  - `LIMIT`: the wall holds as many notes, or groups, as it may.
  *  - `PHASE`: the step the wall is in does not take this (the name is the one of the phases before): a group or
- *    an arrangement while the notes are hidden, the clock outside a step of writing.
+ *    an arrangement while the notes are hidden, the clock outside a step of writing, a note in a step that votes,
+ *    a ballot or counting outside one, a ballot after the vote is counted.
  *  - `STALE`: a control of the clock that was made for another revision of it: taken already, or overtaken. An
- *    undo of an arrangement that is not the wall's last one. A step move made for a step the wall has left.
+ *    undo of an arrangement that is not the wall's last one. A step move, a ballot or counting made for a step the
+ *    wall has left.
  *  - `DAY_SPENT`: the wall has written what one wall may write on a UTC day (domain/budget.ts). The frame says
  *    when it takes changes again (`resetsAt`). */
 export const rejectCodeSchema = z.enum([
@@ -535,6 +563,16 @@ export const serverEventSchema = z.discriminatedUnion("type", [
     /** The run that arranged the wall last, while it can be taken back (`admin.arrange.undo`): the `opId` of its
      *  `admin.arrange.apply`. null: there is nothing to take back. */
     arrangeRun: z.nullable(hexIdSchema),
+    /** The votes of the steps the wall has entered that vote: their options, budgets and whether they are counted
+     *  (domain/vote.ts). No ballot. */
+    votes: z.array(voteRoundSchema),
+    /** This person's own ballot in the step the wall is in, or null: none, or the step does not vote. Never anybody
+     *  else's. */
+    ballot: z.nullable(ballotSchema),
+    /** How many people have voted in the step the wall is in: a number, and nothing about who or what. */
+    voted: z.int().check(z.minimum(0)),
+    /** The results of the counted votes. Nothing of a vote that is not counted. */
+    results: z.array(voteResultSchema),
   }),
   // The answer to a command that was taken. `seq` is the number its change got; a command that found its work
   // done changed nothing, and its answer names the number the wall stands at.
@@ -613,12 +651,35 @@ export const serverEventSchema = z.discriminatedUnion("type", [
   z.object({ type: z.literal("notes.revealed"), seq: z.int(), notes: z.array(noteSchema) }),
   // The wall is in another step from now on, and has reached `reach`. A move that reveals sends `notes.revealed`
   // first, and this with the next number. The clock of the step stops with every move (domain/flow.ts).
+  // Into a step that votes it carries the step's vote (`round`: frozen options, budget, counted or not), how many
+  // have voted in it, and the receiver's own ballot in it, if they voted there before the wall left the step: each
+  // browser gets its own. No other ballot, no tally.
   z.object({
     type: z.literal("step.changed"),
     seq: z.int(),
     step: z.int().check(z.minimum(0)),
     reach: z.int().check(z.minimum(0)),
+    round: z.optional(voteRoundSchema),
+    voted: z.optional(z.int().check(z.minimum(0))),
+    ballot: z.optional(z.nullable(ballotSchema)),
   }),
+  // To every socket of the person who voted, before the `ack`: the ballot as stored, and how many have voted now.
+  z.object({
+    type: z.literal("ballot.stored"),
+    seq: z.int(),
+    step: z.int().check(z.minimum(0)),
+    ballot: ballotSchema,
+    voted: z.int().check(z.minimum(0)),
+  }),
+  // To everybody else, for the same change: how many have voted now. A number and nothing else, never a tally.
+  z.object({
+    type: z.literal("votes.count"),
+    seq: z.int(),
+    step: z.int().check(z.minimum(0)),
+    voted: z.int().check(z.minimum(0)),
+  }),
+  // The moderation counted: the result, to everybody at once.
+  z.object({ type: z.literal("results.published"), seq: z.int(), result: voteResultSchema }),
   // A control of the clock was taken. `serverNow` is the worker's clock when it was: the browser keeps the distance
   // to its own and counts from the clock's end.
   z.object({ type: z.literal("clock.changed"), seq: z.int(), clock: clockSchema, serverNow: z.number() }),

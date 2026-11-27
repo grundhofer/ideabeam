@@ -41,6 +41,10 @@ const sync = (participants: Participant[], notes: Note[] = [], groups: Group[] =
   notes,
   groups,
   arrangeRun: null,
+  votes: [],
+  ballot: null,
+  voted: 0,
+  results: [],
 });
 
 /** A note on the wall, the n-th one made. */
@@ -953,7 +957,7 @@ test("the state names the step, what comes after it and the method with its shor
   const socket = await join();
   socket.tell(hiddenSync(ANNA_AND_BEN("member"), [], 2));
   const state = await screen.findByRole("region", { name: "Stand der Wand" });
-  expect(within(state).getByText("Schritt 1 von 4: Ideen schreiben · danach Aufdecken")).toBeTruthy();
+  expect(within(state).getByText("Schritt 1 von 5: Ideen schreiben · danach Aufdecken")).toBeTruthy();
   // never the method's name alone (PLAN-METHODEN.md 2)
   expect(screen.getByTestId("method").textContent).toBe(
     "Still sammeln, bündeln, verdeckt wählen: Alle schreiben Ideen verdeckt, die Ideen werden gebündelt, dann wählt jede Person verdeckt; heraus kommt eine Rangfolge.",
@@ -961,10 +965,10 @@ test("the state names the step, what comes after it and the method with its shor
   // the wall moves on: said once, and the state follows
   socket.tell({ type: "notes.revealed", seq: 3, notes: [] });
   socket.tell({ type: "step.changed", seq: 4, step: 1, reach: 1 });
-  await screen.findByText("Schritt 2 von 4: Aufdecken · danach Bündeln");
-  socket.tell({ type: "step.changed", seq: 5, step: 3, reach: 3 });
-  await screen.findByText("Schritt 4 von 4: Ergebnis besprechen · der letzte Schritt");
-  expect(screen.getByText("Schritt 4 von 4: Ergebnis besprechen.").classList.contains("sb-visually-hidden")).toBe(true);
+  await screen.findByText("Schritt 2 von 5: Aufdecken · danach Bündeln");
+  socket.tell({ type: "step.changed", seq: 5, step: 4, reach: 4 });
+  await screen.findByText("Schritt 5 von 5: Ergebnis besprechen · der letzte Schritt");
+  expect(screen.getByText("Schritt 5 von 5: Ergebnis besprechen.").classList.contains("sb-visually-hidden")).toBe(true);
   // what to do now is the step's: talking the result through
   expect(guides()).toEqual(["Besprecht die Gruppen gemeinsam: Was fällt auf, was fehlt, was folgt daraus?"]);
   // moving between the steps is the moderation's
@@ -989,7 +993,7 @@ test("the moderation moves on with „Weiter“ and back with „Zurück“ unde
   useWalls.getState().keepToken(WALL, TOKEN);
   const socket = await join();
   socket.tell({ ...(sync(ANNA_AND_BEN("admin")) as Sync), ...REVEALED_SYNC, seq: 0 });
-  await screen.findByText("Schritt 2 von 4: Aufdecken · danach Bündeln");
+  await screen.findByText("Schritt 2 von 5: Aufdecken · danach Bündeln");
   // the step arranges: „Ordnen“ is the zone's primary action, the way on stands in the state, as a text action
   expect(screen.getByRole("button", { name: "Ordnen" }).className).toBe("sb-primary-action");
   const onward = screen.getByRole("button", { name: "Weiter: Bündeln" });
@@ -1844,4 +1848,120 @@ test("„Als Markdown sichern“ and „QR-Code zeigen“ are everybody's, in �
 
   // the wall's link as a QR code: a dialog, which jsdom cannot open (tests/export.spec.ts opens it)
   expect(inMore("QR-Code zeigen")).not.toBeNull();
+});
+
+// A step that votes (stage M2): the ballot stands in the place of the surface, „Abgeben“ sends it whole, and the
+// state says the person's standing and how many have voted; the moderation counts, and the result is a ranked list.
+const VOTE_SYNC = { ...REVEALED_SYNC, step: 3, reach: 3 };
+const voteRound = (options: string[], counted = false) => ({
+  step: 3,
+  options: options.map((id) => ({ id, kind: "note" as const })),
+  omitted: 0,
+  limit: 2,
+  counted,
+});
+
+test("a vote: points with − and +, what is left, „Abgeben“ sends the ballot; the state says who has voted, never what", async () => {
+  found();
+  const socket = await join();
+  const notes = [note(1, "Weniger Termine", BEN), note(2, "Fokuszeit", BEN), note(3, "Mehr Pausen")];
+  socket.tell({
+    ...(sync(ANNA_AND_BEN("member"), notes) as Sync),
+    ...VOTE_SYNC,
+    votes: [voteRound(notes.map((one) => one.id))],
+    voted: 1,
+  });
+  await screen.findByRole("heading", { name: "Deine Stimme: 2\u00a0Punkte zu verteilen" });
+  expect(stateOf().getByText("Noch nicht abgegeben. 1 von 2 haben abgegeben.")).toBeTruthy();
+  expect(document.querySelector(".app-surface, .app-list")).toBeNull();
+  expect(screen.queryByRole("radio", { name: "Fläche" })).toBeNull();
+  // an empty ballot is no vote: it says so and sends nothing
+  fireEvent.click(screen.getByRole("button", { name: "Abgeben" }));
+  expect(await screen.findByText("Verteil mindestens einen Punkt, dann drück „Abgeben“.")).toBeTruthy();
+  expect(socket.sent.filter((frame) => frame.type === "ballot.cast")).toEqual([]);
+  // two points on one note: the budget is spent, „+“ says it cannot act, and stays where it is
+  const more = screen.getByRole("button", { name: "Einen Punkt mehr: Weniger Termine" });
+  const left = () => document.querySelector(".app-ballot__left")?.textContent;
+  expect(left()).toBe("Noch 2\u00a0Punkte");
+  fireEvent.click(more);
+  expect(left()).toBe("Noch 1\u00a0Punkt");
+  fireEvent.click(more);
+  expect(left()).toBe("Alle Punkte verteilt.");
+  expect(screen.getByRole("button", { name: "Einen Punkt mehr: Fokuszeit" }).getAttribute("aria-disabled")).toBe(
+    "true",
+  );
+  fireEvent.click(screen.getByRole("button", { name: "Einen Punkt mehr: Fokuszeit" }));
+  fireEvent.click(screen.getByRole("button", { name: "Einen Punkt weniger: Weniger Termine" }));
+  fireEvent.click(screen.getByRole("button", { name: "Einen Punkt mehr: Mehr Pausen" }));
+  fireEvent.click(screen.getByRole("button", { name: "Abgeben" }));
+  expect(socket.sent.filter((frame) => frame.type === "ballot.cast")).toEqual([
+    expect.objectContaining({
+      type: "ballot.cast",
+      step: 3,
+      ballot: { kind: "dots", points: { [notes[0]!.id]: 1, [notes[2]!.id]: 1 } },
+    }),
+  ]);
+  // the wall stored it: the state says so
+  socket.tell({
+    type: "ballot.stored",
+    seq: 4,
+    step: 3,
+    ballot: { kind: "dots", points: { [notes[0]!.id]: 1, [notes[2]!.id]: 1 } },
+    voted: 2,
+  });
+  await screen.findByText("Abgegeben. 2 von 2 haben abgegeben.");
+  expect(guides()).toContain(
+    "Deine Punkte sind abgegeben. Ändern geht, bis die Moderation auszählt, und niemand sieht sie.",
+  );
+  // counted: the result as a ranked list, with places and points, for everybody at once
+  socket.tell({
+    type: "results.published",
+    seq: 5,
+    result: {
+      step: 3,
+      kind: "dots",
+      limit: 2,
+      voters: 2,
+      rows: [
+        { id: notes[0]!.id, kind: "note", label: "Weniger Termine", points: 3, by: 2, rank: 1 },
+        { id: notes[2]!.id, kind: "note", label: "Mehr Pausen", points: 1, by: 1, rank: 2 },
+        { id: notes[1]!.id, kind: "note", label: "Fokuszeit", points: 0, by: 0, rank: 3 },
+      ],
+    },
+  });
+  const results = await screen.findByRole("region", { name: "Ergebnis der Wahl" });
+  expect([...results.querySelectorAll("li")].map((row) => row.textContent)).toEqual([
+    "1.Weniger Termine3\u00a0Punkte",
+    "2.Mehr Pausen1\u00a0Punkt",
+    "3.Fokuszeit0\u00a0Punkte",
+  ]);
+  expect(document.querySelector(".app-state__sentence")?.textContent).toBe("Ausgezählt: 2\u00a0Stimmzettel.");
+  expect(screen.getByRole("button", { name: "Als Markdown sichern" }).className).toBe("sb-primary-action");
+});
+
+test("the moderation's vote: „Auszählen“ is the primary action with „Abgeben“ beside it, then „Weiter“", async () => {
+  found();
+  useWalls.getState().keepToken(WALL, TOKEN);
+  const socket = await join();
+  const notes = [note(1, "Weniger Termine", BEN)];
+  socket.tell({
+    ...(sync(ANNA_AND_BEN("admin"), notes) as Sync),
+    ...VOTE_SYNC,
+    votes: [voteRound([notes[0]!.id])],
+  });
+  const count = await screen.findByRole("button", { name: "Auszählen" });
+  expect(count.className).toBe("sb-primary-action");
+  expect(screen.getByRole("button", { name: "Abgeben" }).className).toBe("sb-secondary-action");
+  expect(document.querySelectorAll(".sb-primary-action")).toHaveLength(1);
+  fireEvent.click(count);
+  expect(flow(socket).at(-1)).toMatchObject({ type: "admin.step.count", step: 3 });
+  socket.tell({
+    type: "results.published",
+    seq: 2,
+    result: { step: 3, kind: "dots", limit: 2, voters: 0, rows: [] },
+  });
+  const next = await screen.findByRole("button", { name: "Weiter: Ergebnis besprechen" });
+  expect(next.className).toBe("sb-primary-action");
+  fireEvent.click(next);
+  expect(flow(socket).at(-1)).toMatchObject({ type: "admin.step.go", from: 3, to: 4 });
 });

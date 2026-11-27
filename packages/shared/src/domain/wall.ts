@@ -18,6 +18,7 @@ import { numbersOf } from "./arrange.js";
 import { NO_CLOCK, stoppedClock } from "./clock.js";
 import { NO_STEP, stepContext, type StepContext } from "./flow.js";
 import { decide, type WallReader } from "./rules.js";
+import type { Ballot, VoteResult, VoteRound } from "./vote.js";
 
 /** What a wall holds: its notes with their places, and its groups. Both in the order they were made. */
 export interface WallContent {
@@ -58,6 +59,14 @@ export interface WallState extends WallContent {
   /** The run that arranged the wall last, while the moderation can take it back (`admin.arrange.undo` names it), or
    *  null: there is nothing to take back. */
   arrangeRun: string | null;
+  /** The votes of the steps the wall has entered that vote (domain/vote.ts): options, budget, counted or not. */
+  votes: VoteRound[];
+  /** This person's own ballot in the step the wall is in, as the wall stored it, or null. */
+  ballot: Ballot | null;
+  /** How many people have voted in the step the wall is in. */
+  voted: number;
+  /** The results of the counted votes. */
+  results: VoteResult[];
   // `notes` and `groups` are what the worker has told: the wall as it is stored. What a browser shows is `shown()`.
   /** The number of the last stored change this browser has heard of (protocol.ts, `seq`). */
   seq: number;
@@ -82,6 +91,10 @@ export const initialWallState: WallState = {
   hidden: 0,
   clock: NO_CLOCK,
   arrangeRun: null,
+  votes: [],
+  ballot: null,
+  voted: 0,
+  results: [],
   notes: [],
   groups: [],
   seq: 0,
@@ -107,6 +120,10 @@ export function applyServerEvent(state: WallState, event: ServerEvent): WallStat
         hidden: event.hidden,
         clock: event.clock,
         arrangeRun: event.arrangeRun,
+        votes: event.votes,
+        ballot: event.ballot,
+        voted: event.voted,
+        results: event.results,
         notes: event.notes,
         groups: event.groups,
         seq: event.seq,
@@ -180,6 +197,25 @@ export function applyServerEvent(state: WallState, event: ServerEvent): WallStat
         reach: Math.max(event.reach, event.step),
         // the step is over, and with it its time: the worker stores the same (domain/flow.ts)
         clock: stoppedClock(state.clock),
+        // the step's vote, how many have voted in it and one's own ballot, where the step votes
+        votes: event.round === undefined ? state.votes : withRound(state.votes, event.round),
+        voted: event.voted ?? 0,
+        ballot: event.ballot ?? null,
+        ...numbered(state, event.seq),
+      };
+    case "ballot.stored":
+      return {
+        ...state,
+        ...(event.step === state.step ? { ballot: event.ballot, voted: event.voted } : {}),
+        ...numbered(state, event.seq),
+      };
+    case "votes.count":
+      return { ...state, ...(event.step === state.step ? { voted: event.voted } : {}), ...numbered(state, event.seq) };
+    case "results.published":
+      return {
+        ...state,
+        results: [...state.results.filter((result) => result.step !== event.result.step), event.result],
+        votes: state.votes.map((round) => (round.step === event.result.step ? { ...round, counted: true } : round)),
         ...numbered(state, event.seq),
       };
     case "clock.changed":
@@ -202,6 +238,11 @@ export function applyServerEvent(state: WallState, event: ServerEvent): WallStat
  *  frame carries the last of its numbers. */
 function numbered(state: WallState, seq: number, took = 1): Pick<WallState, "seq" | "gap"> {
   return { seq, gap: state.gap || seq !== state.seq + took };
+}
+
+/** The votes with one of them as it stands now. */
+function withRound(votes: VoteRound[], round: VoteRound): VoteRound[] {
+  return [...votes.filter((known) => known.step !== round.step), round];
 }
 
 /** A command of this browser, applied at once: it is on its way from now on, and `shown()` includes what it does.

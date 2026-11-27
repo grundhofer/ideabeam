@@ -192,7 +192,8 @@ describe("a wall of schema 3", () => {
     const after = await meta(wallId);
     expect(after.schemaVersion).toBe("4");
     expect(JSON.parse(after.flow ?? "")).toMatchObject({ v: 2, step: 0, reach: 0, seq: 2 });
-    expect(JSON.parse(after.agenda ?? "")).toMatchObject({ items: [{ methodId: "still-sammeln", version: 1 }] });
+    // „Still sammeln“ as the catalogue has it now: since stage M2 with its vote
+    expect(JSON.parse(after.agenda ?? "")).toMatchObject({ items: [{ methodId: "still-sammeln", version: 2 }] });
     // from then on a wall of this build: a control is one row, revealing is one row and the step move it always was
     expect(await ask(admin.socket, { type: "admin.clock.pause", rev: 1 })).toBe("ack");
     expect(await written(wallId)).toBe(4);

@@ -127,6 +127,8 @@ export function decide(wall: WallReader, command: ContentCommand, by: Actor, now
       return changed({ type: "note.updated", noteId: command.noteId, text: command.text, updatedAt: now });
     }
     case "note.delete": {
+      // not in a step that votes: its options are frozen (domain/agenda.ts, `capabilities`)
+      if (!ctx.can.write) return refused("PHASE");
       const existing = seen(wall.note(command.noteId));
       // Gone already, by this command sent before or by somebody else: what the command wants is so.
       if (existing === null) return UNCHANGED;
