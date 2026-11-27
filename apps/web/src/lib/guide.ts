@@ -15,7 +15,10 @@
 //
 // In a step of a method that is about talking (`discuss`, PLAN-METHODEN.md), the sentence says what to talk about,
 // once somebody else is there. In a step that votes (stage M2) it says how to vote, that nobody sees a ballot, and,
-// to the moderation, that counting is theirs and shows the result to everybody at once; once counted, what now.
+// to the moderation, that counting is theirs and shows the result to everybody at once; once counted, what now. A
+// step that estimates (stage M3) says the same of a number, also in its first round, whose reasons are hidden like
+// hidden writing: the estimate is what to do there. After a counted round it says what to talk about while another
+// round follows, and where both rounds stand once none does.
 import { ARRANGE_MIN_NOTES, type StepType } from "@ideabeam/shared";
 
 /** What the sentence depends on. */
@@ -45,8 +48,12 @@ export type Standing = {
    *  (taking it back acts at once, from the action zone), `changed` after that (it asks first, from „Mehr“). null or
    *  left out: no such run. */
   arranged?: "fresh" | "changed" | null;
-  /** In a step that votes: whether this person's ballot is stored, and whether the vote is counted. */
-  vote?: { cast: boolean; counted: boolean } | null;
+  /** In a step that votes: whether this person's ballot is stored, whether the vote is counted, and whether it is
+   *  an estimate. */
+  vote?: { cast: boolean; counted: boolean; estimate?: boolean } | null;
+  /** After a counted estimate, outside a step that votes: another round of estimates follows (`talk`), or none does
+   *  (`result`). null or left out: the wall has counted no estimate. */
+  estimates?: "talk" | "result" | null;
 };
 
 export type GuideKey =
@@ -79,7 +86,17 @@ export type GuideKey =
   | "adminCounted"
   | "memberVote"
   | "memberVoteCast"
-  | "memberCounted";
+  | "memberCounted"
+  | "adminEstimate"
+  | "adminEstimateCast"
+  | "adminEstimated"
+  | "memberEstimate"
+  | "memberEstimateCast"
+  | "memberEstimated"
+  | "adminEstimateTalk"
+  | "memberEstimateTalk"
+  | "adminEstimateResult"
+  | "memberEstimateResult";
 
 /** The sentence that says what to do now. Alone, the next step is to bring the others in; with others, to write;
  *  once notes lie there, to put what belongs together into a group; once groups stand, to move the rest together
@@ -97,6 +114,17 @@ export function guide(standing: Standing): GuideKey {
   const { arrangeable = 0, arranged = null } = standing;
   const alone = people <= 1;
   const empty = notes === 0;
+  // a step that votes: how, and who counts. First, since the first estimate is a step that votes while the reasons
+  // beside it are hidden
+  const vote = standing.vote ?? null;
+  if (vote !== null) {
+    if (vote.estimate === true) {
+      const state = vote.counted ? "Estimated" : vote.cast ? "EstimateCast" : "Estimate";
+      return `${admin ? "admin" : "member"}${state}`;
+    }
+    const state = vote.counted ? "Counted" : vote.cast ? "VoteCast" : "Vote";
+    return `${admin ? "admin" : "member"}${state}`;
+  }
   if (hidden) {
     if (admin) {
       // alone, the link comes first, whatever the clock says
@@ -107,11 +135,10 @@ export function guide(standing: Standing): GuideKey {
     if (alone) return "memberHiddenAlone";
     return timeUp ? "memberHiddenOver" : "memberHidden";
   }
-  // a step that votes: how, and who counts
-  const vote = standing.vote ?? null;
-  if (vote !== null) {
-    const state = vote.counted ? "Counted" : vote.cast ? "VoteCast" : "Vote";
-    return `${admin ? "admin" : "member"}${state}`;
+  // after a counted estimate: what to talk about before the next round, or where both rounds stand
+  const estimates = standing.estimates ?? null;
+  if (estimates !== null && !alone) {
+    return `${admin ? "admin" : "member"}${estimates === "talk" ? "EstimateTalk" : "EstimateResult"}`;
   }
   // a step to talk the result through, with others on the wall
   if (standing.step === "discuss" && !alone) return admin ? "adminDiscuss" : "memberDiscuss";

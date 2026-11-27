@@ -105,14 +105,14 @@ test("the method: „Still sammeln“ is chosen at first, „Freie Wand“ is th
   await screen.findByRole("heading", { level: 1, name: "Neue Wand" });
   const group = screen.getByRole("group", { name: "Methode" });
   const options = within(group).getAllByRole<HTMLInputElement>("radio");
-  expect(options.map((option) => option.value)).toEqual(["still-sammeln", "free"]);
-  expect(options.map((option) => option.checked)).toEqual([true, false]);
+  expect(options.map((option) => option.value)).toEqual(["still-sammeln", "schaetzen", "free"]);
+  expect(options.map((option) => option.checked)).toEqual([true, false, false]);
   // under headings by purpose
   expect(
     within(group)
       .getAllByRole("heading", { level: 2 })
       .map((heading) => heading.textContent),
-  ).toEqual(["Ideen sammeln", "Ohne festen Ablauf"]);
+  ).toEqual(["Ideen sammeln", "Entscheiden", "Ohne festen Ablauf"]);
   fireEvent.click(screen.getByRole("radio", { name: "Freie Wand" }));
   type("Was hält uns auf?");
   submit();
@@ -120,6 +120,47 @@ test("the method: „Still sammeln“ is chosen at first, „Freie Wand“ is th
   expect(JSON.parse(String(fetched.mock.calls[0]?.[1]?.body))).toEqual({
     question: "Was hält uns auf?",
     agenda: { items: [{ methodId: "free" }] },
+  });
+});
+
+test("a method that estimates asks for its unit, optional, and sends it with the method (stage M3)", async () => {
+  const fetched = vi
+    .spyOn(globalThis, "fetch")
+    .mockImplementation(() => Promise.resolve(new Response(JSON.stringify({ wallId: WALL, adminToken: TOKEN }))));
+  renderApp("/neu");
+  await screen.findByRole("heading", { level: 1, name: "Neue Wand" });
+  // no unit for a method that does not estimate
+  expect(screen.queryByLabelText(/Einheit der Schätzung/)).toBeNull();
+  fireEvent.click(screen.getByRole("radio", { name: "Schätzen – Diskutieren – Schätzen" }));
+  const unit = screen.getByLabelText<HTMLInputElement>(/Einheit der Schätzung/);
+  fireEvent.change(unit, { target: { value: "x".repeat(21) } });
+  type("Wie viele Tage braucht der Umzug?");
+  submit();
+  expect(screen.getByText("Einheit der Schätzung ist zu lang. Höchstens 20 Zeichen.")).toBeTruthy();
+  expect(document.activeElement).toBe(unit);
+  expect(fetched).not.toHaveBeenCalled();
+  fireEvent.change(unit, { target: { value: " Tage " } });
+  submit();
+  await waitFor(() => expect(useWalls.getState().walls).toHaveLength(1));
+  expect(JSON.parse(String(fetched.mock.calls[0]?.[1]?.body))).toEqual({
+    question: "Wie viele Tage braucht der Umzug?",
+    agenda: { items: [{ methodId: "schaetzen", unit: "Tage" }] },
+  });
+});
+
+test("the unit left empty: the method alone is asked for", async () => {
+  const fetched = vi
+    .spyOn(globalThis, "fetch")
+    .mockImplementation(() => Promise.resolve(new Response(JSON.stringify({ wallId: WALL, adminToken: TOKEN }))));
+  renderApp("/neu");
+  await screen.findByRole("heading", { level: 1, name: "Neue Wand" });
+  fireEvent.click(screen.getByRole("radio", { name: "Schätzen – Diskutieren – Schätzen" }));
+  type("Wie wahrscheinlich ist ein Start im März?");
+  submit();
+  await waitFor(() => expect(useWalls.getState().walls).toHaveLength(1));
+  expect(JSON.parse(String(fetched.mock.calls[0]?.[1]?.body))).toEqual({
+    question: "Wie wahrscheinlich ist ein Start im März?",
+    agenda: { items: [{ methodId: "schaetzen" }] },
   });
 });
 

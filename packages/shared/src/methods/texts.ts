@@ -14,7 +14,11 @@ import type { Evidence, MethodId, Purpose, StepMode, StepVisibility } from "../d
 //
 // „Still sammeln, bündeln, verdeckt wählen“: the catalogue's texts, word for word; its steps without „Frage stellen“
 // (part of „Ideen schreiben“, methods/catalogue.ts), its vote („Wählen“) since stage M2. „Freie Wand“: the catalogue names it
-// and has no texts for it; these are the stage's own, for the owner to read.
+// and has no texts for it; these are the stage's own, for the owner to read. „Schätzen – Diskutieren – Schätzen“
+// (stage M3): the catalogue's texts, but for two things. Its short description says „gemeinsam“ where the
+// catalogue says „in Kleingruppen“, since the discussion is a step for everyone until stage M4 brings small groups;
+// and it has no „auch bekannt als“: nobody searched the register for „Mini-Delphi“, and the catalogue's rule leaves
+// such a line out until somebody has.
 
 export type MethodLanguage = "de" | "en";
 
@@ -109,6 +113,23 @@ export const METHOD_TEXTS: Readonly<Record<MethodLanguage, CatalogueTexts>> = {
           discuss: { name: "Ergebnis besprechen" },
         },
       },
+      schaetzen: {
+        name: "Schätzen – Diskutieren – Schätzen",
+        short:
+          "Alle schätzen verdeckt, besprechen gemeinsam die Abweichungen und schätzen neu; heraus kommt eine Gruppenschätzung mit Streuung.",
+        when: "Wenn ihr eine Zahl braucht, etwa Aufwand, Termin oder Wahrscheinlichkeit, und das Wissen auf viele Köpfe verteilt ist.",
+        result:
+          "Beide Runden mit Median und Spannweite, die Begründungen ohne Namen, die Veränderung zwischen den Runden.",
+        evidence:
+          "Eine systematische Übersicht fand, dass solche Runden meist genauer sind als der Mittelwert der ersten Schätzungen und als frei diskutierende Gruppen. Fast alle Tests nutzen Aufgaben mit einer richtigen Antwort.",
+        steps: {
+          estimate1: { name: "Erste Schätzung mit Begründung" },
+          feedback: { name: "Rückmeldung: Median, Spannweite, Begründungen" },
+          discuss: { name: "Abweichungen besprechen" },
+          estimate2: { name: "Neu schätzen" },
+          result: { name: "Ergebnis ansehen" },
+        },
+      },
       free: {
         name: "Freie Wand",
         short:
@@ -184,6 +205,22 @@ export const METHOD_TEXTS: Readonly<Record<MethodLanguage, CatalogueTexts>> = {
           cluster: { name: "Group" },
           vote: { name: "Vote" },
           discuss: { name: "Discuss the result" },
+        },
+      },
+      schaetzen: {
+        name: "Estimate – discuss – estimate",
+        short:
+          "Everyone estimates in private, you discuss the differences together, then everyone estimates again; you get a group estimate with its spread.",
+        when: "When you need a number, such as effort, date or likelihood, and the knowledge is spread across many people.",
+        result: "Both rounds with median and range, the reasons without names, the change between rounds.",
+        evidence:
+          "A systematic review found that such rounds are usually more accurate than the average of first estimates and than freely discussing groups. Almost all tests used tasks with a correct answer.",
+        steps: {
+          estimate1: { name: "First estimate with a reason" },
+          feedback: { name: "Feedback: median, range, reasons" },
+          discuss: { name: "Discuss the differences" },
+          estimate2: { name: "Estimate again" },
+          result: { name: "Look at the result" },
         },
       },
       free: {

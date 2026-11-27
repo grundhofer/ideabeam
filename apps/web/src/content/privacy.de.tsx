@@ -10,7 +10,8 @@
 // Markdown sichern“ through the Worker with the session key, sections 2.1, 3.1, 4 and 7; the QR code drawn in the
 // browser, section 3.6), state d3cc22a, read again end to end against the code on 2026-11-25. Stage M1 of the methods
 // (PLAN-METHODEN.md): the wall's method with its steps and the step it stands in, section 3.1; stage M2: the hidden
-// vote, its ballots per person and its result, sections 3.1 and 3.3. Arranging in the
+// vote, its ballots per person and its result, sections 3.1 and 3.3; stage M3: estimates as ballots with a number,
+// the unit of a method that estimates, the summary of a round, sections 3.1 and 3.3. Arranging in the
 // browser (4c) is not built: section 3.4 names it as a plan. Who is responsible for a run with a key of one's own
 // (section 3.5, „Wer verantwortlich ist“, and section 6) is the operator's understanding and an open point for a legal
 // review. It is a draft until the operator has read it (operator.ts, NOTICE_REVIEWED), and no lawyer has reviewed it.
@@ -128,11 +129,12 @@ export function PrivacyDe() {
         <li>
           <strong>Die Wand:</strong> ihre Frage (höchstens 140 Zeichen), der Zeitpunkt des Anlegens, der Tag ihrer
           automatischen Löschung, ein zufälliger Moderationsschlüssel, die gewählte Methode mit ihren Schritten (eine
-          Kopie aus dem Katalog der Anwendung, beim Anlegen gespeichert), in welchem Schritt die Wand steht und wie weit
-          sie schon war (daraus folgt, ob verdeckt geschrieben wird oder die Zettel aufgedeckt sind), die Uhr des
-          Schritts (wann sie abläuft oder wie viel Zeit angehalten noch bleibt, und wie oft sie gestellt wurde) und für
-          die Bremse der Wand (unten) ein Tag nach UTC mit der Nummer der ersten Änderung an diesem Tag. Diese Angaben
-          sagen nichts über Personen.
+          Kopie aus dem Katalog der Anwendung, beim Anlegen gespeichert; bei einer Methode, die schätzt, mit der
+          Einheit, die die Moderation dafür angegeben hat), in welchem Schritt die Wand steht und wie weit sie schon war
+          (daraus folgt, ob verdeckt geschrieben wird oder die Zettel aufgedeckt sind), die Uhr des Schritts (wann sie
+          abläuft oder wie viel Zeit angehalten noch bleibt, und wie oft sie gestellt wurde) und für die Bremse der Wand
+          (unten) ein Tag nach UTC mit der Nummer der ersten Änderung an diesem Tag. Diese Angaben sagen nichts über
+          Personen.
         </li>
         <li>
           <strong>Je Person:</strong> der Anzeigename (ein Vorname oder ein Pseudonym genügt, höchstens 40 Zeichen), ob
@@ -159,6 +161,14 @@ export function PrivacyDe() {
           Option ihren Titel oder Text, ihre Punkte, ihren Platz und wie viele Stimmzettel ihr etwas gaben, dazu die
           Zahl der Stimmzettel, ohne Kennungen. Was zur Wahl steht, hält die Wand beim Beginn des Schritts fest.
         </li>
+        <li>
+          <strong>Schätzungen:</strong> in einem Schritt, in dem geschätzt wird, je Person eine Zahl, wie ein
+          Stimmzettel: die Zahl, die Kennung der Person und die laufende Nummer der Änderung. Wer neu abgibt,
+          überschreibt die eigene Zahl. Beim Auszählen speichert die Wand nur die Zusammenfassung der Runde: wie viele
+          geschätzt haben, den Median, die Grenzen der mittleren Hälfte, die kleinste und die größte Zahl, ohne
+          Kennungen. Die kurze Begründung neben einer Schätzung ist ein Zettel wie jeder andere (oben): verdeckt, bis
+          der nächste Schritt sie für alle zeigt, ohne Namen.
+        </li>
       </ul>
       <p>
         Zu jedem Zettel, zu jeder Gruppe und zur Lage der Zettel hält die Wand außerdem die laufende Nummer der letzten
@@ -178,7 +188,10 @@ export function PrivacyDe() {
         Server. Der Server sendet einen Stimmzettel nur an den Browser der Person, die ihn abgegeben hat. Alle anderen,
         auch die Moderation, bekommen bis zum Auszählen nur eine Zahl: wie viele abgegeben haben. Einzelne Stimmzettel
         sieht niemand, auch nach dem Auszählen nicht: Das Auszählen ist Sache der Moderation, und dann bekommen alle
-        zugleich nur das Ergebnis. Auch die Datei von „Als Markdown sichern“ enthält nur das Ergebnis.
+        zugleich nur das Ergebnis. Auch die Datei von „Als Markdown sichern“ enthält nur das Ergebnis. Für Schätzungen
+        gilt dasselbe: Das Ergebnis ist die Zusammenfassung der Runde. Die kleinste und die größte Zahl stehen darin;
+        wer sie geschätzt hat, nicht. In einer kleinen Gruppe lässt sich aus ihnen dennoch mehr erraten als aus einem
+        Median.
       </p>
       <p>
         <strong>Wer was tun kann.</strong> Jede Person, die der Wand beigetreten ist, kann Zettel schreiben. Solange
@@ -203,10 +216,11 @@ export function PrivacyDe() {
         <strong>Als Markdown sichern.</strong> Jede Person auf der Wand kann sie über „Als Markdown sichern“ als Datei
         auf ihr Gerät holen. Der Server stellt die Datei erst auf diese Anfrage zusammen, aus genau dem, was die Person
         auf der Wand sehen darf: die Frage, die Gruppen mit ihren Titeln, die Texte der Zettel und das Ergebnis einer
-        ausgezählten Wahl, nie einen Stimmzettel; solange verdeckt geschrieben wird, nur ihre eigenen Zettel und die
-        Zahl der anderen. Namen stehen nicht darin, auch nicht, wer einen Zettel geschrieben hat. Ihr Browser weist sich
-        dabei mit seinem Sitzungsschlüssel aus (Abschnitt 4). Der Server speichert zu dieser Anfrage nichts und merkt
-        sich die Datei nicht; die Datei liegt danach nur auf Ihrem Gerät, und was mit ihr geschieht, entscheiden Sie.
+        ausgezählten Wahl oder Schätzung, nie einen Stimmzettel und nie eine einzelne Schätzung; solange verdeckt
+        geschrieben wird, nur ihre eigenen Zettel und die Zahl der anderen. Namen stehen nicht darin, auch nicht, wer
+        einen Zettel geschrieben hat. Ihr Browser weist sich dabei mit seinem Sitzungsschlüssel aus (Abschnitt 4). Der
+        Server speichert zu dieser Anfrage nichts und merkt sich die Datei nicht; die Datei liegt danach nur auf Ihrem
+        Gerät, und was mit ihr geschieht, entscheiden Sie.
       </p>
       <p>
         <strong>Die Bremse der Wand.</strong> Eine Wand speichert höchstens 1.500 Änderungen an einem Tag nach UTC

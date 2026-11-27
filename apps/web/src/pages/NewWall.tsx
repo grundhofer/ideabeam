@@ -4,11 +4,12 @@
 // description, „Freie Wand“ last. The primary action stays enabled: its press says at the field what is wrong and moves
 // the focus there. While the wall is made the action shows its own progress; a failure stands as a sentence right
 // before it and the field keeps its value: also when the day's walls are taken, where the sentence names the time
-// it goes on. Leaving with a question typed asks first.
+// it goes on. Leaving with a question typed asks first. A method that estimates („Schätzen – Diskutieren – Schätzen“,
+// stage M3) asks for the unit of its number under the choice, as an optional field: „Tage“, „€“, „%“.
 import { useEffect, useRef, useState, type FormEvent } from "react";
 import { useTranslation } from "react-i18next";
 import { useBlocker, useNavigate } from "react-router";
-import { DEFAULT_METHOD, type MethodId } from "@ideabeam/shared";
+import { CATALOGUE, DEFAULT_METHOD, UNIT_MAX, type MethodId } from "@ideabeam/shared";
 import { MethodChoice } from "../components/MethodChoice";
 import { View } from "../components/View";
 import { useLang } from "../i18n";
@@ -21,6 +22,7 @@ import { Icon } from "../sebaro/react/Icon";
 import { useWalls } from "../store/walls";
 
 const FIELD = "app-f-question";
+const UNIT_FIELD = "app-f-unit";
 
 export default function NewWall() {
   const { t } = useTranslation();
@@ -29,7 +31,11 @@ export default function NewWall() {
   const [question, setQuestion] = useState("");
   // the best supported method is how a wall starts; another one, „Freie Wand“ among them, is asked for
   const [method, setMethod] = useState<MethodId>(DEFAULT_METHOD);
+  // the unit of a method that estimates; empty: a bare number
+  const [unit, setUnit] = useState("");
+  const estimates = CATALOGUE[method].steps.some((step) => step.vote?.kind === "estimate");
   const [fault, setFault] = useState<TextFault>();
+  const [unitFault, setUnitFault] = useState<TextFault>();
   const [busy, setBusy] = useState(false);
   const [failure, setFailure] = useState<Exclude<Made, { ok: true }> | null>(null);
   const [asking, setAsking] = useState(false);
@@ -62,9 +68,15 @@ export default function NewWall() {
       document.getElementById(FIELD)?.focus();
       return;
     }
+    const unitFound = estimates && tidy(unit) !== "" ? checkText(unit, UNIT_MAX) : undefined;
+    setUnitFault(unitFound);
+    if (unitFound) {
+      document.getElementById(UNIT_FIELD)?.focus();
+      return;
+    }
     setBusy(true);
     setFailure(null);
-    const made = await createWall(tidy(question), method);
+    const made = await createWall(tidy(question), method, estimates && tidy(unit) !== "" ? tidy(unit) : undefined);
     setBusy(false);
     if (!made.ok) {
       setFailure(made);
@@ -117,6 +129,29 @@ export default function NewWall() {
           <div className="sb-form-grid__wide">
             <MethodChoice lang={lang} value={method} onChange={setMethod} />
           </div>
+          {estimates && (
+            <div className="sb-form-grid__wide">
+              <Field
+                id={UNIT_FIELD}
+                label={t("new.unit")}
+                optional={t("common.optional")}
+                help={t("new.unitHelp")}
+                error={
+                  unitFault === "tooLong" ? t("common.tooLong", { label: t("new.unit"), max: UNIT_MAX }) : undefined
+                }
+              >
+                {(control) => (
+                  <input
+                    {...control}
+                    type="text"
+                    autoComplete="off"
+                    value={unit}
+                    onChange={(e) => setUnit(e.target.value.replace(/[\p{Cc}\u2028\u2029]/gu, ""))}
+                  />
+                )}
+              </Field>
+            </div>
+          )}
           <div className="sb-form-grid__actions">
             {/* the reason of a failure: a line of its own in the actions' row, right before them */}
             <p className="sb-form-grid__message" role="alert">

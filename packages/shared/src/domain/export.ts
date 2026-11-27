@@ -6,7 +6,10 @@ import type { ArrangeLanguage, Group } from "../protocol.js";
 import type { NoteLevel } from "./agenda.js";
 import type { MethodId } from "./method.js";
 import { notesFor, type StoredNote } from "./visibility.js";
-import type { VoteKind, VoteResult } from "./vote.js";
+import { CATALOGUE } from "../methods/catalogue.js";
+import type { EstimateResult, EstimateSummary, RankingResult, VoteResult } from "./vote.js";
+
+type VoteKind = RankingResult["kind"];
 
 // The export of a wall as Markdown (PLAN.md 2.1, „Export: Markdown: Gruppen als Überschriften“; 3.2, `GET
 // /api/walls/:id/export`). Its model is RetroBeam's `packages/shared/src/domain/export.ts` (docs/HERKUNFT.md): the
@@ -32,7 +35,11 @@ import type { VoteKind, VoteResult } from "./vote.js";
 //  - **The results of the counted votes** (stage M2), under the method: each a ranking with places and points, and a
 //    line that names how it was counted (points with a budget, choices, Borda, the mean of scores) and how many
 //    ballots there were. Never a single ballot, never who voted (PLAN-METHODEN.md 4). A vote that is not counted is
-//    not in the file at all.
+//    not in the file at all. A counted estimate (stage M3) is its round's summary: the median, the middle half, the
+//    range and how many estimated, with the unit; from the second round on, how the median and the middle half
+//    moved since the round before. Never a single estimate.
+//  - **The reasons of a method that asks for them** (the notes beside a first estimate, stage M3) stand under
+//    „Begründungen“ instead of „Zettel“, without names like every note.
 //  - **The fixed words in the language of whoever asks** (`de` or `en`, as „Ordnen“ takes it: a wall has no
 //    language of its own). They stand in the table below and nowhere else; the Worker writes the file, so they
 //    cannot come from the app's string tables.
@@ -73,6 +80,16 @@ const COUNTED_EN: Record<VoteKind, (limit: number) => string> = {
 
 const WORDS = {
   de: {
+    reasons: "Begründungen",
+    round: (n: number) => `Schätzung, Runde ${n}`,
+    estimated: (n: number) =>
+      `Verdeckt geschätzt, zugleich ausgezählt: ${n === 1 ? "1 Schätzung" : `${n} Schätzungen`}.`,
+    noEstimate: "Niemand hat geschätzt.",
+    median: (value: string) => `Median: ${value}`,
+    middle: (from: string, to: string) => `Mittlere Hälfte: ${from} bis ${to}`,
+    range: (from: string, to: string) => `Spanne: ${from} bis ${to}`,
+    moved: (round: number, from: string, to: string, widthFrom: string, widthTo: string) =>
+      `Gegenüber Runde ${round}: Median von ${from} auf ${to}, mittlere Hälfte von ${widthFrom} auf ${widthTo} breit`,
     stand: (date: string) => `IdeaBeam · Stand: ${date}`,
     hidden: (count: number) =>
       count === 1
@@ -104,6 +121,15 @@ const WORDS = {
             : `${points} Punkte`,
   },
   en: {
+    reasons: "Reasons",
+    round: (n: number) => `Estimate, round ${n}`,
+    estimated: (n: number) => `Estimated in secret, counted at once: ${n === 1 ? "1 estimate" : `${n} estimates`}.`,
+    noEstimate: "Nobody estimated.",
+    median: (value: string) => `Median: ${value}`,
+    middle: (from: string, to: string) => `Middle half: ${from} to ${to}`,
+    range: (from: string, to: string) => `Range: ${from} to ${to}`,
+    moved: (round: number, from: string, to: string, widthFrom: string, widthTo: string) =>
+      `Since round ${round}: median from ${from} to ${to}, middle half from ${widthFrom} to ${widthTo} wide`,
     stand: (date: string) => `IdeaBeam · As of ${date}`,
     hidden: (count: number) =>
       count === 1
@@ -165,6 +191,44 @@ export function escapeMarkdown(text: string): string {
   return line.replace(/^([+\-=])/, "\\$1").replace(/^(\d+)([.)])/, "$1\\$2");
 }
 
+/** A number of an estimate as the language writes it: „2,5“ and „1.200“, „2.5“ and „1,200“; at most two places
+ *  after the point. The app writes the same (components/Estimate.tsx). */
+export function estimateNumber(value: number, language: ArrangeLanguage): string {
+  return new Intl.NumberFormat(language === "de" ? "de-DE" : "en-GB", { maximumFractionDigits: 2 }).format(value);
+}
+
+/** The lines of a counted estimate: its heading, how many estimated, and its summary; `before`, the summary of the
+ *  round before it, for how it moved. */
+function estimateLines(
+  result: EstimateResult,
+  round: number,
+  before: EstimateSummary | null,
+  language: ArrangeLanguage,
+): string[] {
+  const words = WORDS[language];
+  const unit = result.unit === null ? "" : ` ${escapeMarkdown(result.unit)}`;
+  const num = (value: number) => estimateNumber(value, language);
+  const lines = [`## ${words.round(round)}`, ""];
+  const summary = result.summary;
+  if (summary === null) return [...lines, `_${words.noEstimate}_`, ""];
+  lines.push(`_${words.estimated(summary.n)}_`, "");
+  lines.push(`- ${words.median(num(summary.median) + unit)}`);
+  lines.push(`- ${words.middle(num(summary.q1), num(summary.q3) + unit)}`);
+  lines.push(`- ${words.range(num(summary.min), num(summary.max) + unit)}`);
+  if (before !== null) {
+    lines.push(
+      `- ${words.moved(
+        round - 1,
+        num(before.median),
+        num(summary.median) + unit,
+        num(before.q3 - before.q1),
+        num(summary.q3 - summary.q1) + unit,
+      )}`,
+    );
+  }
+  return [...lines, ""];
+}
+
 /** The wall as one person may see it, as a Markdown document. */
 export function wallMarkdown(input: ExportInput): string {
   const words = WORDS[input.language];
@@ -191,8 +255,17 @@ export function wallMarkdown(input: ExportInput): string {
     "",
   ];
   const results = input.results ?? [];
+  const rankings = results.filter((result) => result.kind !== "estimate");
+  let rounds = 0;
+  let before: EstimateSummary | null = null;
   for (const result of results) {
-    lines.push(`## ${results.length === 1 ? words.result : words.resultOf(result.step + 1)}`, "");
+    if (result.kind === "estimate") {
+      rounds += 1;
+      lines.push(...estimateLines(result, rounds, before, input.language));
+      before = result.summary;
+      continue;
+    }
+    lines.push(`## ${rankings.length === 1 ? words.result : words.resultOf(result.step + 1)}`, "");
     lines.push(`_${words.counted(result.kind, result.limit, result.voters)}_`, "");
     for (const row of result.rows) {
       const label = row.label.trim() === "" ? words.untitled : escapeMarkdown(row.label);
@@ -213,7 +286,11 @@ export function wallMarkdown(input: ExportInput): string {
   }
   if (loose.length > 0) {
     // on a wall without groups these are simply its notes; while the notes are hidden, one's own (as the list says)
-    lines.push(`## ${groups.length > 0 ? words.ungrouped : writing ? words.own : words.notes}`, "");
+    const reasons = CATALOGUE[input.methodId].steps.some((step) => step.noteKind === "reason");
+    lines.push(
+      `## ${groups.length > 0 ? words.ungrouped : writing ? words.own : reasons ? words.reasons : words.notes}`,
+      "",
+    );
     for (const text of loose) lines.push(`- ${escapeMarkdown(text)}`);
     lines.push("");
   }

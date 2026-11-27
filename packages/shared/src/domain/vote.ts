@@ -11,12 +11,15 @@ import type { RejectCode } from "../protocol.js";
 // tally goes to everyone at once (the owner's decisions, PLAN-METHODEN.md 7). What may be chosen is frozen when the
 // wall enters the step: the groups after „Bündeln“, else the notes.
 //
-// Four kinds, set by the method's step (`Step.vote`):
+// Five kinds, set by the method's step (`Step.vote`):
 //  - `dots`: points with a budget a person, stacked on an option or spread; the default budget is a quarter of the
 //    options, at least two (docs/methoden-katalog.md, method 2).
 //  - `approval`: up to so many options, each chosen once.
 //  - `rank`: the first so many options in order, counted by Borda: the first of k gets k points, the last 1.
 //  - `score`: 1 to 5 for an option, once, or once per criterion; the result is the mean.
+//  - `estimate` (stage M3): one number a person, with the step's unit and within its bounds; no options. The result
+//    is the median with the quartiles, the lowest and the highest estimate and how many there were
+//    (`aggregate`), never the mean alone and never a single estimate (docs/architektur-methoden.md 3.1).
 //
 // This file imports nothing from the protocol at run time (domain/method.ts imports it, and the protocol imports
 // that): the schemas it needs stand here.
@@ -32,6 +35,16 @@ export const MAX_CRITERIA = 5;
 export const MAX_BUDGET = 100;
 
 const budgetSchema = z.int().check(z.minimum(1), z.maximum(MAX_BUDGET));
+/** The largest amount an estimate may name, either way: far past any effort, date or sum, and still exact in a
+ *  double. */
+export const ESTIMATE_LIMIT = 1e12;
+/** How long the unit of an estimate may be: „Tage“, „Personentage“, „€“, „%“. */
+export const UNIT_MAX = 20;
+const estimateValueSchema = z.number().check(z.minimum(-ESTIMATE_LIMIT), z.maximum(ESTIMATE_LIMIT));
+/** The unit of an estimate, as the moderation typed it on `/neu`: one line, no control characters. */
+export const estimateUnitSchema = z
+  .string()
+  .check(z.minLength(1), z.maxLength(UNIT_MAX), z.regex(/^[^\p{Cc}\u2028\u2029]+$/u));
 const criterionKeySchema = z.string().check(z.regex(/^[a-z][a-zA-Z0-9]{0,31}$/));
 
 /** How a step's vote works, as the catalogue has it and a wall stores it with its agenda. null leaves a number to
@@ -44,6 +57,14 @@ export const voteConfigSchema = z.discriminatedUnion("kind", [
     kind: z.literal("score"),
     /** The text keys of the criteria (`<methodId>.<criterion>`); none: one score for an option. */
     criteria: z.array(criterionKeySchema).check(z.maxLength(MAX_CRITERIA)),
+  }),
+  z.object({
+    kind: z.literal("estimate"),
+    /** What the number counts, or null: a bare number. The moderation names it on `/neu` (domain/agenda.ts). */
+    unit: z.nullable(estimateUnitSchema),
+    /** The lowest and the highest number taken, or null: no bound. */
+    min: z.nullable(estimateValueSchema),
+    max: z.nullable(estimateValueSchema),
   }),
 ]);
 export type VoteConfig = z.infer<typeof voteConfigSchema>;
@@ -96,6 +117,11 @@ export const ballotSchema = z.discriminatedUnion("kind", [
       )
       .check(z.refine(fewKeys)),
   }),
+  z.object({
+    kind: z.literal("estimate"),
+    /** The person's number, in the step's unit. */
+    value: estimateValueSchema,
+  }),
 ]);
 export type Ballot = z.infer<typeof ballotSchema>;
 
@@ -114,15 +140,41 @@ export const voteResultRowSchema = z.object({
 });
 export type VoteResultRow = z.infer<typeof voteResultRowSchema>;
 
-/** A counted vote: the kind and budget it was counted by, how many ballots there were, and every option in the
- *  order of its place. */
-export const voteResultSchema = z.object({
+/** A counted vote over options: the kind and budget it was counted by, how many ballots there were, and every option
+ *  in the order of its place. */
+export const rankingResultSchema = z.object({
   step: z.int().check(z.minimum(0)),
   kind: z.enum(["dots", "approval", "rank", "score"]),
   limit: z.int().check(z.minimum(0)),
   voters: z.int().check(z.minimum(0)),
   rows: z.array(voteResultRowSchema).check(z.maxLength(MAX_OPTIONS)),
 });
+export type RankingResult = z.infer<typeof rankingResultSchema>;
+
+/** What a counted estimate shows (`aggregate`): how many estimates, their median, the quartiles that bound the middle
+ *  half, the lowest and the highest. Never the mean alone, never who estimated what. */
+export const estimateSummarySchema = z.object({
+  n: z.int().check(z.minimum(1)),
+  median: z.number(),
+  q1: z.number(),
+  q3: z.number(),
+  min: z.number(),
+  max: z.number(),
+});
+export type EstimateSummary = z.infer<typeof estimateSummarySchema>;
+
+/** A counted estimate: its unit, how many estimates there were, and their summary (null: nobody estimated). */
+export const estimateResultSchema = z.object({
+  step: z.int().check(z.minimum(0)),
+  kind: z.literal("estimate"),
+  unit: z.nullable(estimateUnitSchema),
+  voters: z.int().check(z.minimum(0)),
+  summary: z.nullable(estimateSummarySchema),
+});
+export type EstimateResult = z.infer<typeof estimateResultSchema>;
+
+/** A counted vote: a ranking of options, or the summary of estimates. */
+export const voteResultSchema = z.union([rankingResultSchema, estimateResultSchema]);
 export type VoteResult = z.infer<typeof voteResultSchema>;
 
 // ───────────────────────── the options ─────────────────────────
@@ -168,12 +220,15 @@ export function limitOf(config: VoteConfig, options: number): number {
       return Math.min(options, config.top ?? 5);
     case "score":
       return options;
+    case "estimate":
+      return 1;
   }
 }
 
-/** The vote of step `step` as it begins: its options frozen, its budget set, nothing counted. */
+/** The vote of step `step` as it begins: its options frozen, its budget set, nothing counted. An estimate has no
+ *  options: it asks for a number. */
 export function openRound(step: number, config: VoteConfig, content: VoteContent, shown: boolean): VoteRound {
-  const { options, omitted } = optionsFor(content, shown);
+  const { options, omitted } = config.kind === "estimate" ? { options: [], omitted: 0 } : optionsFor(content, shown);
   return { step, options, omitted, limit: limitOf(config, options.length), counted: false };
 }
 
@@ -195,6 +250,8 @@ export function ballotUse(ballot: Ballot): number {
       return ballot.order.length;
     case "score":
       return Object.keys(ballot.scores).length;
+    case "estimate":
+      return 1;
   }
 }
 
@@ -202,6 +259,7 @@ export function ballotUse(ballot: Ballot): number {
  *  (an empty ballot says nothing, and „abgegeben“ would be untrue of it). */
 export function checkBallot(round: Pick<VoteRound, "options" | "limit">, config: VoteConfig, ballot: Ballot): boolean {
   if (ballot.kind !== config.kind) return false;
+  if (ballot.kind === "estimate") return config.kind === "estimate" && withinBounds(config, ballot.value);
   const known = new Set(round.options.map((option) => option.id));
   const ids =
     ballot.kind === "dots"
@@ -242,6 +300,9 @@ export function canonicalBallot(ballot: Ballot): Ballot {
       return { kind: "rank", order: [...ballot.order] };
     case "score":
       return { kind: "score", scores: sorted(ballot.scores) };
+    case "estimate":
+      // -0 and 0 are one number, and one text
+      return { kind: "estimate", value: ballot.value === 0 ? 0 : ballot.value };
   }
 }
 
@@ -253,8 +314,24 @@ export function sameBallot(a: Ballot | null, b: Ballot | null): boolean {
 
 // ───────────────────────── counting ─────────────────────────
 
-/** The result of a vote from its ballots. `label` gives an option's words as the wall holds them now. A ballot that
- *  does not fit the vote (it cannot be stored, `checkBallot`) counts for nothing. */
+/** The vote kinds that rank options. */
+export type RankingConfig = Exclude<VoteConfig, { kind: "estimate" }>;
+
+/** The result of a vote from its ballots: a ranking of its options, or for an estimate its summary (`aggregate`).
+ *  `label` gives an option's words as the wall holds them now. A ballot that does not fit the vote (it cannot be
+ *  stored, `checkBallot`) counts for nothing. */
+export function tally(
+  round: VoteRound,
+  config: RankingConfig,
+  ballots: readonly Ballot[],
+  label: (option: VoteOption) => string,
+): RankingResult;
+export function tally(
+  round: VoteRound,
+  config: VoteConfig,
+  ballots: readonly Ballot[],
+  label: (option: VoteOption) => string,
+): VoteResult;
 export function tally(
   round: VoteRound,
   config: VoteConfig,
@@ -262,6 +339,10 @@ export function tally(
   label: (option: VoteOption) => string,
 ): VoteResult {
   const valid = ballots.filter((ballot) => checkBallot(round, config, ballot));
+  if (config.kind === "estimate") {
+    const values = valid.flatMap((ballot) => (ballot.kind === "estimate" ? [ballot.value] : []));
+    return { step: round.step, kind: "estimate", unit: config.unit, voters: values.length, summary: aggregate(values) };
+  }
   const points = new Map<string, number>();
   const by = new Map<string, number>();
   const sums = new Map<string, number[]>();
@@ -322,6 +403,42 @@ export function tally(
       };
     }),
   };
+}
+
+/** Whether an estimate lies within the step's bounds. */
+function withinBounds(config: Extract<VoteConfig, { kind: "estimate" }>, value: number): boolean {
+  return (config.min === null || value >= config.min) && (config.max === null || value <= config.max);
+}
+
+/** The summary of estimates (docs/architektur-methoden.md 3.1): how many, the median, the first and the third
+ *  quartile, the lowest and the highest; null for none. The quartiles are interpolated between the two estimates
+ *  they fall between, as spreadsheets do (QUARTILE.INC, R's type 7): the median of 10, 20, 30, 40 is 25, its middle
+ *  half 17.5 to 32.5. One estimate is all of them at once. Rounded to six places, so that no binary rest
+ *  (0.30000000000000004) reaches a sentence. */
+export function aggregate(numbers: readonly number[]): EstimateSummary | null {
+  const sorted = numbers.filter((value) => Number.isFinite(value)).sort((a, b) => a - b);
+  const n = sorted.length;
+  if (n === 0) return null;
+  const at = (p: number) => {
+    const h = (n - 1) * p;
+    const low = Math.floor(h);
+    const lower = sorted[low] ?? 0;
+    const upper = sorted[Math.min(n - 1, low + 1)] ?? lower;
+    return round6(lower + (h - low) * (upper - lower));
+  };
+  return {
+    n,
+    median: at(0.5),
+    q1: at(0.25),
+    q3: at(0.75),
+    min: round6(sorted[0] ?? 0),
+    max: round6(sorted[n - 1] ?? 0),
+  };
+}
+
+function round6(value: number): number {
+  const rounded = Math.round(value * 1e6) / 1e6;
+  return rounded === 0 ? 0 : rounded;
 }
 
 // ───────────────────────── the rules of the commands ─────────────────────────

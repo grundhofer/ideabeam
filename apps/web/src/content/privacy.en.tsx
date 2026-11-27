@@ -4,7 +4,7 @@
 // on any frame; state 68a1204; stage 4a, arranging by Workers AI on the server: state c63573e, recipe 588552c, counter
 // a0796b5; stage 4b, the facilitator's own key, section 3.5: state 60284aa; stage 5, step A, “Save as Markdown” and the
 // QR code, sections 2.1, 3.1, 3.6, 4 and 7: state d3cc22a, read again against the code on 2026-11-25; stage M2 of the
-// methods, the hidden vote, sections 3.1 and 3.3), and a draft
+// methods, the hidden vote, sections 3.1 and 3.3; stage M3, estimates, sections 3.1 and 3.3), and a draft
 // until the operator has read it. Who is responsible for a run with a key of one's own (section 3.5, “Who is responsible”, and section 6) is the
 // operator's understanding and an open point for a legal review. The German version is the one the operator reads
 // and releases; where the two differ, it is the German one that was meant.
@@ -115,10 +115,11 @@ export function PrivacyEn() {
         <li>
           <strong>The wall:</strong> its question (at most 140 characters), the time it was created, the day of its
           automatic deletion, a random facilitator key, the chosen method with its steps (a copy from the app’s
-          catalogue, stored when the wall is created), which step the wall is in and how far it has got (from which
-          follows whether notes are written hidden or have been revealed), the clock of the step (when it runs out or,
-          while paused, how much time is left, and how often it was set) and, for the wall’s brake (below), a day in UTC
-          with the number of the first change on that day. These details say nothing about persons.
+          catalogue, stored when the wall is created; for a method that estimates, with the unit the facilitator gave
+          for it), which step the wall is in and how far it has got (from which follows whether notes are written hidden
+          or have been revealed), the clock of the step (when it runs out or, while paused, how much time is left, and
+          how often it was set) and, for the wall’s brake (below), a day in UTC with the number of the first change on
+          that day. These details say nothing about persons.
         </li>
         <li>
           <strong>Per person:</strong> the display name (a first name or a pseudonym is enough, at most 40 characters),
@@ -144,6 +145,13 @@ export function PrivacyEn() {
           or text, its points, its place and how many ballots gave it anything, and the number of ballots, without
           identifiers. What is up for the vote the wall fixes when the step begins.
         </li>
+        <li>
+          <strong>Estimates:</strong> in a step in which people estimate, one number per person, like a ballot: the
+          number, the identifier of the person and the running number of the change. Casting again overwrites one’s own
+          number. When the round is counted, the wall stores only its summary: how many estimated, the median, the
+          bounds of the middle half, the smallest and the largest number, without identifiers. The short reason beside
+          an estimate is a note like any other (above): hidden until the next step shows it to everyone, without names.
+        </li>
       </ul>
       <p>
         For every note, every group and the layout of the notes the wall also keeps the running number of the last
@@ -163,7 +171,9 @@ export function PrivacyEn() {
         server. The server sends a ballot only to the browser of the person who cast it. Everybody else, the facilitator
         included, gets only a number until the votes are counted: how many have voted. Nobody sees a single ballot, not
         after counting either: counting is the facilitator’s, and then everyone gets only the result, all at once. The
-        file of “Save as Markdown” holds only the result too.
+        file of “Save as Markdown” holds only the result too. The same holds for estimates: the result is the summary of
+        the round. The smallest and the largest number are in it; who estimated them is not. In a small group they still
+        let one guess more than a median does.
       </p>
       <p>
         <strong>Who can do what.</strong> Every person who has joined the wall can write notes. While notes are written
@@ -185,11 +195,11 @@ export function PrivacyEn() {
       <p>
         <strong>Save as Markdown.</strong> Every person on the wall can fetch it onto their device as a file with “Save
         as Markdown”. The server puts the file together only at this request, from exactly what the person may see on
-        the wall: the question, the groups with their titles, the texts of the notes and the result of a counted vote,
-        never a ballot; while notes are written hidden, only their own notes and the number of the others’. No names are
-        in it, nor who wrote a note. Your browser identifies itself with its session key for this (section 4). The
-        server stores nothing about this request and does not keep the file; afterwards the file lies on your device
-        alone, and what happens to it is your decision.
+        the wall: the question, the groups with their titles, the texts of the notes and the result of a counted vote or
+        estimate, never a ballot and never a single estimate; while notes are written hidden, only their own notes and
+        the number of the others’. No names are in it, nor who wrote a note. Your browser identifies itself with its
+        session key for this (section 4). The server stores nothing about this request and does not keep the file;
+        afterwards the file lies on your device alone, and what happens to it is your decision.
       </p>
       <p>
         <strong>The wall’s brake.</strong> A wall stores at most 1,500 changes on one day in UTC (writing, changing,

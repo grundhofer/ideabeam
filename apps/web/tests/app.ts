@@ -80,22 +80,26 @@ export async function ownAddress(page: Page) {
 export async function makeWall(
   page: Page,
   question = QUESTION,
-  options: { hidden?: boolean } = {},
+  options: { hidden?: boolean; agenda?: unknown } = {},
 ): Promise<{ wallId: string; adminToken: string }> {
   // the request is the page's own: a page that is nowhere yet goes to the app first
   if (!page.url().startsWith("http")) await page.goto("/");
   await ownAddress(page);
   return page.evaluate(
-    async ({ question, hidden }) => {
+    async ({ question, hidden, agenda }) => {
       const response = await fetch("/api/walls", {
         method: "POST",
         headers: { "content-type": "application/json" },
-        body: JSON.stringify(hidden === undefined ? { question } : { question, hidden }),
+        body: JSON.stringify({
+          question,
+          ...(hidden === undefined ? {} : { hidden }),
+          ...(agenda === undefined ? {} : { agenda }),
+        }),
       });
       if (!response.ok) throw new Error(`the wall was not made: ${response.status}`);
       return (await response.json()) as { wallId: string; adminToken: string };
     },
-    { question, hidden: options.hidden },
+    { question, hidden: options.hidden, agenda: options.agenda },
   );
 }
 
@@ -391,4 +395,43 @@ export async function enterVote(page: Page, options: { counted?: boolean; admin?
     .first()
     .waitFor();
   return { ...wall, groupId, notes };
+}
+
+/** „Schätzen – Diskutieren – Schätzen“ (stage M3): first estimate 0, feedback 1, discuss 2, estimate again 3,
+ *  result 4. Its unit on these walls is „Tage“. */
+export const ESTIMATE_STEPS = { first: 0, feedback: 1, discuss: 2, again: 3, result: 4 } as const;
+export const ESTIMATE_QUESTION = "Wie viele Tage braucht der Umzug?";
+export const ESTIMATE_AGENDA = { items: [{ methodId: "schaetzen", unit: "Tage" }] };
+
+/** A wall of „Schätzen“ made by a moderation that is no browser (Ben). `round` 1: in its first estimate, where Ben
+ *  estimates 30 with the reason „Wie beim letzten Umzug“; `counted`: Ben counts it. `round` 2: Ben has counted the
+ *  first round, revealed the reasons, discussed and gone on to the second estimate; `counted`: Ben estimates 34
+ *  there and counts. Ben leaves; the page goes onto the wall as Anna, with the admin token where `admin` says so. */
+export async function enterEstimate(page: Page, options: { round?: 1 | 2; counted?: boolean; admin?: boolean } = {}) {
+  const { round = 1, counted = false, admin = false } = options;
+  const wall = await makeWall(page, ESTIMATE_QUESTION, { agenda: ESTIMATE_AGENDA });
+  const ben = await join(wall.wallId, "Ben", wall.adminToken);
+  const { first, feedback, discuss, again } = ESTIMATE_STEPS;
+  await ben.cast(first, { kind: "estimate", value: 30 });
+  await ben.write("Wie beim letzten Umzug", 0, 0);
+  if (round === 2 || counted) await ben.count(first);
+  if (round === 2) {
+    await ben.go(first, feedback);
+    await ben.go(feedback, discuss);
+    await ben.go(discuss, again);
+    if (counted) {
+      await ben.cast(again, { kind: "estimate", value: 34 });
+      await ben.count(again);
+    }
+  }
+  await ben.leave();
+  await know(page, [
+    { id: wall.wallId, question: ESTIMATE_QUESTION, as: "Anna", ...(admin ? { adminToken: wall.adminToken } : {}) },
+  ]);
+  await page.goto(`/w/${wall.wallId}`);
+  await page
+    .locator(counted ? ".app-results" : ".app-estimate")
+    .first()
+    .waitFor();
+  return wall;
 }

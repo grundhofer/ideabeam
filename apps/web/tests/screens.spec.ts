@@ -29,7 +29,9 @@
 import { expect, test, type Page } from "@playwright/test";
 import {
   enter,
+  enterEstimate,
   enterVote,
+  ESTIMATE_QUESTION,
   GROUPS,
   join,
   know,
@@ -312,6 +314,20 @@ const screens: Screen[] = [
       (page) => page.locator('[data-method="free"] .app-method__more').click(),
       (page) => expect(page.getByRole("radio", { name: "Freie Wand" })).toBeChecked(),
       (page) => expect(page.locator('[data-method="free"] .app-method__about')).toBeVisible(),
+    ),
+  },
+  {
+    // „Schätzen – Diskutieren – Schätzen“ chosen: the unit of its number under the choice (stage M3)
+    name: "neu-schaetzen",
+    path: "/neu",
+    heading: "Neue Wand",
+    view: view("neu"),
+    overlay: null,
+    prepare: then(
+      (page) => page.fill("#app-f-question", ESTIMATE_QUESTION),
+      (page) => page.getByRole("radio", { name: "Schätzen – Diskutieren – Schätzen" }).check(),
+      (page) => page.fill("#app-f-unit", "Tage"),
+      (page) => expect(page.locator("#app-f-unit")).toBeVisible(),
     ),
   },
   {
@@ -1457,6 +1473,55 @@ const screens: Screen[] = [
     prepare: then(
       (page) => enterVote(page, { counted: true }),
       (page) => expect(page.locator(".app-results__row").first()).toContainText("Abstimmung"),
+      (page) => expect(page.locator(".sb-primary-action")).toHaveText("Als Markdown sichern"),
+    ),
+  },
+  {
+    // the first estimate (stage M3): the number field with its unit and the reason under it in the place of the
+    // surface, a number typed; „Abgeben“ as the primary action. Also at 200 %
+    name: "wand-schaetzung",
+    largeText: true,
+    path: "/",
+    heading: ESTIMATE_QUESTION,
+    view: '[data-sb-view="wand"][data-sb-view-type="form"]',
+    overlay: null,
+    prepare: then(
+      (page) => enterEstimate(page),
+      (page) => page.fill("#app-f-estimate", "40"),
+      (page) => page.fill("#app-f-reason", "Wie beim letzten Umzug, nur mit mehr Kisten"),
+      (page) => expect(page.locator(".sb-primary-action")).toHaveText("Abgeben"),
+    ),
+  },
+  {
+    // the second estimate for the moderation: the first round's summary above the field, no reason; „Auszählen“
+    // as the primary action, „Abgeben“ beside it. Also at 200 %
+    name: "wand-schaetzung-runde-2",
+    largeText: true,
+    path: "/",
+    heading: ESTIMATE_QUESTION,
+    view: '[data-sb-view="wand"][data-sb-view-type="form"]',
+    overlay: null,
+    prepare: then(
+      (page) => enterEstimate(page, { round: 2, admin: true }),
+      (page) => expect(page.getByRole("region", { name: "Runde 1" }).locator(".app-estimate__row")).toHaveCount(3),
+      (page) => expect(page.locator(".sb-primary-action")).toHaveText("Auszählen"),
+    ),
+  },
+  {
+    // the second estimate counted: both rounds as rows of words and numbers, with how the median moved, no chart;
+    // keeping it is the primary action. Also at 200 %
+    name: "wand-schaetzung-ergebnis",
+    largeText: true,
+    path: "/",
+    heading: ESTIMATE_QUESTION,
+    view: '[data-sb-view="wand"][data-sb-view-type="result"]',
+    overlay: null,
+    prepare: then(
+      (page) => enterEstimate(page, { round: 2, counted: true }),
+      (page) =>
+        expect(page.getByRole("region", { name: "Ergebnis der Schätzung" }).locator(".app-estimate__row")).toHaveCount(
+          7,
+        ),
       (page) => expect(page.locator(".sb-primary-action")).toHaveText("Als Markdown sichern"),
     ),
   },

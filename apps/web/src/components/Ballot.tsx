@@ -7,7 +7,7 @@
 // The options are the ones the wall froze when it entered the step (domain/vote.ts); their words are read from the
 // wall as it stands: a group by its title, with the notes in it as a line under it, a note by its text.
 import { useTranslation } from "react-i18next";
-import type { Group, Note, VoteOption, VoteResult, VoteRound } from "@ideabeam/shared";
+import type { Group, Note, RankingResult, VoteOption, VoteRound } from "@ideabeam/shared";
 import { Icon } from "../sebaro/react/Icon";
 import { titleOf } from "./Asks";
 
@@ -127,7 +127,7 @@ export function BallotPanel(props: {
 
 /** A counted vote as a ranked list: the place, the words, the points as a number. `compact`: beside the surface in
  *  the steps after the vote, with a heading of the next level. */
-export function Results(props: { result: VoteResult; notes: readonly Note[]; compact?: boolean }) {
+export function Results(props: { result: RankingResult; notes: readonly Note[]; compact?: boolean }) {
   const { result, notes, compact = false } = props;
   const { t } = useTranslation();
   const heading = compact ? "app-h-results-side" : "app-h-results";

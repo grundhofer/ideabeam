@@ -26,6 +26,13 @@
 // as a ranked list at once; the moderation goes on with „Weiter“, and in the steps after it the result stands beside
 // the surface.
 //
+// A step that estimates (stage M3, „Schätzen – Diskutieren – Schätzen“) shows the estimate in the place of the
+// surface (components/Estimate.tsx): a number field with the step's unit, in the first round the short reason under
+// it, which is a note of this person's, hidden until the next step shows it without a name; „Abgeben“ sends both.
+// The moderation counts as in a vote; everybody then sees the summary of the round (median, middle half, range, how
+// many), never a single estimate. The second round shows the first round's summary above its field, and its counted
+// view both rounds; in the steps after, they stand beside the surface.
+//
 // With a key of its own (PLAN.md 4.5, „Eigener KI-Schlüssel“ in „Mehr“, store/key.ts) the moderation's browser asks
 // its own provider instead: the line under the action then names that provider, and a quiet line at the wall's top
 // says so and how to go back.
@@ -39,6 +46,7 @@ import {
   MAX_GROUPS,
   MAX_NOTES,
   methodOfStep,
+  NOTE_TEXT_MAX,
   methodTexts,
   nameInitials,
   roundOf,
@@ -50,10 +58,13 @@ import {
   WALL_DAILY_RUNS,
   WALL_ID_PATTERN,
   type Ballot,
+  type EstimateResult,
   type Participant,
+  type VoteResult,
   type WallInfo,
 } from "@ideabeam/shared";
 import { BallotPanel, Results, type Marks } from "../components/Ballot";
+import { EstimatePanel, EstimateResults, summarySentence } from "../components/Estimate";
 import { ClockControls } from "../components/ClockControls";
 import { CopyKey } from "../components/CopyKey";
 import { OwnKeyAsk, providerFacts } from "../components/OwnKeyAsk";
@@ -66,12 +77,15 @@ import { useLang } from "../i18n";
 import { exportWall, findWall } from "../lib/api";
 import { arrangeable, previewOf, undoAsks } from "../lib/arrange";
 import { clockLine, useClockTurns } from "../lib/clock";
+import { parseEstimate } from "../lib/estimate";
 import { saveText } from "../lib/download";
 import { laterDay, clock as timeOfDay, unit } from "../lib/format";
 import { guide, summary } from "../lib/guide";
 import { checkText, DISPLAY_NAME_MAX, tidy, type TextFault } from "../lib/input";
 import { adminLink, wallLink } from "../lib/links";
 import { usePaced } from "../lib/paced";
+import { looseSpot } from "../lib/surface/groups";
+import { sizeOf } from "../lib/surface/notes";
 import { rejectKey } from "../lib/rejected";
 import { firstView, storeView, type WallView } from "../lib/wall-view";
 import { ActionZone } from "../sebaro/react/ActionZone";
@@ -500,15 +514,61 @@ function OnWall({ wallId }: { wallId: string }) {
   const cap = voteConfig?.kind === "dots" ? (voteConfig.maxPerOption ?? round?.limit ?? 0) : 1;
   const [draft, setDraft] = useState<Marks | null>(null);
   const [voteProblem, setVoteProblem] = useState<string | null>(null);
+  // A step that estimates (stage M3): what stands in the number field and in the reason, each null while untouched:
+  // then the field shows what the wall stored. The reason is this person's own note of the step (its first one).
+  const estimating = voteConfig?.kind === "estimate";
+  const estimateUnit = voteConfig?.kind === "estimate" ? voteConfig.unit : null;
+  const [typed, setTyped] = useState<string | null>(null);
+  const [reasonTyped, setReasonTyped] = useState<string | null>(null);
+  const storedValue = state.ballot?.kind === "estimate" ? state.ballot.value : null;
+  const ownReason = estimating && step.can.write ? (stored.notes.find((note) => note.mine) ?? null) : null;
+  // after the rounds: whether the wall still talks before it estimates again, or shows its result (lib/guide.ts)
+  const estimateStage =
+    voting || estimatesUpTo(state.results, state.step).length === 0
+      ? null
+      : steps.some((later, at) => at > state.step && later.vote?.kind === "estimate")
+        ? ("talk" as const)
+        : ("result" as const);
   // a ballot the wall stored (this tab's, or another tab's of the same person) and another step put the draft away
   const [draftOf, setDraftOf] = useState({ ballot: state.ballot, step: state.step });
   if (draftOf.ballot !== state.ballot || draftOf.step !== state.step) {
     setDraftOf({ ballot: state.ballot, step: state.step });
     setDraft(null);
+    setTyped(null);
+    if (draftOf.step !== state.step) setReasonTyped(null);
     setVoteProblem(null);
   }
   const marks = draft ?? marksOf(state.ballot);
+  /** „Abgeben“ of an estimate: the number, and in the first round the reason beside it, as a note of this person's
+   *  (made, changed or, emptied, taken away). Nothing is sent while the number cannot be read. */
+  const submitEstimate = () => {
+    const read = parseEstimate(typed ?? (storedValue === null ? "" : String(storedValue)), lang);
+    if (!read.ok) {
+      setVoteProblem(t(`estimate.problem.${read.why}`));
+      return;
+    }
+    const bounds = voteConfig?.kind === "estimate" ? voteConfig : null;
+    if (
+      bounds !== null &&
+      ((bounds.min !== null && read.value < bounds.min) || (bounds.max !== null && read.value > bounds.max))
+    ) {
+      setVoteProblem(t("estimate.problem.outside"));
+      return;
+    }
+    setVoteProblem(null);
+    castBallot({ kind: "estimate", value: read.value });
+    if (!step.can.write || reasonTyped === null) return;
+    const text = reasonTyped.trim().slice(0, NOTE_TEXT_MAX);
+    if (ownReason === null) {
+      if (text === "") return;
+      const spot = looseSpot(sizeOf(text), stored.notes, stored.groups);
+      send({ type: "note.create", opId: generateHexId(), noteId: generateHexId(), text, x: spot.x, y: spot.y });
+    } else if (text === "") send({ type: "note.delete", opId: generateHexId(), noteId: ownReason.id });
+    else if (text !== ownReason.text) send({ type: "note.update", opId: generateHexId(), noteId: ownReason.id, text });
+    setReasonTyped(null);
+  };
   const submit = () => {
+    if (estimating) return submitEstimate();
     const ballot = ballotKind === null ? null : ballotOf(ballotKind, marks);
     if (ballot === null) {
       setVoteProblem(t(ballotKind === "approval" ? "vote.choices.empty" : "vote.points.empty"));
@@ -522,8 +582,9 @@ function OnWall({ wallId }: { wallId: string }) {
   if (resultsKnown !== state.results.length) {
     setResultsKnown(state.results.length);
     const newest = state.results.at(-1);
-    const first = newest?.rows[0];
-    if (newest !== undefined) {
+    if (newest?.kind === "estimate") setSaid(t("estimate.said", { summary: summarySentence(t, lang, newest) }));
+    else if (newest !== undefined) {
+      const first = newest.rows[0];
       setSaid(
         newest.voters === 0 || first === undefined
           ? t("wall.vote.saidNone")
@@ -592,7 +653,8 @@ function OnWall({ wallId }: { wallId: string }) {
     timeUp: time?.is === "over",
     arrangeable: Number(open),
     arranged: state.arrangeRun === null ? null : undoAsksFirst ? ("changed" as const) : ("fresh" as const),
-    vote: voting ? { cast: state.ballot !== null, counted } : null,
+    vote: voting ? { cast: state.ballot !== null, counted, estimate: estimating } : null,
+    estimates: estimateStage,
   };
   // the first half of the state sentence: how many notes, and once the wall has groups, what the groups hold
   const noteCount = t("wall.noteCount", { count: standing.notes });
@@ -622,11 +684,20 @@ function OnWall({ wallId }: { wallId: string }) {
   const voteSentence = !voting
     ? null
     : counted
-      ? t("wall.vote.counted", { count: result.voters })
-      : t(state.ballot === null ? "wall.vote.open" : "wall.vote.cast", {
-          voted: state.voted,
-          of: Math.max(state.voted, Number(present)),
-        });
+      ? t(estimating ? "estimate.counted" : "wall.vote.counted", { count: result.voters })
+      : t(
+          state.ballot === null
+            ? estimating
+              ? "estimate.open"
+              : "wall.vote.open"
+            : estimating
+              ? "estimate.cast"
+              : "wall.vote.cast",
+          {
+            voted: state.voted,
+            of: Math.max(state.voted, Number(present)),
+          },
+        );
   const sentence =
     trouble ??
     proposal ??
@@ -890,7 +961,7 @@ function OnWall({ wallId }: { wallId: string }) {
         voting ? (
           // a step that votes: „Abgeben“, and the moderation's „Auszählen“; once counted, „Weiter“ for the
           // moderation and keeping the result for everybody
-          <ActionZone hint={counted ? t("wall.exportHint") : t("wall.vote.hint")}>
+          <ActionZone hint={counted ? t("wall.exportHint") : t(estimating ? "estimate.hint" : "wall.vote.hint")}>
             {!counted ? (
               admin ? (
                 <div className="app-zone-actions">
@@ -1139,7 +1210,30 @@ function OnWall({ wallId }: { wallId: string }) {
         {wall &&
           (voting ? (
             counted ? (
-              <Results result={result} notes={stored.notes} />
+              result.kind === "estimate" ? (
+                <EstimateResults results={estimatesUpTo(state.results, state.step)} />
+              ) : (
+                <Results result={result} notes={stored.notes} />
+              )
+            ) : estimating ? (
+              <EstimatePanel
+                unit={estimateUnit}
+                value={typed ?? (storedValue === null ? "" : typedOf(storedValue, lang))}
+                stored={storedValue}
+                reason={step.can.write ? (reasonTyped ?? ownReason?.text ?? "") : null}
+                before={estimatesUpTo(state.results, state.step - 1)}
+                problem={voteProblem ?? problem}
+                onDismiss={() => {
+                  setVoteProblem(null);
+                  dismissRejected();
+                }}
+                onValue={(next) => {
+                  setVoteProblem(null);
+                  setTyped(next);
+                }}
+                onReason={setReasonTyped}
+                onSubmit={submit}
+              />
             ) : ballotKind !== null ? (
               <BallotPanel
                 round={round}
@@ -1174,7 +1268,14 @@ function OnWall({ wallId }: { wallId: string }) {
             </p>
           )}
           {/* in the steps after a vote, its result beside the surface: what „Ergebnis besprechen“ talks about */}
-          {!voting && state.results.map((one) => <Results key={one.step} result={one} notes={stored.notes} compact />)}
+          {!voting &&
+            state.results.map((one) =>
+              one.kind === "estimate" ? null : <Results key={one.step} result={one} notes={stored.notes} compact />,
+            )}
+          {/* the rounds of the estimates, together, beside the surface in the steps after them */}
+          {!voting && estimatesUpTo(state.results, state.step).length > 0 && (
+            <EstimateResults results={estimatesUpTo(state.results, state.step)} compact />
+          )}
           <details className="app-people" open={listed} onToggle={(event) => setListed(event.currentTarget.open)}>
             <summary className="app-people__head">
               <h2 className="sb-list-header" id="app-h-people">
@@ -1319,6 +1420,19 @@ function OnWall({ wallId }: { wallId: string }) {
       </Dialog>
     </View>
   );
+}
+
+/** The counted estimates of the wall up to step `step`, in the order of their steps. */
+function estimatesUpTo(results: readonly VoteResult[], step: number): EstimateResult[] {
+  return results
+    .filter((one): one is EstimateResult => one.kind === "estimate" && one.step <= step)
+    .sort((a, b) => a.step - b.step);
+}
+
+/** A stored estimate as the number field shows it again: no grouping, the language's decimal separator. */
+function typedOf(value: number, lang: "de" | "en"): string {
+  const plain = String(value);
+  return lang === "de" ? plain.replace(".", ",") : plain;
 }
 
 /** The draft a stored ballot stands for: its marks by option. */

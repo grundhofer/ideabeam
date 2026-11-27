@@ -160,6 +160,15 @@ run the rest; their result is the run itself. Keep this file current.
   without a panel: no method uses them yet. Nobody looked at the panel at 2000 px or with a screen reader; the guide
   sentences speak of points, which is true for the one vote there is. „5 von 8“ counts the people here now, at least
   as many as have voted.
+- Estimating in rounds (stage M3): `tests/estimate.spec.ts` plays „Schätzen – Diskutieren – Schätzen“ with two
+  browsers from the first estimate to the result, reads the other browser's frames for the estimate of the first
+  before counting and of the second round at all, and casts an estimate and a reason with the keyboard alone; the
+  screens `wand-schaetzung`, `wand-schaetzung-runde-2` and `wand-schaetzung-ergebnis` run axe in light at 390 px,
+  dark at 1440 px and at 200 %, `neu-schaetzen` (the unit's field) in light and dark. With two people the range of a
+  round is both estimates: the summary gives away the smallest and the largest estimate by design, which the privacy
+  notice says; the worker test (`apps/worker/test/estimates.test.ts`) checks with four people that the two in the
+  middle reach no frame. Nobody looked at the panels at 2000 px or with a screen reader; the step „Abweichungen
+  besprechen“ is one for everyone until stage M4 brings small groups.
 
 ## Waivers
 

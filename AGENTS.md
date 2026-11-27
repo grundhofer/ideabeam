@@ -10,9 +10,10 @@ Cloudflare's AI: „Ordnen“, its preview, „Anwenden“, „Rückgängig“) 
 Mistral, OpenAI or Anthropic: „Eigener KI-Schlüssel“) are merged into `main` by the owner's word (2026-11-24); no
 provider's model is measured yet, so nobody is offered 4b (see „The moderation's own key“ below). Grouping in the browser (4c)
 follows. The guided methods have their own plan, [`PLAN-METHODEN.md`](PLAN-METHODEN.md): stage M1 (methods as data, a
-wall's agenda and its steps, „Weiter“ and „Zurück“, the choice of the method on `/neu`) is built on the branch
-`methoden-m1` and not merged; its state is under M1 there. Stage M2 (hidden voting: ballots, counting, the result as
-a ranking) is built on `methoden-m2`, on top of M1; its state is under M2 there.
+wall's agenda and its steps, „Weiter“ and „Zurück“, the choice of the method on `/neu`) and stage M2 (hidden voting:
+ballots, counting, the result as a ranking) are merged into `main` and deployed (2026-11-27); stage M3 (estimates in
+two rounds: median, middle half, range, reasons without names) is built on `methoden-m3`. Each stage's state is
+under its heading there.
 
 ## Commands
 

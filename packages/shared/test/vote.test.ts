@@ -21,6 +21,7 @@ import {
   tally,
   voteResultSchema,
   type Ballot,
+  type RankingConfig,
   type VoteConfig,
   type VoteRound,
 } from "../src/index.js";
@@ -28,7 +29,7 @@ import { HIDDEN_AGENDA } from "./steps.js";
 
 const ids = Array.from({ length: 6 }, () => generateHexId()).sort();
 const [a, b, c, d] = ids as [string, string, string, string];
-const DOTS: VoteConfig = { kind: "dots", perPerson: null, maxPerOption: null };
+const DOTS: RankingConfig = { kind: "dots", perPerson: null, maxPerOption: null };
 const round = (options: string[], limit: number, counted = false): VoteRound => ({
   step: 3,
   options: options.map((id) => ({ id, kind: "note" as const })),

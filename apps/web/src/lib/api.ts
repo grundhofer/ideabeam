@@ -27,13 +27,16 @@ export type Made =
 
 /** `method`: the method the wall runs (PLAN-METHODEN.md, packages/shared methods/catalogue.ts): „Still sammeln“
  *  starts with hidden writing, everyone writes for themselves until the moderation reveals; on a „Freie Wand“ every
- *  note is there for everyone at once. */
-export async function createWall(question: string, method: MethodId): Promise<Made> {
+ *  note is there for everyone at once. `unit`: what the estimates of a method that estimates count (stage M3). */
+export async function createWall(question: string, method: MethodId, unit?: string): Promise<Made> {
   try {
     const response = await fetch("/api/walls", {
       method: "POST",
       headers: { "content-type": "application/json" },
-      body: JSON.stringify({ question, agenda: { items: [{ methodId: method }] } }),
+      body: JSON.stringify({
+        question,
+        agenda: { items: [{ methodId: method, ...(unit === undefined ? {} : { unit }) }] },
+      }),
     });
     if (response.status === 429) {
       // two brakes answer 429: the one per address, and the day's budget, which says when it goes on

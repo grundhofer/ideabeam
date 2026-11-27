@@ -1116,3 +1116,40 @@
 .app-results--side {
   margin-block: 0 var(--sb-space-4);
 }
+
+/* A step that estimates (components/Estimate.tsx, stage M3): the number field with its unit and the reason, in the
+   column of the ballot; a counted round as rows of a description list, the word at the start and the number at the
+   end, as the rows of a list stand; no chart. */
+.app-estimate__form {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sb-space-4);
+}
+.app-estimate__round {
+  margin-block: 0 var(--sb-space-4);
+}
+.app-estimate__heading {
+  margin: 0 0 var(--sb-space-1);
+  font: var(--sb-type-body-strong);
+  letter-spacing: var(--sb-type-body-strong-tracking);
+}
+.app-estimate__rows {
+  margin: 0;
+}
+.app-estimate__row {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  gap: var(--sb-space-1) var(--sb-space-4);
+  padding-block: var(--sb-space-2);
+  border-block-end: var(--sb-border-width-hairline) solid var(--sb-color-border);
+}
+.app-estimate__row dt {
+  color: var(--sb-color-text-muted);
+}
+.app-estimate__row dd {
+  margin: 0;
+  font: var(--sb-type-body-strong);
+  letter-spacing: var(--sb-type-body-strong-tracking);
+  overflow-wrap: anywhere;
+}

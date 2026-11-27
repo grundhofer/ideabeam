@@ -10,11 +10,12 @@ import { voteConfigSchema } from "./vote.js";
 // text, so a wall stores no words and a deploy that rewords a step changes no running wall.
 //
 // Stage M1 built the engine and two methods with it: „Still sammeln, bündeln, verdeckt wählen“ and „Freie Wand“;
-// stage M2 gave the first its vote (domain/vote.ts). The enums already name what the later stages bring (votes, pairs, small groups), so
+// stage M2 gave the first its vote (domain/vote.ts); stage M3 brought estimating in rounds and the method
+// „Schätzen – Diskutieren – Schätzen“. The enums already name what the later stages bring (votes, pairs, small groups), so
 // that a wall's stored copy of its agenda keeps one shape from now on.
 
 /** The ids of the methods in the catalogue. A method is never renamed: a wall stores the id. */
-export const METHOD_IDS = ["still-sammeln", "free"] as const;
+export const METHOD_IDS = ["still-sammeln", "schaetzen", "free"] as const;
 export const methodIdSchema = z.enum(METHOD_IDS);
 export type MethodId = z.infer<typeof methodIdSchema>;
 
@@ -59,6 +60,12 @@ export const outputKindSchema = z.enum([
 ]);
 export type OutputKind = z.infer<typeof outputKindSchema>;
 
+/** What the notes of a step are, where a step that is no step of writing takes notes beside its own work
+ *  (docs/architektur-methoden.md 1): `reason`, the short reason beside a first estimate (stage M3). A step of
+ *  writing or sorting takes notes by its type and needs none of it. */
+export const noteKindSchema = z.enum(["idea", "reason", "action", "decision", "criterion"]);
+export type NoteKind = z.infer<typeof noteKindSchema>;
+
 /** How well the core of a method is supported (docs/methoden-katalog.md, „Evidenzstufen“), shown as a word with one
  *  sentence (the owner's decision 5, PLAN-METHODEN.md 7). */
 export const evidenceSchema = z.enum(["metaAnalysis", "experiments", "studies", "practice", "disputed"]);
@@ -92,6 +99,9 @@ export const stepSchema = z.object({
   /** How a step of type `vote`, `rank` or `score` is voted (domain/vote.ts): a step votes if and only if it has one
    *  (`checkAgenda`). */
   vote: z.optional(voteConfigSchema),
+  /** The step takes notes of this kind beside its vote (`capabilities`, domain/agenda.ts): the reasons beside the
+   *  first estimate. Left out: notes only where the step's type is about notes. */
+  noteKind: z.optional(noteKindSchema),
 });
 export type Step = z.infer<typeof stepSchema>;
 

@@ -218,7 +218,9 @@
     "spent": "All of today’s walls are taken. New walls can be made again at {{time}}. Your question is still there.",
     "failed": "The wall could not be created. Your question is still there; check the connection and try again.",
     "unsavedTitle": "Discard the question?",
-    "unsavedText": "The wall is not created yet. If you leave now, the question is gone."
+    "unsavedText": "The wall is not created yet. If you leave now, the question is gone.",
+    "unit": "Unit of the estimate",
+    "unitHelp": "What the number counts, such as days, € or %. Leave empty for a bare number."
   },
   "join": {
     "title": "Join",
@@ -379,7 +381,17 @@
       "adminCounted": "You moderate: the result stands, for everyone at once. “Next” leads to the next step; you can save it as Markdown under “More”.",
       "memberVote": "Give your points to what matters most to you and press “Cast vote”. Nobody sees your points, only the result once the moderation counts.",
       "memberVoteCast": "Your points are cast. You can change them until the moderation counts, and nobody sees them.",
-      "memberCounted": "The result stands: everyone sees the same ranking. What was counted are the points, not who gave them."
+      "memberCounted": "The result stands: everyone sees the same ranking. What was counted are the points, not who gave them.",
+      "adminEstimate": "You moderate: everyone estimates on their own, you too, and presses “Cast vote”. Nobody sees who estimated what. When everyone has cast, “Count votes” shows everyone the median and the range at once.",
+      "adminEstimateCast": "You moderate: your estimate is cast, and you can change it until it is counted. When everyone has cast, “Count votes” shows everyone the median and the range at once.",
+      "adminEstimated": "You moderate: the median and the range are in, for everyone at once, without a single estimate. “Next” takes you to the next step.",
+      "memberEstimate": "Estimate on your own and press “Cast vote”. Nobody sees your number, only the median and the range once the moderation counts.",
+      "memberEstimateCast": "Your estimate is cast. You can change it until the moderation counts, and nobody sees it.",
+      "memberEstimated": "Everyone sees the same summary, no single estimate. What was counted are the numbers, not who estimated them.",
+      "adminEstimateTalk": "You moderate: talk about why the estimates differ. The reasons are on the wall without names. Then everyone estimates again.",
+      "memberEstimateTalk": "Talk about why the estimates differ: whoever knows something the others do not, says it. Then everyone estimates again.",
+      "adminEstimateResult": "You moderate: both rounds stand by the method. What follows from the number? You can save it as Markdown under “More”.",
+      "memberEstimateResult": "Both rounds stand by the method: median, middle half and range, no single estimate."
     },
     "adminLinkCopied": "Facilitator link copied. Anyone who has it facilitates this wall and can delete it: share it only if someone should facilitate with you."
   },
@@ -552,6 +564,40 @@
       "mean": "mean {{value}}",
       "unscored": "not scored"
     }
+  },
+  "estimate": {
+    "heading": "Your estimate",
+    "notYet": "Not cast yet.",
+    "stored": "Cast: {{value}}. You can change it until it is counted.",
+    "field": "Your number",
+    "fieldHelp": "A number, such as 40 or 2.5. Enter casts it.",
+    "reason": "Short reason",
+    "reasonHelp": "Everyone sees it in the next step, without your name. Nobody sees your number.",
+    "problem": {
+      "empty": "Enter a number, then press “Cast vote”.",
+      "notANumber": "That is not a number. Use digits only, such as 40 or 2.5.",
+      "tooLarge": "This number is too large for an estimate.",
+      "outside": "This number lies outside what the estimate allows."
+    },
+    "round": "Round {{n}}",
+    "count_one": "1 estimate, cast in secret.",
+    "count_other": "{{count}} estimates, cast in secret.",
+    "none": "Nobody estimated.",
+    "median": "Median",
+    "middle": "Middle half",
+    "range": "Range",
+    "span": "{{from}} to {{to}}",
+    "moved": "Since round {{n}}",
+    "movedValue": "median from {{from}} to {{to}}, middle half from {{widthFrom}} to {{widthTo}} wide",
+    "resultHeading": "Result of the estimate",
+    "sentence_one": "Median {{median}}, middle half {{q1}} to {{q3}}, range {{min}} to {{max}}, 1 estimate.",
+    "sentence_other": "Median {{median}}, middle half {{q1}} to {{q3}}, range {{min}} to {{max}}, {{count}} estimates.",
+    "said": "Counted. {{summary}}",
+    "open": "Not estimated yet. {{voted}} of {{of}} have estimated.",
+    "cast": "Estimated. {{voted}} of {{of}} have estimated.",
+    "counted_one": "Counted: 1 estimate.",
+    "counted_other": "Counted: {{count}} estimates.",
+    "hint": "Nobody sees your number, not even the moderation: everyone sees only the median and the range once it is counted."
   },
   "reject": {
     "phaseBallot": "The vote is counted already: your vote was not taken any more. The result is on the wall.",

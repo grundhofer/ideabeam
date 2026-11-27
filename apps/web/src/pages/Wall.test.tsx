@@ -4,6 +4,7 @@
 import { act, fireEvent, screen, waitFor, within } from "@testing-library/react";
 import { afterEach, beforeEach, expect, onTestFinished, test, vi } from "vitest";
 import {
+  agendaFor,
   NO_CLOCK,
   PROTOCOL_VERSION,
   type ClientCommand,
@@ -1964,4 +1965,103 @@ test("the moderation's vote: „Auszählen“ is the primary action with „Abge
   expect(next.className).toBe("sb-primary-action");
   fireEvent.click(next);
   expect(flow(socket).at(-1)).toMatchObject({ type: "admin.step.go", from: 3, to: 4 });
+});
+
+// A step that estimates (stage M3): the number field with its unit in the place of the surface, the reason under it
+// in the first round, „Abgeben“ and Enter send both; the second round shows the first round's summary and no reason;
+// counted, the summary as rows of words and numbers.
+const ESTIMATE_AGENDA = agendaFor({ hidden: true, agenda: { items: [{ methodId: "schaetzen", unit: "Tage" }] } });
+const estimateRound = (step: number, counted = false) => ({ step, options: [], omitted: 0, limit: 1, counted });
+const ROUND_ONE = {
+  step: 0,
+  kind: "estimate" as const,
+  unit: "Tage",
+  voters: 2,
+  summary: { n: 2, median: 30, q1: 25, q3: 35, min: 20, max: 40 },
+};
+
+test("the first estimate: the number with its unit, a reason beside it; Enter sends the number and the reason as a note", async () => {
+  found();
+  const socket = await join();
+  socket.tell({
+    ...(sync(ANNA_AND_BEN("member")) as Sync),
+    agenda: ESTIMATE_AGENDA,
+    step: 0,
+    reach: 0,
+    votes: [estimateRound(0)],
+  });
+  await screen.findByRole("heading", { name: "Deine Schätzung" });
+  expect(stateOf().getByText("Noch nicht geschätzt. 0 von 2 haben geschätzt.")).toBeTruthy();
+  expect(guides()).toContain(
+    "Schätz für dich und drück „Abgeben“. Niemand sieht deine Zahl, nur Median und Spanne, wenn die Moderation auszählt.",
+  );
+  expect(document.querySelector(".app-surface, .app-list")).toBeNull();
+  const field = screen.getByLabelText<HTMLInputElement>("Deine Zahl");
+  expect(field.closest(".sb-field__control")?.querySelector(".sb-field__suffix")?.textContent).toBe("Tage");
+  // no number: it says so and sends nothing
+  fireEvent.click(screen.getByRole("button", { name: "Abgeben" }));
+  expect(await screen.findByText("Gib eine Zahl ein, dann drück „Abgeben“.")).toBeTruthy();
+  fireEvent.change(field, { target: { value: "vierzig" } });
+  fireEvent.keyDown(field, { key: "Enter" });
+  expect(await screen.findByText("Das ist keine Zahl. Schreib nur Ziffern, etwa 40 oder 2,5.")).toBeTruthy();
+  expect(socket.sent.filter((frame) => frame.type === "ballot.cast")).toEqual([]);
+  fireEvent.change(field, { target: { value: "2,5" } });
+  fireEvent.change(screen.getByLabelText(/Kurze Begründung/), { target: { value: " Wie beim letzten Umzug " } });
+  fireEvent.keyDown(field, { key: "Enter" });
+  expect(socket.sent.filter((frame) => frame.type === "ballot.cast")).toEqual([
+    expect.objectContaining({ step: 0, ballot: { kind: "estimate", value: 2.5 } }),
+  ]);
+  expect(socket.sent.filter((frame) => frame.type === "note.create")).toEqual([
+    expect.objectContaining({ text: "Wie beim letzten Umzug" }),
+  ]);
+  socket.tell({ type: "ballot.stored", seq: 1, step: 0, ballot: { kind: "estimate", value: 2.5 }, voted: 1 });
+  await screen.findByText("Abgegeben: 2,5 Tage. Ändern geht bis zum Auszählen.");
+  expect(stateOf().getByText("Geschätzt. 1 von 2 haben geschätzt.")).toBeTruthy();
+  expect(field.value).toBe("2,5");
+});
+
+test("the second round shows the first round's summary, no reason; counted, both rounds as rows", async () => {
+  found();
+  useWalls.getState().keepToken(WALL, TOKEN);
+  const socket = await join();
+  socket.tell({
+    ...(sync(ANNA_AND_BEN("admin")) as Sync),
+    agenda: ESTIMATE_AGENDA,
+    step: 3,
+    reach: 3,
+    votes: [estimateRound(0, true), estimateRound(3)],
+    results: [ROUND_ONE],
+  });
+  await screen.findByRole("heading", { name: "Deine Schätzung" });
+  const before = screen.getByRole("region", { name: "Runde 1" });
+  expect([...before.querySelectorAll(".app-estimate__row")].map((row) => row.textContent)).toEqual([
+    "Median30 Tage",
+    "Mittlere Hälfte25 bis 35 Tage",
+    "Spanne20 bis 40 Tage",
+  ]);
+  expect(screen.queryByLabelText(/Kurze Begründung/)).toBeNull();
+  expect(screen.getByRole("button", { name: "Auszählen" }).className).toBe("sb-primary-action");
+  socket.tell({
+    type: "results.published",
+    seq: 1,
+    result: {
+      step: 3,
+      kind: "estimate",
+      unit: "Tage",
+      voters: 2,
+      summary: { n: 2, median: 32, q1: 31, q3: 33, min: 30, max: 34 },
+    },
+  });
+  const results = await screen.findByRole("region", { name: "Ergebnis der Schätzung" });
+  expect([...results.querySelectorAll(".app-estimate__row")].map((row) => row.textContent)).toEqual([
+    "Median30 Tage",
+    "Mittlere Hälfte25 bis 35 Tage",
+    "Spanne20 bis 40 Tage",
+    "Median32 Tage",
+    "Mittlere Hälfte31 bis 33 Tage",
+    "Spanne30 bis 34 Tage",
+    "Gegenüber Runde 1Median von 30 auf 32 Tage, mittlere Hälfte von 10 auf 2 Tage breit",
+  ]);
+  expect(document.querySelector(".app-state__sentence")?.textContent).toBe("Ausgezählt: 2 Schätzungen.");
+  expect(screen.getByRole("button", { name: "Weiter: Ergebnis ansehen" }).className).toBe("sb-primary-action");
 });

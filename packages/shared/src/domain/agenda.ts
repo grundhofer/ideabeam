@@ -4,6 +4,7 @@
 import * as z from "zod/mini";
 import { CATALOGUE, DEFAULT_METHOD } from "../methods/catalogue.js";
 import { MAX_STEPS, methodIdSchema, stepSchema, type MethodId, type Step, type StepVisibility } from "./method.js";
+import { estimateUnitSchema } from "./vote.js";
 
 // A wall's agenda (docs/architektur-methoden.md 1): the methods it runs, one after the other, flattened into the
 // steps it walks through. A wall stores its agenda resolved, at its creation, as one row (`meta 'agenda'`): a copy
@@ -16,9 +17,13 @@ import { MAX_STEPS, methodIdSchema, stepSchema, type MethodId, type Step, type S
 /** How many methods an agenda may name. One in M1; M7 raises it. */
 export const MAX_AGENDA_ITEMS = 1;
 
-/** What `POST /api/walls` may ask for: the methods, in order. */
+/** What `POST /api/walls` may ask for: the methods, in order. `unit`: what the estimates of a method that estimates
+ *  count („Tage“, „€“), as the moderation typed it on `/neu` (stage M3); it goes into the vote of every step of the
+ *  method that estimates, and means nothing to a method without one. */
 export const agendaRequestSchema = z.strictObject({
-  items: z.array(z.strictObject({ methodId: methodIdSchema })).check(z.minLength(1), z.maxLength(MAX_AGENDA_ITEMS)),
+  items: z
+    .array(z.strictObject({ methodId: methodIdSchema, unit: z.optional(estimateUnitSchema) }))
+    .check(z.minLength(1), z.maxLength(MAX_AGENDA_ITEMS)),
 });
 export type AgendaRequest = z.infer<typeof agendaRequestSchema>;
 
@@ -37,8 +42,12 @@ export type ResolvedAgenda = z.infer<typeof resolvedAgendaSchema>;
  *  item it belongs to. */
 export function resolveAgenda(request: AgendaRequest): ResolvedAgenda {
   const items = request.items.map(({ methodId }) => ({ methodId, version: CATALOGUE[methodId].version }));
-  const steps = request.items.flatMap(({ methodId }, item) =>
-    CATALOGUE[methodId].steps.map((step): ResolvedStep => ({ ...step, item })),
+  const steps = request.items.flatMap(({ methodId, unit }, item) =>
+    CATALOGUE[methodId].steps.map((step): ResolvedStep => ({
+      ...step,
+      ...(step.vote?.kind === "estimate" && unit !== undefined ? { vote: { ...step.vote, unit } } : {}),
+      item,
+    })),
   );
   return { items, steps };
 }
@@ -70,7 +79,9 @@ export function methodOfStep(agenda: ResolvedAgenda, step: number): MethodId {
  *  - `arrange`: „Ordnen“: ask for a proposal, apply it, take it back.
  *  - `clock`: the moderation's clock. In M1 the clock of the writing, as before: in a hidden writing step.
  *  - `ballot`: vote (`ballot.cast`), and the moderation counts (`admin.step.count`): a step with a vote
- *    (domain/vote.ts). Nothing is written, moved or grouped in it: the options are frozen. */
+ *    (domain/vote.ts). Nothing is written, moved or grouped in it: the options are frozen. A step that names a
+ *    `noteKind` takes notes beside its vote all the same (the reasons beside the first estimate, stage M3): they
+ *    are written, changed and deleted, at the step's visibility. */
 export interface Capabilities {
   write: boolean;
   move: boolean;
@@ -83,8 +94,8 @@ export interface Capabilities {
 const NOTE_STEPS = new Set<Step["type"]>(["impulse", "write", "reveal", "cluster", "discuss"]);
 const SORT_STEPS = new Set<Step["type"]>(["reveal", "cluster", "discuss"]);
 
-export function capabilities(step: Pick<Step, "type" | "visibility" | "vote">): Capabilities {
-  const notes = NOTE_STEPS.has(step.type);
+export function capabilities(step: Pick<Step, "type" | "visibility" | "vote" | "noteKind">): Capabilities {
+  const notes = NOTE_STEPS.has(step.type) || step.noteKind !== undefined;
   // groups need the notes to be seen: while they are hidden, nobody sorts what nobody can read
   const sorts = SORT_STEPS.has(step.type) && levelOf(step.visibility) === "all";
   return {
@@ -97,12 +108,13 @@ export function capabilities(step: Pick<Step, "type" | "visibility" | "vote">): 
   };
 }
 
-const VOTE_STEPS = new Set<Step["type"]>(["vote", "rank", "score"]);
+const VOTE_STEPS = new Set<Step["type"]>(["vote", "rank", "score", "estimate"]);
 /** Which vote kinds a step type takes. */
 const VOTE_KINDS: Partial<Record<Step["type"], readonly string[]>> = {
   vote: ["dots", "approval"],
   rank: ["rank"],
   score: ["score"],
+  estimate: ["estimate"],
 };
 
 // ───────────────────────── visibility ─────────────────────────
@@ -148,7 +160,8 @@ export type AgendaProblem =
   /** a step of type vote, rank or score without its vote, one of another type with a vote, or a vote of a kind its
    *  type does not take; or a vote that is not hidden until counted (`aggregate`, PLAN-METHODEN.md 1) */
   | { kind: "voteShape"; step: number }
-  /** a vote would offer notes nobody but their writers has seen: no step up to it shows them */
+  /** a vote would offer notes nobody but their writers has seen: no step up to it shows them. An estimate offers
+   *  nothing and may stand before any note is shown */
   | { kind: "voteUnseen"; step: number };
 
 export function checkAgenda(agenda: Pick<ResolvedAgenda, "steps">): AgendaProblem[] {
@@ -158,7 +171,8 @@ export function checkAgenda(agenda: Pick<ResolvedAgenda, "steps">): AgendaProble
     const key = `${step.item}.${step.key}`;
     if (seen.has(key)) problems.push({ kind: "duplicateKey", step: at });
     seen.add(key);
-    if (step.output === "notes" && noteLevel(agenda.steps, agenda.steps.length - 1, at) !== "all") {
+    const writes = step.output === "notes" || step.noteKind !== undefined;
+    if (writes && noteLevel(agenda.steps, agenda.steps.length - 1, at) !== "all") {
       problems.push({ kind: "neverShown", step: at });
     }
     const votes = VOTE_STEPS.has(step.type);
@@ -169,7 +183,9 @@ export function checkAgenda(agenda: Pick<ResolvedAgenda, "steps">): AgendaProble
     ) {
       problems.push({ kind: "voteShape", step: at });
     }
-    if (votes && noteLevel(agenda.steps, at) !== "all") problems.push({ kind: "voteUnseen", step: at });
+    if (votes && step.vote?.kind !== "estimate" && noteLevel(agenda.steps, at) !== "all") {
+      problems.push({ kind: "voteUnseen", step: at });
+    }
   });
   return problems;
 }

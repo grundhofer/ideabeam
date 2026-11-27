@@ -308,7 +308,7 @@ export class WallRoom extends DurableObject<Env> {
       String(now),
       String(SCHEMA_VERSION),
       String(retentionAt),
-      JSON.stringify(initialFlow()),
+      JSON.stringify(initialFlow(agenda)),
       JSON.stringify(agenda),
     );
     await this.ctx.storage.setAlarm(retentionAt);

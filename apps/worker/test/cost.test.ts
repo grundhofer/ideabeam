@@ -652,3 +652,104 @@ describe("what a vote costs", { timeout: 60_000 }, () => {
     expect(total).toBeLessThanOrEqual(VOTE_ROWS);
   });
 });
+
+// Estimating in rounds (stage M3 of the methods, PLAN-METHODEN.md 5): „Schätzen – Diskutieren – Schätzen“ with 8
+// people from its first estimate to its result. Everybody estimates and writes a reason, one person changes their
+// estimate and one sends the same one twice; the moderation counts, reveals the reasons, goes on to the discussion
+// and to the second round, everybody estimates again, the moderation counts and shows the result. Counted are the
+// rows of the method itself, after everybody has joined. The lead's bound for M3: about 30 rows for the two rounds;
+// the reasons are notes and cost what notes cost, so they are counted apart.
+describe("what estimating in two rounds costs", { timeout: 60_000 }, () => {
+  /** The two rounds with 8 people, without the reasons: ballots, counting and the step moves. */
+  const ROUNDS_ROWS = 30;
+
+  it(`two rounds with ${PEOPLE.length} people write at most ${ROUNDS_ROWS} rows, and a row a reason`, async () => {
+    const { wallId, stub } = newWall(env);
+    const adminToken = "e".repeat(32);
+    await runInDurableObject(stub, (instance) =>
+      instance.initialize({
+        wallId,
+        question: "How many days does the move take?",
+        adminToken,
+        hidden: true,
+        agenda: { items: [{ methodId: "schaetzen", unit: "days" }] },
+      }),
+    );
+    const sockets: TestSocket[] = [];
+    for (const name of PEOPLE) {
+      const socket = await connect(wallId);
+      socket.send({
+        type: "join",
+        name,
+        sessionKey: generateSessionKey(),
+        ...(name === "Anna" ? { adminToken } : {}),
+      });
+      await socket.waitFor((event) => event.type === "sync");
+      sockets.push(socket);
+    }
+    const said = async (socket: TestSocket, command: Record<string, unknown>) => {
+      const opId = generateHexId();
+      socket.send({ ...command, opId });
+      const answer = await socket.waitFor(
+        (event) => (event.type === "ack" || event.type === "reject") && event.opId === opId,
+      );
+      expect(answer.type, JSON.stringify(answer)).toBe("ack");
+    };
+    const moderation = sockets[0] as TestSocket;
+    const estimate = (step: number, value: number) => ({
+      type: "ballot.cast",
+      step,
+      ballot: { kind: "estimate", value },
+    });
+
+    // from here on every row is counted
+    const rows = { ballots: 0, reasons: 0, count: 0, steps: 0 };
+    let into: keyof typeof rows = "ballots";
+    await runInDurableObject(stub, (instance) =>
+      counted(instance, (_read, written) => {
+        rows[into] += written;
+      }),
+    );
+    for (const [n, socket] of sockets.entries()) {
+      into = "ballots";
+      await said(socket, estimate(0, 20 + n * 5));
+      into = "reasons";
+      await said(socket, { type: "note.create", noteId: generateHexId(), text: `Reason ${n + 1}`, x: n * 260, y: 0 });
+    }
+    into = "ballots";
+    // one person changes their mind, one sends the same estimate again
+    await said(sockets[1] as TestSocket, estimate(0, 31));
+    await said(sockets[2] as TestSocket, estimate(0, 30));
+    into = "count";
+    await said(moderation, { type: "admin.step.count", step: 0 });
+    into = "steps";
+    await said(moderation, { type: "admin.step.go", from: 0, to: 1 });
+    await said(moderation, { type: "admin.step.go", from: 1, to: 2 });
+    await said(moderation, { type: "admin.step.go", from: 2, to: 3 });
+    into = "ballots";
+    for (const [n, socket] of sockets.entries()) await said(socket, estimate(3, 30 + n));
+    into = "count";
+    await said(moderation, { type: "admin.step.count", step: 3 });
+    into = "steps";
+    await said(moderation, { type: "admin.step.go", from: 3, to: 4 });
+    expect(await runInDurableObject(stub, isCounted), "the wall's object was replaced on the way").toBe(true);
+
+    const total = rows.ballots + rows.count + rows.steps;
+    // eslint-disable-next-line no-console -- the one test whose job is to say what it measured
+    console.log(
+      [
+        `two rounds of estimates with ${PEOPLE.length} people (17 estimates sent, 1 of them the same again):`,
+        `  estimates ${rows.ballots}, counting ${rows.count}, step moves ${rows.steps}: ${total} rows written;`,
+        `  and ${rows.reasons} rows for ${PEOPLE.length} reasons: ${total + rows.reasons} in all`,
+      ].join("\n"),
+    );
+    // a row an estimate, the changed one written over, the same one again nothing; the table once, two rows; and the
+    // mark of the wall's day for its brake, which the first change of the wall writes (here the first estimate)
+    expect(rows.ballots).toBe(2 * PEOPLE.length + 1 + 2 + 1);
+    // each counting the result and the flow; each step move one row
+    expect(rows.count).toBe(4);
+    expect(rows.steps).toBe(4);
+    expect(rows.reasons).toBe(PEOPLE.length);
+    expect(total).toBeLessThanOrEqual(ROUNDS_ROWS);
+  });
+});

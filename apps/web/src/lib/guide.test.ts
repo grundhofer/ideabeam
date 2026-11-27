@@ -217,3 +217,34 @@ test("in a step that votes: how to vote and that nobody sees a ballot; to the mo
     "“Count votes” shows the result to everyone at once.",
   );
 });
+
+test("in a step that estimates: how to estimate, also while the reasons beside it are hidden; after it, what to talk about and where both rounds stand", () => {
+  const estimate = (admin: boolean, cast: boolean, counted: boolean) =>
+    guide({ admin, notes: 3, people: 4, hidden: true, step: "estimate", vote: { cast, counted, estimate: true } });
+  expect([estimate(true, false, false), estimate(true, true, false), estimate(true, true, true)]).toEqual([
+    "adminEstimate",
+    "adminEstimateCast",
+    "adminEstimated",
+  ]);
+  expect([estimate(false, false, false), estimate(false, true, false), estimate(false, true, true)]).toEqual([
+    "memberEstimate",
+    "memberEstimateCast",
+    "memberEstimated",
+  ]);
+  const after = (admin: boolean, estimates: "talk" | "result") =>
+    guide({ admin, notes: 3, people: 4, step: "discuss", estimates });
+  expect([after(true, "talk"), after(false, "talk"), after(true, "result"), after(false, "result")]).toEqual([
+    "adminEstimateTalk",
+    "memberEstimateTalk",
+    "adminEstimateResult",
+    "memberEstimateResult",
+  ]);
+  // alone, the link comes first
+  expect(guide({ admin: true, notes: 0, people: 1, step: "discuss", estimates: "talk" })).toBe("adminAloneEmpty");
+  expect(say({ admin: false, notes: 3, people: 4, vote: { cast: true, counted: false, estimate: true } })).toBe(
+    "Deine Schätzung ist abgegeben. Ändern geht, bis die Moderation auszählt, und niemand sieht sie.",
+  );
+  expect(
+    say({ admin: true, notes: 3, people: 4, vote: { cast: false, counted: false, estimate: true } }, "en"),
+  ).toContain("“Count votes” shows everyone the median and the range at once.");
+});

@@ -211,6 +211,38 @@ Zahl schätzen, Median und Spanne, zweite Runde mit dem Ergebnis der ersten, Beg
 Abnahme: Median und Quartile getestet mit gerader, ungerader und einer einzigen Schätzung. Die zweite Runde zeigt nur
 die Summe der ersten.
 
+**Stand M3 (27.11.2026, Branch `methoden-m3` auf M2 `1aa7e4c`, nicht committet):** gebaut, von dir nicht abgenommen,
+nicht deployt.
+
+- `domain/vote.ts`: Art `estimate` (eine Zahl, Einheit, Grenzen) mit `checkBallot`, `aggregate` (Anzahl, Median,
+  erstes und drittes Quartil, kleinste und größte Zahl; Quartile linear zwischen den Schätzungen wie QUARTILE.INC,
+  auf sechs Stellen gerundet) und dem Ergebnis `estimateResult`; `voteResultSchema` ist jetzt Rangliste oder
+  Zusammenfassung. Methode „Schätzen – Diskutieren – Schätzen“ (`schaetzen`, Zweck „Entscheiden“, Experimente, 5–30
+  Personen, 25 Minuten) mit fünf Schritten: erste Schätzung mit Begründung (verdeckt, `noteKind: "reason"`: der
+  Schritt nimmt Zettel neben der Schätzung), Rückmeldung (zeigt die Begründungen ohne Namen), Abweichungen
+  besprechen, neu schätzen (ohne Zettel), Ergebnis ansehen. Die Einheit gibt die Moderation auf `/neu` an (optional,
+  bis 20 Zeichen); sie kommt als `unit` in die Anfrage und in beide Schätzschritte.
+- App: `components/Estimate.tsx` statt der Fläche (Zahlenfeld mit Einheit, Enter oder „Abgeben“, in Runde 1 die
+  Begründung als eigener Zettel), die zweite Runde zeigt über dem Feld nur die Zusammenfassung der ersten; nach dem
+  Auszählen „Ergebnis der Schätzung“ als Beschreibungsliste (Median, mittlere Hälfte, Spanne, Anzahl, ab Runde 2 die
+  Veränderung), danach in der Spalte der Personen. Export: beide Runden mit Einheit und Veränderung, die Zettel unter
+  „Begründungen“, nie eine einzelne Schätzung. Datenschutzerklärung 3.1 und 3.3 in beiden Sprachen.
+- Abweichungen: (1) „Schätzfrage stellen“ steckt in der ersten Schätzung, wie „Frage stellen“ in „Ideen schreiben“;
+  fünf statt sechs Schritte. (2) „Abweichungen besprechen“ ist bis M4 ein Schritt für alle, nicht in Kleingruppen;
+  die Kurzbeschreibung sagt darum „besprechen gemeinsam“ statt „in Kleingruppen“. (3) Kein „Auch bekannt als“:
+  „Mini-Delphi“ ist nicht im Register geprüft. (4) Die Schätzschritte sind `aggregate` (nur Summe), nicht
+  „verdeckt“: `checkAgenda` verlangt das für jede Abstimmung. (5) Die erste Runde ist ab dem Anlegen offen
+  (`initialFlow(agenda)`), weil die Methode mit ihr beginnt. (6) Die Begründungen sind gewöhnliche Zettel ohne
+  Spalte `kind`. (7) Die Einheit auf `/neu` steht nicht im Architekturvorschlag; Grenzen (`min`, `max`) gibt es in
+  den Regeln, aber keine Methode und keine Oberfläche setzt sie. (8) Keine Uhr in den Schätzschritten (die Uhr gibt
+  es nur beim Schreiben); vor „Weiter“ muss die Moderation auszählen, wie in M2.
+- `CI=1 pnpm checks` grün: 355 Tests im geteilten Paket, 126 in `packages/arrange`, 247 im Worker, 298 in der App,
+  337 Ende-zu-Ende, keiner übersprungen. Kosten: zwei Runden mit 8 Personen 28 Zeilen (Schätzungen 20 samt Tabelle 2
+  und Tagesmarke 1, Auszählen 4, Schritte 4), dazu 8 Zeilen für 8 Begründungen.
+- Nicht geprüft: kein Bildschirmleser, nicht bei 2000 px angesehen; mit zwei Personen sind kleinste und größte Zahl
+  die beiden Schätzungen (die Datenschutzerklärung sagt es); Texte und Belegsatz aus dem Katalog nicht neu an den
+  Quellen geprüft.
+
 ### M4: Paare und Kleingruppen
 
 Teams bilden (zufällig, durch die Moderation, zusammenlegen, Nachzügler), Sichtbarkeit je Team, Bereiche, die Wahl

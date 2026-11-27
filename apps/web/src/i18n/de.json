@@ -218,7 +218,9 @@
     "spent": "Heute sind alle Wände vergeben. Ab {{time}}\u00a0Uhr geht es weiter. Deine Frage ist noch da.",
     "failed": "Die Wand ließ sich nicht anlegen. Deine Frage ist noch da; prüf die Verbindung und versuch es noch mal.",
     "unsavedTitle": "Frage verwerfen?",
-    "unsavedText": "Die Wand ist noch nicht angelegt. Wenn du jetzt gehst, ist die Frage weg."
+    "unsavedText": "Die Wand ist noch nicht angelegt. Wenn du jetzt gehst, ist die Frage weg.",
+    "unit": "Einheit der Schätzung",
+    "unitHelp": "Was die Zahl zählt, etwa Tage, € oder %. Leer lassen für eine bloße Zahl."
   },
   "join": {
     "title": "Beitreten",
@@ -379,7 +381,17 @@
       "adminCounted": "Du moderierst: Das Ergebnis steht, für alle zugleich. Mit „Weiter“ geht es in den nächsten Schritt; sichern kannst du es unter „Mehr“ als Markdown.",
       "memberVote": "Verteil deine Punkte auf das, was dir am wichtigsten ist, und drück „Abgeben“. Niemand sieht deine Punkte, nur das Ergebnis, wenn die Moderation auszählt.",
       "memberVoteCast": "Deine Punkte sind abgegeben. Ändern geht, bis die Moderation auszählt, und niemand sieht sie.",
-      "memberCounted": "Das Ergebnis steht: Alle sehen dieselbe Rangfolge. Gezählt sind die Punkte, nicht wer sie gab."
+      "memberCounted": "Das Ergebnis steht: Alle sehen dieselbe Rangfolge. Gezählt sind die Punkte, nicht wer sie gab.",
+      "adminEstimate": "Du moderierst: Alle schätzen für sich, du auch, und drücken „Abgeben“. Niemand sieht, wer was geschätzt hat. Wenn alle abgegeben haben, zeigt „Auszählen“ allen Median und Spanne zugleich.",
+      "adminEstimateCast": "Du moderierst: Deine Schätzung ist abgegeben, ändern geht bis zum Auszählen. Wenn alle abgegeben haben, zeigt „Auszählen“ allen Median und Spanne zugleich.",
+      "adminEstimated": "Du moderierst: Median und Spanne stehen, für alle zugleich, ohne eine einzelne Schätzung. Mit „Weiter“ geht es in den nächsten Schritt.",
+      "memberEstimate": "Schätz für dich und drück „Abgeben“. Niemand sieht deine Zahl, nur Median und Spanne, wenn die Moderation auszählt.",
+      "memberEstimateCast": "Deine Schätzung ist abgegeben. Ändern geht, bis die Moderation auszählt, und niemand sieht sie.",
+      "memberEstimated": "Alle sehen dieselbe Zusammenfassung, keine einzelne Schätzung. Gezählt sind die Zahlen, nicht wer sie schätzte.",
+      "adminEstimateTalk": "Du moderierst: Besprecht, warum die Schätzungen auseinanderliegen. Die Begründungen stehen ohne Namen auf der Wand. Danach schätzen alle neu.",
+      "memberEstimateTalk": "Besprecht, warum die Schätzungen auseinanderliegen: Wer etwas weiß, das die anderen nicht wissen, sagt es. Danach schätzen alle neu.",
+      "adminEstimateResult": "Du moderierst: Beide Runden stehen bei der Methode. Was folgt aus der Zahl? Sichern kannst du sie unter „Mehr“ als Markdown.",
+      "memberEstimateResult": "Beide Runden stehen bei der Methode: Median, mittlere Hälfte und Spanne, keine einzelne Schätzung."
     },
     "adminLinkCopied": "Moderationslink kopiert. Wer ihn hat, moderiert diese Wand und kann sie löschen: Gib ihn nur weiter, wenn jemand mit dir moderieren soll."
   },
@@ -552,6 +564,40 @@
       "mean": "Mittelwert {{value}}",
       "unscored": "keine Bewertung"
     }
+  },
+  "estimate": {
+    "heading": "Deine Schätzung",
+    "notYet": "Noch nicht abgegeben.",
+    "stored": "Abgegeben: {{value}}. Ändern geht bis zum Auszählen.",
+    "field": "Deine Zahl",
+    "fieldHelp": "Eine Zahl, etwa 40 oder 2,5. Enter gibt sie ab.",
+    "reason": "Kurze Begründung",
+    "reasonHelp": "Alle sehen sie im nächsten Schritt, ohne deinen Namen. Deine Zahl sieht niemand.",
+    "problem": {
+      "empty": "Gib eine Zahl ein, dann drück „Abgeben“.",
+      "notANumber": "Das ist keine Zahl. Schreib nur Ziffern, etwa 40 oder 2,5.",
+      "tooLarge": "Diese Zahl ist zu groß für eine Schätzung.",
+      "outside": "Diese Zahl liegt außerhalb dessen, was die Schätzung zulässt."
+    },
+    "round": "Runde {{n}}",
+    "count_one": "1 Schätzung, verdeckt abgegeben.",
+    "count_other": "{{count}} Schätzungen, verdeckt abgegeben.",
+    "none": "Niemand hat geschätzt.",
+    "median": "Median",
+    "middle": "Mittlere Hälfte",
+    "range": "Spanne",
+    "span": "{{from}} bis {{to}}",
+    "moved": "Gegenüber Runde {{n}}",
+    "movedValue": "Median von {{from}} auf {{to}}, mittlere Hälfte von {{widthFrom}} auf {{widthTo}} breit",
+    "resultHeading": "Ergebnis der Schätzung",
+    "sentence_one": "Median {{median}}, mittlere Hälfte {{q1}} bis {{q3}}, Spanne {{min}} bis {{max}}, 1 Schätzung.",
+    "sentence_other": "Median {{median}}, mittlere Hälfte {{q1}} bis {{q3}}, Spanne {{min}} bis {{max}}, {{count}} Schätzungen.",
+    "said": "Ausgezählt. {{summary}}",
+    "open": "Noch nicht geschätzt. {{voted}} von {{of}} haben geschätzt.",
+    "cast": "Geschätzt. {{voted}} von {{of}} haben geschätzt.",
+    "counted_one": "Ausgezählt: 1 Schätzung.",
+    "counted_other": "Ausgezählt: {{count}} Schätzungen.",
+    "hint": "Niemand sieht deine Zahl, auch die Moderation nicht: Alle sehen nur Median und Spanne, wenn ausgezählt ist."
   },
   "reject": {
     "phaseBallot": "Die Wahl ist schon ausgezählt: Deine Stimme wurde nicht mehr übernommen. Das Ergebnis steht auf der Wand.",

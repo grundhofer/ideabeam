@@ -5,7 +5,7 @@ import type { Clock, RejectCode, StepCommand } from "../protocol.js";
 import { agendaOf, capabilities, noteLevel, type Capabilities, type NoteLevel, type ResolvedAgenda } from "./agenda.js";
 import { NO_CLOCK, stoppedClock } from "./clock.js";
 import type { Actor } from "./rules.js";
-import { roundOf, type VoteRound } from "./vote.js";
+import { openRound, roundOf, type VoteRound } from "./vote.js";
 
 // Where a wall stands in its agenda (docs/architektur-methoden.md 1, 4): the step it is in, the furthest step it has
 // reached, and the clock of the step. One row holds it (`meta 'flow'`), as the phase and the clock did before: every
@@ -75,9 +75,14 @@ export function readStoredFlow(stored: unknown, agenda: ResolvedAgenda | null): 
   return { flow, legacy: agendaOf(phase === "writing" ? "still-sammeln" : "free") };
 }
 
-/** A new wall's flow: at its first step, with no clock. */
-export function initialFlow(): Flow {
-  return { v: 2, step: 0, reach: 0, clock: NO_CLOCK, seq: 0 };
+/** A new wall's flow: at its first step, with no clock. Where its agenda begins with a step that votes (the first
+ *  estimate, stage M3), that vote is open from the start, as a step move into it would open it: an estimate offers
+ *  nothing to choose, so nothing on the wall needs to exist first. */
+export function initialFlow(agenda?: Pick<ResolvedAgenda, "steps">): Flow {
+  const flow: Flow = { v: 2, step: 0, reach: 0, clock: NO_CLOCK, seq: 0 };
+  const config = agenda?.steps[0]?.vote;
+  if (config === undefined) return flow;
+  return { ...flow, votes: [openRound(0, config, { notes: [], groups: [] }, false)] };
 }
 
 // ───────────────────────── what a step allows ─────────────────────────
