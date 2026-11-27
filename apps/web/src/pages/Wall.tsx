@@ -39,6 +39,13 @@
 // „Teams“ (components/Teams.tsx). A step that moves on by itself says so with its time; the moderation can switch that
 // off under „Mehr“. The method's attribution (Liberating Structures) stands under its description.
 //
+// Stage M5: a step of a method that says what to do now carries that sentence under the step. A step that reveals by
+// turn („Reihum aufdecken“) shows the notes one at a time as the moderation presses „Nächster Zettel“, its primary
+// action while notes are left; the state says how many are shown, the zone how many are left. A step that ranks
+// shows the ranking in the place of the surface (components/Rank.tsx). A step that decides shows the method's
+// actions in the place of the surface (components/Actions.tsx), where the moderation agrees on each with „Wer“ and
+// „Bis wann“. A step in which somebody presents and nobody writes offers no „Neuer Zettel“.
+//
 // With a key of its own (PLAN.md 4.5, „Eigener KI-Schlüssel“ in „Mehr“, store/key.ts) the moderation's browser asks
 // its own provider instead: the line under the action then names that provider, and a quiet line at the wall's top
 // says so and how to go back.
@@ -58,27 +65,31 @@ import {
   methodAttribution,
   methodTexts,
   nameInitials,
-  noteLevel,
   roundOf,
   self,
   shown,
   stepContextOf,
+  stepHint,
   stepName,
-  stepWidens,
+  stepReveals,
   WALL_DAILY_RUNS,
   WALL_ID_PATTERN,
   type Ballot,
   type EstimateResult,
+  type Note,
+  type NoteAction,
   type Participant,
   type VoteResult,
   type WallInfo,
 } from "@ideabeam/shared";
+import { ActionsPanel } from "../components/Actions";
 import { BallotPanel, Results, type Marks } from "../components/Ballot";
 import { EstimatePanel, EstimateResults, summarySentence } from "../components/Estimate";
 import { ClockControls } from "../components/ClockControls";
 import { CopyKey } from "../components/CopyKey";
 import { OwnKeyAsk, providerFacts } from "../components/OwnKeyAsk";
 import { QrCode } from "../components/QrCode";
+import { RankPanel } from "../components/Rank";
 import { Segmented } from "../components/Segmented";
 import { Surface, type WallHandle } from "../components/Surface";
 import { TeamsDialog } from "../components/Teams";
@@ -449,6 +460,7 @@ function OnWall({ wallId }: { wallId: string }) {
     countVotes,
     setTeams,
     setAuto,
+    nextTurn,
   } = useWall.getState();
   const adminToken = useWalls((walls) => walls.adminTokens[wallId]);
   // the session key this browser joined the wall with: it says who asks for the wall as a file
@@ -499,7 +511,9 @@ function OnWall({ wallId }: { wallId: string }) {
   // domain/flow.ts). While the notes are hidden this browser holds its own notes alone; of the others' it knows how
   // many there are, and nothing else.
   const step = stepContextOf(state);
-  const writing = step.sight !== "all";
+  // what a note written now is to the others: hidden, the team's, or everybody's (in a later round of writing it is
+  // hidden again while what was shown stays shown); a step that reveals by turn is no writing
+  const writing = step.writes !== "all" && !step.can.turn;
   const steps = state.agenda?.steps ?? [];
   const methodId = state.agenda === null ? null : methodOfStep(state.agenda, state.step);
   const method = methodId === null ? null : methodTexts(lang, methodId);
@@ -513,14 +527,27 @@ function OnWall({ wallId }: { wallId: string }) {
   const backStep = state.step > 0 && state.step - 1 < steps.length ? state.step - 1 : null;
   // the next step shows the notes that are hidden now to everybody: moving there is revealing, and asks first. (Into
   // a step of teams the notes go to the team alone: that is the step's own doing, and asks nothing.)
+  // (after revealing by turn with every note shown there is nothing left to show)
   const nextReveals =
     nextStep !== null &&
     state.agenda !== null &&
-    stepWidens(state.agenda, state, nextStep) &&
-    noteLevel(steps, Math.max(state.reach, nextStep)) === "all";
+    stepReveals(state.agenda, state, nextStep) &&
+    !(step.can.turn && (state.turns.find((one) => one.step === state.step)?.left ?? 0) === 0);
   // Pairs and small groups (stage M4): the teams in force, if the step the wall is in works in them; the person's own
   // team, its number and the names of the others in it; every team's area on the surface, once the wall has teams.
   const stepHere = steps[state.step];
+  // the sentence of what to do now, where the method says one (stage M5)
+  const hint =
+    state.agenda === null || stepHere === undefined
+      ? null
+      : stepHint(lang, methodOfStep(state.agenda, state.step), stepHere.key);
+  // a step that reveals by turn (stage M5): how many notes are shown, and how many are left
+  const turning = step.can.turn;
+  const turnView = turning ? (state.turns.find((one) => one.step === state.step) ?? null) : null;
+  const turnLeft = turnView?.left ?? 0;
+  const turnTotal = (turnView?.shown ?? 0) + turnLeft;
+  // a step that decides (stage M5): the actions of the method, in the order of the vote on them where there was one
+  const deciding = step.can.decide;
   const teams = state.teams;
   const teamStep = stepHere?.team !== undefined && teams !== null && teams.step === state.step;
   const ownTeam = teamStep && teams !== null ? teams.own : null;
@@ -588,6 +615,9 @@ function OnWall({ wallId }: { wallId: string }) {
   const result = state.results.find((one) => one.step === state.step) ?? null;
   const counted = voting && round.counted && result !== null;
   const ballotKind = voteConfig?.kind === "dots" || voteConfig?.kind === "approval" ? voteConfig.kind : null;
+  // a step that ranks (stage M5): the options chosen, in order; the draft until „Abgeben“
+  const ranking = voteConfig?.kind === "rank";
+  const [rankDraft, setRankDraft] = useState<string[] | null>(null);
   const cap = voteConfig?.kind === "dots" ? (voteConfig.maxPerOption ?? round?.limit ?? 0) : 1;
   const [draft, setDraft] = useState<Marks | null>(null);
   const [voteProblem, setVoteProblem] = useState<string | null>(null);
@@ -611,11 +641,13 @@ function OnWall({ wallId }: { wallId: string }) {
   if (draftOf.ballot !== state.ballot || draftOf.step !== state.step) {
     setDraftOf({ ballot: state.ballot, step: state.step });
     setDraft(null);
+    setRankDraft(null);
     setTyped(null);
     if (draftOf.step !== state.step) setReasonTyped(null);
     setVoteProblem(null);
   }
   const marks = draft ?? marksOf(state.ballot);
+  const rankOrder = rankDraft ?? (state.ballot?.kind === "rank" ? state.ballot.order : []);
   /** „Abgeben“ of an estimate: the number, and in the first round the reason beside it, as a note of this person's
    *  (made, changed or, emptied, taken away). Nothing is sent while the number cannot be read. */
   const submitEstimate = () => {
@@ -646,6 +678,15 @@ function OnWall({ wallId }: { wallId: string }) {
   };
   const submit = () => {
     if (estimating) return submitEstimate();
+    if (ranking) {
+      if (rankOrder.length === 0) {
+        setVoteProblem(t("rank.problemEmpty"));
+        return;
+      }
+      setVoteProblem(null);
+      castBallot({ kind: "rank", order: [...rankOrder] });
+      return;
+    }
     const ballot = ballotKind === null ? null : ballotOf(ballotKind, marks);
     if (ballot === null) {
       setVoteProblem(t(ballotKind === "approval" ? "vote.choices.empty" : "vote.points.empty"));
@@ -672,15 +713,24 @@ function OnWall({ wallId }: { wallId: string }) {
 
   // The wall moved to another step while this browser was on it: said once. Where the notes were revealed with it,
   // that is said, for all of them (PLAN.md 3.7), and a question about revealing that still stood is answered.
-  const [was, setWas] = useState({ step: state.step, sight: step.sight });
-  if (was.step !== state.step || was.sight !== step.sight) {
-    setWas({ step: state.step, sight: step.sight });
-    if (was.sight !== "all" && step.sight === "all") {
+  const [was, setWas] = useState({ step: state.step, sight: step.writes });
+  if (was.step !== state.step || was.sight !== step.writes) {
+    setWas({ step: state.step, sight: step.writes });
+    if (was.sight !== "all" && step.writes === "all") {
       setSaid(notes.length === 0 ? t("wall.revealedNone") : t("wall.revealed", { count: notes.length }));
     } else if (was.step !== state.step) {
       setSaid(t("wall.step.said", { n: state.step + 1, of: steps.length, name: nameOf(state.step) }));
     }
     if (asking === "reveal") setAsking(null);
+  }
+  // „Nächster Zettel“ showed one more note while this browser was on the wall: said once, with how many (stage M5)
+  const turnShown = turnView?.shown ?? 0;
+  const [turnWas, setTurnWas] = useState({ step: state.step, shown: turnShown });
+  if (turnWas.step !== state.step || turnWas.shown !== turnShown) {
+    setTurnWas({ step: state.step, shown: turnShown });
+    if (turnWas.step === state.step && turnShown > turnWas.shown) {
+      setSaid(t("wall.turn.said", { shown: turnShown, total: turnTotal }));
+    }
   }
   // The person's team changed (formed, merged, a swap): said once, with whom; the surface looks at the team's area
   // and at every note this browser holds, so nothing that was there leaves the view.
@@ -756,14 +806,21 @@ function OnWall({ wallId }: { wallId: string }) {
     timeUp: time?.is === "over",
     arrangeable: Number(open),
     arranged: state.arrangeRun === null ? null : undoAsksFirst ? ("changed" as const) : ("fresh" as const),
-    vote: voting ? { cast: state.ballot !== null, counted, estimate: estimating } : null,
+    vote: voting ? { cast: state.ballot !== null, counted, estimate: estimating, rank: ranking } : null,
+    turn: turning ? { left: turnLeft } : null,
     estimates: estimateStage,
+    // pairs merged into fours present their core idea („1-2-4-Alle“); other small groups what they found (stage M5);
+    // before pairs that form when the time is up, the clock; before small groups that wait for „Weiter“, that
     teams: teamStep
       ? ("team" as const)
       : stepHere?.mode === "presentation" && teams !== null
-        ? ("present" as const)
+        ? steps[state.step - 1]?.team?.form === "merge"
+          ? ("present" as const)
+          : ("presentGroups" as const)
         : nextStep !== null && steps[nextStep]?.team !== undefined
-          ? ("before" as const)
+          ? stepHere?.advance === "auto"
+            ? ("before" as const)
+            : ("beforeGroups" as const)
           : null,
   };
   // the first half of the state sentence: how many notes, and once the wall has groups, what the groups hold
@@ -810,10 +867,13 @@ function OnWall({ wallId }: { wallId: string }) {
             of: Math.max(state.voted, Number(present)),
           },
         );
+  // in a step that reveals by turn the state says how many of its notes are shown
+  const turnSentence = turning ? t("wall.turn.state", { shown: turnView?.shown ?? 0, total: turnTotal }) : null;
   const sentence =
     trouble ??
     proposal ??
     voteSentence ??
+    turnSentence ??
     t("wall.summary", {
       notes: holds,
       // in a step of teams, how many are in the person's team; else how many are on the wall
@@ -1027,6 +1087,32 @@ function OnWall({ wallId }: { wallId: string }) {
   // primary action and at most one with an outline. The two keys keep their places through all of it, so the focus
   // stays where it is.
   const compose = () => shownAs.current?.compose();
+  // The actions of the method (stage M5): the notes written in a step that takes actions, those the vote on them
+  // ranked first in its order, the rest in the order they were made.
+  const actionSteps = step.actionSteps;
+  const actions = (() => {
+    const listed = stored.notes.filter((note) => actionSteps.includes(note.step ?? 0));
+    const ranked = new Map<string, number>();
+    for (const result of state.results) {
+      if (result.kind === "estimate") continue;
+      for (const row of result.rows) if (row.kind === "note" && !ranked.has(row.id)) ranked.set(row.id, row.rank);
+    }
+    return listed
+      .map((note, at) => ({ note, at, rank: ranked.get(note.id) ?? Number.POSITIVE_INFINITY }))
+      .sort((a, b) => a.rank - b.rank || a.at - b.at)
+      .map(({ note }): Note => note);
+  })();
+  const agree = (noteId: string, action: NoteAction | null) => {
+    send({ type: "note.action", opId: generateHexId(), noteId, action });
+    const text = actions.find((note) => note.id === noteId)?.text ?? "";
+    setSaid(t(action === null ? "actions.saidUndone" : "actions.said", { text }));
+  };
+  const addAction = (text: string) => {
+    const spot = looseSpot(sizeOf(text), stored.notes, stored.groups);
+    send({ type: "note.create", opId: generateHexId(), noteId: generateHexId(), text, x: spot.x, y: spot.y });
+  };
+  // a step in which nobody writes and the moderation does the one thing there is: the others have no primary action
+  const listening = !voting && !deciding && !arranges && (turning || !step.can.write);
   const applying = arranging.is === "applying";
   const waiting = arranging.is === "running";
   // the zone's second key: „Neuer Zettel“, then „Abbrechen“, then „Verwerfen“
@@ -1044,7 +1130,8 @@ function OnWall({ wallId }: { wallId: string }) {
       name="wand"
       wall
       wide
-      type={voting ? (counted ? "result" : "form") : mode === "list" ? "list" : "tool"}
+      type={voting ? (counted ? "result" : "form") : deciding ? "list" : mode === "list" ? "list" : "tool"}
+      noPrimary={listening && !admin}
       title={question}
       tab={tab}
       tools={<CopyKey quiet word={t("wall.copyLink")} text={link} />}
@@ -1106,7 +1193,13 @@ function OnWall({ wallId }: { wallId: string }) {
         voting ? (
           // a step that votes: „Abgeben“, and the moderation's „Auszählen“; once counted, „Weiter“ for the
           // moderation and keeping the result for everybody
-          <ActionZone hint={counted ? t("wall.exportHint") : t(estimating ? "estimate.hint" : "wall.vote.hint")}>
+          <ActionZone
+            hint={
+              counted
+                ? t("wall.exportHint")
+                : t(estimating ? "estimate.hint" : ranking ? "rank.hint" : "wall.vote.hint")
+            }
+          >
             {!counted ? (
               admin ? (
                 <div className="app-zone-actions">
@@ -1140,6 +1233,52 @@ function OnWall({ wallId }: { wallId: string }) {
                 </span>
               </button>
             )}
+          </ActionZone>
+        ) : deciding ? (
+          // a step that decides: „Weiter“ for the moderation where a step follows, else keeping the result
+          <ActionZone hint={t("actions.hint")}>
+            {admin && nextStep !== null ? (
+              <button className="sb-primary-action" type="button" onClick={goNext}>
+                <Icon name="arrow-right" />
+                <span className="sb-primary-action__label">{t("wall.step.forward", { name: nameOf(nextStep) })}</span>
+              </button>
+            ) : (
+              <button
+                className="sb-primary-action"
+                type="button"
+                aria-busy={saving === "busy" || undefined}
+                onClick={saveMarkdown}
+              >
+                <Icon name="download" />
+                <span className="sb-primary-action__label">
+                  {saving === "busy" ? t("wall.exporting") : t("wall.export")}
+                </span>
+              </button>
+            )}
+          </ActionZone>
+        ) : listening ? (
+          // A step that reveals by turn: „Nächster Zettel“ for the moderation while notes are left, then „Weiter“. A
+          // step in which somebody presents: „Weiter“ for the moderation. Nobody else has anything to press.
+          <ActionZone
+            hint={
+              turning
+                ? turnLeft > 0
+                  ? t("wall.turn.left", { count: turnLeft })
+                  : t("wall.turn.leftNone")
+                : t("wall.listen.hint")
+            }
+          >
+            {admin && turning && turnLeft > 0 ? (
+              <button className="sb-primary-action" type="button" onClick={nextTurn}>
+                <Icon name="eye" />
+                <span className="sb-primary-action__label">{t("wall.turn.next")}</span>
+              </button>
+            ) : admin && nextStep !== null ? (
+              <button className="sb-primary-action" type="button" onClick={goNext}>
+                <Icon name={nextReveals ? "eye" : "arrow-right"} />
+                <span className="sb-primary-action__label">{t("wall.step.forward", { name: nameOf(nextStep) })}</span>
+              </button>
+            ) : null}
           </ActionZone>
         ) : arranges ? (
           <ActionZone>
@@ -1249,6 +1388,12 @@ function OnWall({ wallId }: { wallId: string }) {
                 : t("wall.step.positionLast", { n: state.step + 1, of: steps.length, name: nameOf(state.step) })}
             </p>
           )}
+          {/* what to do now, in the method's words (stage M5) */}
+          {hint !== null && (
+            <p className="app-state__hint" data-testid="hint">
+              {hint}
+            </p>
+          )}
           <p className="app-state__sentence" role="status">
             {sentence}
           </p>
@@ -1283,6 +1428,16 @@ function OnWall({ wallId }: { wallId: string }) {
                   <p className="app-state__note">{t(`wall.guide.${guide(standing)}`)}</p>
                   {/* in a step that arranges, „Ordnen“ is the zone's primary action: the way to the next step
                       stands here */}
+                  {/* revealing by turn: the moderation may go on before every note is shown; the next step shows
+                      the rest */}
+                  {admin && turning && turnLeft > 0 && nextStep !== null && (
+                    <div className="app-state__key">
+                      <button className="sb-text-action" type="button" onClick={goNext}>
+                        <Icon name="arrow-right" />
+                        {t("wall.step.forward", { name: nameOf(nextStep) })}
+                      </button>
+                    </div>
+                  )}
                   {arranges && nextStep !== null && !paused && (
                     <div className="app-state__key">
                       <button className="sb-text-action" type="button" onClick={goNext}>
@@ -1334,8 +1489,9 @@ function OnWall({ wallId }: { wallId: string }) {
           {clocked && (
             <ClockControls line={time} canExtend={extendClock(state.clock, now) !== null} onControl={setClock} />
           )}
-          {/* a step that votes shows its ballot or its result, neither the surface nor the list */}
-          {!voting && (
+          {/* a step that votes shows its ballot or its result, neither the surface nor the list; a step that decides
+              its actions */}
+          {!voting && !deciding && (
             <Segmented
               legend={t("wall.view")}
               quiet
@@ -1386,6 +1542,22 @@ function OnWall({ wallId }: { wallId: string }) {
                 onReason={setReasonTyped}
                 onSubmit={submit}
               />
+            ) : ranking ? (
+              <RankPanel
+                round={round}
+                order={rankOrder}
+                notes={stored.notes}
+                groups={stored.groups}
+                problem={voteProblem ?? problem}
+                onDismiss={() => {
+                  setVoteProblem(null);
+                  dismissRejected();
+                }}
+                onChange={(next) => {
+                  setVoteProblem(null);
+                  setRankDraft(next);
+                }}
+              />
             ) : ballotKind !== null ? (
               <BallotPanel
                 round={round}
@@ -1405,6 +1577,16 @@ function OnWall({ wallId }: { wallId: string }) {
                 }}
               />
             ) : null
+          ) : deciding ? (
+            <ActionsPanel
+              actions={actions}
+              admin={admin}
+              canWrite={step.can.write}
+              problem={problem}
+              onDismiss={dismissRejected}
+              onAgree={agree}
+              onAdd={addAction}
+            />
           ) : mode === "list" ? (
             <WallList {...wall} />
           ) : (
@@ -1455,7 +1637,7 @@ function OnWall({ wallId }: { wallId: string }) {
       {/* revealing asks first: it cannot be taken back, and afterwards everyone sees every note */}
       <Dialog
         id="app-dlg-reveal"
-        open={asking === "reveal" && writing && nextReveals}
+        open={asking === "reveal" && nextReveals}
         title={t("wall.revealTitle")}
         text={[
           total === 0 ? t("wall.revealTextNone") : t("wall.revealText", { count: total }),

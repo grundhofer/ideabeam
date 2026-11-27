@@ -2,9 +2,21 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import type { AutoCommand, Clock, RejectCode, StepCommand } from "../protocol.js";
-import { agendaOf, capabilities, noteLevel, type Capabilities, type NoteLevel, type ResolvedAgenda } from "./agenda.js";
+import {
+  agendaOf,
+  capabilities,
+  keepsSteps,
+  noteLevel,
+  startsWriting,
+  writingFrom,
+  type Capabilities,
+  type NoteLevel,
+  type ResolvedAgenda,
+} from "./agenda.js";
 import { NO_CLOCK, stoppedClock } from "./clock.js";
 import type { Actor } from "./rules.js";
+import { shownByTurn, turnRoundOf, type TurnRound } from "./turns.js";
+import type { Seen } from "./visibility.js";
 import { openRound, roundOf, type VoteRound } from "./vote.js";
 
 // Where a wall stands in its agenda (docs/architektur-methoden.md 1, 4): the step it is in, the furthest step it has
@@ -35,6 +47,10 @@ export interface Flow {
   /** The steps that move on by themselves (`advance: "auto"`) whose moving on the moderation has switched off
    *  (stage M4): there the wall waits for „Weiter“ when the time is up. Left out while there is none. */
   manual?: number[];
+  /** The orders of the steps that reveal by turn which the wall has entered (stage M5, domain/turns.ts): frozen
+   *  when it first entered each, with how many are shown. Note ids: this never leaves the worker. Left out while there
+   *  is none. */
+  turns?: TurnRound[];
 }
 
 /** The row as the builds before methods wrote it (schema 3): the phase and the clock. */
@@ -69,6 +85,7 @@ export function readStoredFlow(stored: unknown, agenda: ResolvedAgenda | null): 
       seq: value.seq ?? 0,
       ...(Array.isArray(value.votes) && value.votes.length > 0 ? { votes: value.votes } : {}),
       ...(Array.isArray(value.manual) && value.manual.length > 0 ? { manual: value.manual } : {}),
+      ...(Array.isArray(value.turns) && value.turns.length > 0 ? { turns: value.turns } : {}),
     };
     return { flow, legacy: agenda === null ? agendaOf("still-sammeln") : null };
   }
@@ -93,8 +110,21 @@ export function initialFlow(agenda?: Pick<ResolvedAgenda, "steps">): Flow {
 
 /** What the rules ask about the step a wall is in (domain/rules.ts, domain/clock.ts, domain/visibility.ts). */
 export interface StepContext {
-  /** What is seen of the notes of others. */
+  /** What is seen of the notes of others: of the notes of the wall's first round of writing, which, before stage M5,
+   *  were all of them. */
   sight: NoteLevel;
+  /** What is seen of a note written now, by others (stage M5): in a later round of writing that is hidden again
+   *  while what was shown stays shown. Where a step reveals by turn, the turns' notes are not counted. */
+  writes: NoteLevel;
+  /** What is seen of each note (`sightOf`): the one level where it is the same for all, else per note. A browser,
+   *  which knows no order of turns, works it out without the notes shown by turn: it holds them anyway. */
+  seen: Seen;
+  /** The step the wall is in: a note written now is written in it. */
+  at: number;
+  /** The steps whose notes are actions (`noteKind: "action"`, stage M5). */
+  actionSteps: readonly number[];
+  /** Whether a note keeps the step it is written in (`keepsSteps`, domain/agenda.ts). */
+  keepsSteps: boolean;
   /** What may be done in the step. */
   can: Capabilities;
 }
@@ -102,14 +132,70 @@ export interface StepContext {
 /** Nothing may be done and nothing of others is seen: what a browser takes before it knows the wall. */
 export const NO_STEP: StepContext = {
   sight: "hidden",
-  can: { write: false, move: false, group: false, arrange: false, clock: false, ballot: false },
+  writes: "hidden",
+  seen: "hidden",
+  at: 0,
+  actionSteps: [],
+  keepsSteps: false,
+  can: {
+    write: false,
+    move: false,
+    group: false,
+    arrange: false,
+    clock: false,
+    ballot: false,
+    turn: false,
+    decide: false,
+  },
 };
 
 /** The step context of a wall that stands at `flow` in `agenda`. */
-export function stepContext(agenda: ResolvedAgenda, flow: Pick<Flow, "step" | "reach">): StepContext {
+export function stepContext(
+  agenda: ResolvedAgenda,
+  flow: Pick<Flow, "step" | "reach"> & Partial<Pick<Flow, "turns">>,
+): StepContext {
   const step = agenda.steps[flow.step];
   if (step === undefined) return NO_STEP;
-  return { sight: noteLevel(agenda.steps, flow.reach), can: capabilities(step) };
+  const seen = sightOf(agenda, flow);
+  const can = capabilities(step);
+  return {
+    sight: noteLevel(agenda.steps, flow.reach),
+    writes: noteLevel(agenda.steps, flow.reach, writingFrom(agenda.steps, flow.step)),
+    seen,
+    at: flow.step,
+    actionSteps: agenda.steps.flatMap((one, at) => (one.noteKind === "action" ? [at] : [])),
+    keepsSteps: keepsSteps(agenda.steps),
+    // „Ordnen“ hands every note to the AI and moves any of them: not while some notes are hidden from somebody (a
+    // step that sorts, gone back to from a later round of hidden writing)
+    can: typeof seen === "string" ? can : { ...can, arrange: false },
+  };
+}
+
+/** The level of a note written in each step, once the wall has reached `reach` (stage M5): from the step it counts
+ *  from (`writingFrom`), the turns of a step that reveals by turn not counted. */
+export function levelsAt(agenda: Pick<ResolvedAgenda, "steps">, reach: number): NoteLevel[] {
+  const { steps } = agenda;
+  if (!keepsSteps(steps)) return steps.map(() => noteLevel(steps, reach));
+  // the same as `writingFrom` for every step, in one pass
+  let from = 0;
+  return steps.map((step, at) => {
+    if (at > 0 && startsWriting(step)) from = at;
+    return noteLevel(steps, reach, from);
+  });
+}
+
+/** What is seen of the notes of a wall that stands at `flow` (domain/visibility.ts): one level where every note that
+ *  can be on the wall (written in a step up to `reach`) is seen alike and no note waits for its turn; else a level per
+ *  step and the notes shown by turn. Every method before stage M5 gives the one level, `noteLevel` from step 0. */
+export function sightOf(
+  agenda: Pick<ResolvedAgenda, "steps">,
+  flow: Pick<Flow, "reach"> & Partial<Pick<Flow, "turns">>,
+): Seen {
+  const levels = levelsAt(agenda, flow.reach);
+  const first = levels[0] ?? "hidden";
+  const alike = levels.every((level, at) => at > flow.reach || level === first);
+  if (alike && (first === "all" || (flow.turns ?? []).length === 0)) return first;
+  return { levels, shown: shownByTurn(flow.turns) };
 }
 
 // ───────────────────────── moving between steps ─────────────────────────
@@ -120,8 +206,16 @@ export type StepDecision =
   | { kind: "unchanged" }
   /** The flow after the move, and whether what is seen of the notes widens with it: then every browser gets the
    *  notes it did not have (`notes.revealed`) before the step. `opens`: the step moved to votes and the wall enters
-   *  it for the first time: its options are frozen now (domain/vote.ts, `openRound`), in the same row. */
-  | { kind: "changed"; flow: Pick<Flow, "step" | "reach" | "clock">; widens: boolean; opens: boolean };
+   *  it for the first time: its options are frozen now (domain/vote.ts, `openRound`), in the same row. `turns`: the
+   *  step moved to reveals by turn and the wall enters it for the first time: its order is frozen now
+   *  (domain/turns.ts), in the same row. */
+  | {
+      kind: "changed";
+      flow: Pick<Flow, "step" | "reach" | "clock">;
+      widens: boolean;
+      opens: boolean;
+      turns: boolean;
+    };
 
 /** What the moderation's `admin.step.go` makes of a wall's flow (docs/architektur-methoden.md 4): forward, back or
  *  past a step, the moderation's alone. Forward into a step that moves on by itself (stage M4), the step's clock
@@ -148,15 +242,27 @@ export function decideStep(
   return {
     kind: "changed",
     flow: { step: command.to, reach, clock: timed ?? stoppedClock(flow.clock) },
-    widens: noteLevel(agenda.steps, reach) !== noteLevel(agenda.steps, flow.reach),
+    widens: stepWidens(agenda, flow, command.to),
     opens: agenda.steps[command.to]?.vote !== undefined && roundOf(flow.votes, command.to) === null,
+    turns: agenda.steps[command.to]?.turns === true && turnRoundOf(flow.turns, command.to) === null,
   };
 }
 
-/** Whether moving to step `to` would show notes that are hidden now: the move the app asks about first, since it
- *  cannot be undone. */
+/** Whether moving to step `to` would let somebody see notes they do not see now: the notes of some step widen. */
 export function stepWidens(agenda: Pick<ResolvedAgenda, "steps">, flow: Pick<Flow, "reach">, to: number): boolean {
-  return noteLevel(agenda.steps, Math.max(flow.reach, to)) !== noteLevel(agenda.steps, flow.reach);
+  const before = levelsAt(agenda, flow.reach);
+  const after = levelsAt(agenda, Math.max(flow.reach, to));
+  return after.some((level, at) => at <= Math.max(flow.reach, to) && level !== before[at]);
+}
+
+/** Whether moving to step `to` would show to everybody notes that are not shown to everybody now (written in a step
+ *  up to the furthest one reached): the move the app asks about first, since it cannot be undone. Into a step of
+ *  teams the notes go to the team alone, which is the step's own doing and asks nothing; a step that reveals by turn
+ *  shows nothing by being reached. */
+export function stepReveals(agenda: Pick<ResolvedAgenda, "steps">, flow: Pick<Flow, "reach">, to: number): boolean {
+  const before = levelsAt(agenda, flow.reach);
+  const after = levelsAt(agenda, Math.max(flow.reach, to));
+  return after.some((level, at) => at <= flow.reach && level === "all" && before[at] !== "all");
 }
 
 // ───────────────────────── moving on by itself ─────────────────────────

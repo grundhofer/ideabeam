@@ -29,10 +29,13 @@
 import { expect, test, type Page } from "@playwright/test";
 import {
   enter,
+  enterAdjust,
   enterEstimate,
+  enterRound,
   enterTeams,
   enterVote,
   ESTIMATE_QUESTION,
+  FAILURE_QUESTION,
   GROUPS,
   join,
   know,
@@ -43,6 +46,7 @@ import {
   offerOwnKey,
   openOwnKey,
   QUESTION,
+  ROUND_QUESTION,
   takeOwnKey,
   TEAM_QUESTION,
   visit,
@@ -1575,6 +1579,72 @@ const screens: Screen[] = [
       (page) => page.getByRole("button", { name: "Tauschen: Anna" }).click(),
       (page) => expect(page.locator(".app-state__sentence")).toHaveText("Euer Team: 1 Zettel. Ihr seid 2 im Team."),
       (page) => expect(page.locator("#app-dlg-teams")).toContainText("Mit wem tauscht Anna?"),
+    ),
+  },
+  {
+    // revealing by turn (stage M5, „Stille Ideenrunde“) for the moderation: two of four notes shown, „Nächster Zettel“
+    // as the primary action with the notes left under it, „Weiter“ in the state, the step's sentence. Also at 200 %
+    name: "wand-reihum",
+    largeText: true,
+    path: "/",
+    heading: ROUND_QUESTION,
+    view: '[data-sb-view="wand"][data-sb-view-type="tool"]',
+    overlay: null,
+    prepare: then(
+      (page) => enterRound(page, { admin: true }),
+      press("Alles zeigen"),
+      (page) => expect(page.locator(".app-state__sentence")).toHaveText("Reihum aufgedeckt: 2 von 4 Zetteln."),
+      (page) => expect(page.locator(".sb-primary-action")).toHaveText("Nächster Zettel"),
+      (page) => expect(page.locator(".sb-action-hint")).toHaveText("Noch 2 Zettel verdeckt."),
+    ),
+  },
+  {
+    // the ranking (stage M5) in the place of the surface: two ideas chosen and in order with their keys, the rest to
+    // choose from, „Abgeben“ as the primary action. Also at 200 %
+    name: "wand-rangfolge",
+    largeText: true,
+    path: "/",
+    heading: ROUND_QUESTION,
+    view: '[data-sb-view="wand"][data-sb-view-type="form"]',
+    overlay: null,
+    prepare: then(
+      (page) => enterRound(page, { rank: true }),
+      (page) => page.getByRole("button", { name: "Wählen: Tests stabilisieren", exact: true }).click(),
+      (page) => page.getByRole("button", { name: "Wählen: Doku aufräumen", exact: true }).click(),
+      (page) => expect(page.locator(".app-ballot__left")).toHaveText("Noch 2 Plätze frei"),
+      (page) => expect(page.locator(".sb-primary-action")).toHaveText("Abgeben"),
+    ),
+  },
+  {
+    // the actions of a step that decides (stage M5, „Plan anpassen“) for the moderation: one agreed with who and by
+    // when, one open, each with its fields; a new action under them; „Als Markdown sichern“ in the last step. Also
+    // at 200 %
+    name: "wand-aktionen",
+    largeText: true,
+    path: "/",
+    heading: FAILURE_QUESTION,
+    view: '[data-sb-view="wand"][data-sb-view-type="list"]',
+    overlay: null,
+    prepare: then(
+      (page) => enterAdjust(page, { admin: true }),
+      (page) => expect(page.locator(".app-actions__row")).toHaveCount(2),
+      (page) => expect(page.locator(".app-actions .app-ballot__left")).toHaveText("1 von 2 festgelegt."),
+      (page) => expect(page.locator(".sb-primary-action")).toHaveText("Als Markdown sichern"),
+    ),
+  },
+  {
+    // the same actions for everybody else: what is agreed, with who and by when, to read
+    name: "wand-aktionen-lesen",
+    path: "/",
+    heading: FAILURE_QUESTION,
+    view: '[data-sb-view="wand"][data-sb-view-type="list"]',
+    overlay: null,
+    prepare: then(
+      (page) => enterAdjust(page),
+      (page) =>
+        expect(page.locator("[data-action]").filter({ hasText: "Skripte vorher dokumentieren" })).toContainText(
+          "Festgelegt · Wer: Dora · Bis wann: 15. Januar",
+        ),
     ),
   },
   {

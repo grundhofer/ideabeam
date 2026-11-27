@@ -82,7 +82,12 @@ export function methodOfStep(agenda: ResolvedAgenda, step: number): MethodId {
  *  - `ballot`: vote (`ballot.cast`), and the moderation counts (`admin.step.count`): a step with a vote
  *    (domain/vote.ts). Nothing is written, moved or grouped in it: the options are frozen. A step that names a
  *    `noteKind` takes notes beside its vote all the same (the reasons beside the first estimate, stage M3): they
- *    are written, changed and deleted, at the step's visibility. */
+ *    are written, changed and deleted, at the step's visibility.
+ *  - `turn` (stage M5): the step shows the hidden notes one at a time, and the moderation shows the next one
+ *    (`admin.turn.next`, domain/turns.ts). Nothing is written, deleted or grouped in it: the order is frozen, and a
+ *    note written or deleted meanwhile would shift it. Notes are moved, the shown ones by everybody.
+ *  - `decide` (stage M5): the moderation gives an action its „Wer“ and „Bis wann“ (`note.action`, domain/rules.ts):
+ *    a step of type `decide`. */
 export interface Capabilities {
   write: boolean;
   move: boolean;
@@ -90,24 +95,29 @@ export interface Capabilities {
   arrange: boolean;
   clock: boolean;
   ballot: boolean;
+  turn: boolean;
+  decide: boolean;
 }
 
 const NOTE_STEPS = new Set<Step["type"]>(["impulse", "write", "reveal", "cluster", "discuss"]);
 const SORT_STEPS = new Set<Step["type"]>(["reveal", "cluster", "discuss"]);
 
 export function capabilities(
-  step: Pick<Step, "type" | "visibility" | "vote" | "noteKind"> & Partial<Pick<Step, "advance">>,
+  step: Pick<Step, "type" | "visibility" | "vote" | "noteKind"> & Partial<Pick<Step, "advance" | "turns">>,
 ): Capabilities {
+  const turn = step.turns === true;
   const notes = NOTE_STEPS.has(step.type) || step.noteKind !== undefined;
   // groups need the notes to be seen: while they are hidden, nobody sorts what nobody can read
-  const sorts = SORT_STEPS.has(step.type) && levelOf(step.visibility) === "all";
+  const sorts = SORT_STEPS.has(step.type) && levelOf(step.visibility) === "all" && !turn;
   return {
-    write: notes,
+    write: notes && !turn,
     move: notes,
     group: sorts,
     arrange: sorts,
     clock: step.type === "write" || step.advance === "auto",
     ballot: step.vote !== undefined,
+    turn,
+    decide: step.type === "decide",
   };
 }
 
@@ -138,18 +148,67 @@ export function levelOf(visibility: StepVisibility): NoteLevel {
  *  the steps from the one it was written in up to the furthest one reached (docs/architektur-methoden.md 2). It
  *  depends on `reach`, never on the step the wall is in now: so going back never hides what was shown.
  *
- *  Stage M1 stores no step with a note: both of its methods begin with their writing step, so every note counts
- *  from step 0 (`from` left out), which gives the same answer for every note. The column comes with the first
- *  method that hides again after it has shown (M4, M5). */
-export function noteLevel(steps: readonly Pick<Step, "visibility">[], reach: number, from = 0): NoteLevel {
+ *  A step that reveals by turn (`turns`, stage M5) counts for nothing here: reaching it shows no note, each one is
+ *  shown when its turn comes (domain/turns.ts), and the rest by the next step that shows everything.
+ *
+ *  `from`: the step a note counts from (`writingFrom`). Until stage M5 every method began with its one round of
+ *  writing, so every note counted from step 0, which is what `from` left out says, and what a wall of an older build,
+ *  which stores no step with a note, still says of every note. */
+export function noteLevel(
+  steps: readonly (Pick<Step, "visibility"> & Partial<Pick<Step, "turns">>)[],
+  reach: number,
+  from = 0,
+): NoteLevel {
   let level: NoteLevel = "hidden";
   for (let at = Math.max(0, from); at <= reach && at < steps.length; at += 1) {
     const step = steps[at];
-    if (step === undefined) continue;
+    if (step === undefined || step.turns === true) continue;
     const here = levelOf(step.visibility);
     if (RANK[here] > RANK[level]) level = here;
   }
   return level;
+}
+
+/** Whether a step begins a round of writing (stage M5): its notes start hidden, or seen by the team alone, and it
+ *  takes notes. A step that shows only what is counted (`aggregate`) begins none: a note written there, beside a
+ *  vote, belongs to the round it stands in. */
+export function startsWriting(
+  step: Pick<Step, "type" | "visibility" | "vote" | "noteKind"> & Partial<Pick<Step, "advance" | "turns">>,
+): boolean {
+  return (step.visibility === "hidden" || step.visibility === "team") && capabilities(step).write;
+}
+
+/** Whether the notes of an agenda keep the step they were written in (stage M5): where a round of writing begins
+ *  after notes were shown to everybody (the next round of „Was? Na und? Was nun?“, the actions of „Rückblick nach
+ *  Ziel und Daten“, the reasons of „Scheitern vorwegdenken“ after the plan was presented), or where notes are
+ *  actions. Every method before stage M5 keeps none: every note of it counts from step 0, as it always did. */
+export function keepsSteps(steps: readonly Step[]): boolean {
+  return steps.some(
+    (step, at) => step.noteKind === "action" || (at > 0 && startsWriting(step) && noteLevel(steps, at) === "all"),
+  );
+}
+
+/** The step a note written in step `at` counts from: the last step at or before it that begins a round of writing
+ *  (`startsWriting`), or 0. So a method that shows its notes and then asks for new ones in private (the next round
+ *  of „Was? Na und? Was nun?“, the actions of „Rückblick nach Ziel und Daten“) hides the new ones, and what was shown
+ *  stays shown. 0 for every note of a method that keeps no steps (`keepsSteps`): it hides nothing again. */
+export function writingFrom(steps: readonly Step[], at: number): number {
+  if (!keepsSteps(steps)) return 0;
+  for (let from = Math.min(at, steps.length - 1); from > 0; from -= 1) {
+    const step = steps[from];
+    if (step !== undefined && startsWriting(step)) return from;
+  }
+  return 0;
+}
+
+/** The step of the same agenda item that a step's `optionsFrom` names, or null. */
+export function optionsStep(steps: readonly ResolvedStep[], at: number): number | null {
+  const step = steps[at];
+  if (step?.optionsFrom === undefined) return null;
+  const found = steps.findIndex(
+    (other, index) => index < at && other.item === step.item && other.key === step.optionsFrom,
+  );
+  return found < 0 ? null : found;
 }
 
 // ───────────────────────── checks ─────────────────────────
@@ -171,7 +230,16 @@ export type AgendaProblem =
   | { kind: "teamShape"; step: number }
   /** a step that moves on by itself without a time to run out, or as the last step, after which there is nowhere to
    *  move */
-  | { kind: "autoShape"; step: number };
+  | { kind: "autoShape"; step: number }
+  /** a step that reveals by turn that is no step of type `reveal` shown to everybody, or that comes before any
+   *  hidden writing (stage M5) */
+  | { kind: "turnShape"; step: number }
+  /** a vote's `optionsFrom` names no earlier step of its method, or a vote over options names it while it is no vote
+   *  over options (stage M5) */
+  | { kind: "optionsShape"; step: number }
+  /** a step of type `decide` that takes no actions, or an action step outside a method with a step of type `decide`
+   *  (stage M5): nobody could agree on them */
+  | { kind: "actionShape"; step: number };
 
 export function checkAgenda(agenda: Pick<ResolvedAgenda, "steps">): AgendaProblem[] {
   const problems: AgendaProblem[] = [];
@@ -194,6 +262,28 @@ export function checkAgenda(agenda: Pick<ResolvedAgenda, "steps">): AgendaProble
     }
     if (votes && step.vote?.kind !== "estimate" && noteLevel(agenda.steps, at) !== "all") {
       problems.push({ kind: "voteUnseen", step: at });
+    }
+    if (step.optionsFrom !== undefined) {
+      const from = optionsStep(agenda.steps, at);
+      if (from === null || !votes || step.vote?.kind === "estimate") {
+        problems.push({ kind: "optionsShape", step: at });
+      } else if (noteLevel(agenda.steps, at, writingFrom(agenda.steps, from)) !== "all") {
+        problems.push({ kind: "voteUnseen", step: at });
+      }
+    }
+    if (
+      step.turns === true &&
+      (step.type !== "reveal" ||
+        levelOf(step.visibility) !== "all" ||
+        !agenda.steps.slice(0, at).some((before) => before.visibility === "hidden" && startsWriting(before)))
+    ) {
+      problems.push({ kind: "turnShape", step: at });
+    }
+    if (
+      (step.type === "decide" && step.noteKind !== "action") ||
+      (step.noteKind === "action" && !agenda.steps.some((other) => other.item === step.item && other.type === "decide"))
+    ) {
+      problems.push({ kind: "actionShape", step: at });
     }
     const teamed = step.team !== undefined;
     if (

@@ -79,6 +79,7 @@ const sync: Sync = {
   results: [],
   teams: null,
   manual: [],
+  turns: [],
 };
 
 /** A wall this browser is on as Ben, with what it holds and the number it stands at. */

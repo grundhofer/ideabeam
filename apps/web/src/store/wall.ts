@@ -19,6 +19,7 @@ import {
   type ServerEvent,
   type StepCommand,
   type TeamsCommand,
+  type TurnCommand,
   type WallState,
 } from "@ideabeam/shared";
 import type { ProviderFailure, ProviderId } from "@ideabeam/arrange";
@@ -35,7 +36,7 @@ export type Refusal = "NAME_TAKEN" | "WALL_FULL";
  *  moderation's step moves (revealing among them), the controls of the writing's clock and counting a vote; and
  *  everybody's ballot, which shows as stored once the wall has stored it (stage M2); the moderation's teams and the
  *  switch of a step's moving on by itself (stage M4). */
-type FlowCommand = StepCommand | ClockCommand | BallotCommand | CountCommand | TeamsCommand | AutoCommand;
+type FlowCommand = StepCommand | ClockCommand | BallotCommand | CountCommand | TeamsCommand | AutoCommand | TurnCommand;
 
 /** A change of this browser that the wall did not take, and so is taken back: the reason, and the kind of command
  *  it was (null: neither a change of the wall's content nor a step of its flow). Beside the wall's own reasons:
@@ -139,6 +140,9 @@ type Live = {
   setTeams(teams: string[][]): void;
   /** The moderation's: a step that moves on by itself when its time is up does so, or waits for „Weiter“. */
   setAuto(step: number, on: boolean): void;
+  /** The moderation's „Nächster Zettel“ in a step that reveals by turn (stage M5): made for as many shown notes as
+   *  this browser knows. Nothing shows before the wall has said so, to everyone at once. */
+  nextTurn(): void;
   /** The reason of the last reject has been read. */
   dismissRejected(): void;
 };
@@ -403,6 +407,11 @@ export const useWall = create<Live>()((set, get) => {
     },
     setAuto(step, on) {
       ask({ type: "admin.step.auto", opId: generateHexId(), step, on });
+    },
+    nextTurn() {
+      const { step, turns } = get().state;
+      const shown = turns.find((turn) => turn.step === step)?.shown ?? 0;
+      ask({ type: "admin.turn.next", opId: generateHexId(), step, shown });
     },
     look() {
       set((live) => ({ now: workerTime(Date.now(), live.skew) }));

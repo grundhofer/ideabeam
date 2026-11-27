@@ -12,11 +12,23 @@ import { voteConfigSchema } from "./vote.js";
 // Stage M1 built the engine and two methods with it: „Still sammeln, bündeln, verdeckt wählen“ and „Freie Wand“;
 // stage M2 gave the first its vote (domain/vote.ts); stage M3 brought estimating in rounds and the method
 // „Schätzen – Diskutieren – Schätzen“; stage M4 pairs and small groups (`team`, domain/teams.ts), steps that move on by
-// themselves when their time is up (`advance: "auto"`) and the method „1-2-4-Alle“. The enums already name what the
-// later stages bring, so that a wall's stored copy of its agenda keeps one shape from now on.
+// themselves when their time is up (`advance: "auto"`) and the method „1-2-4-Alle“; stage M5 revealing one note at a
+// time by turn (`turns`), votes over the notes of one step (`optionsFrom`), teams kept from round to round (`keep`),
+// actions with „Wer“ and „Bis wann“ (`noteKind: "action"`, a step of type `decide`) and four methods with them. The
+// enums already name what the later stages bring, so that a wall's stored copy of its agenda keeps one shape from now
+// on.
 
 /** The ids of the methods in the catalogue. A method is never renamed: a wall stores the id. */
-export const METHOD_IDS = ["still-sammeln", "eins-zwei-vier", "schaetzen", "free"] as const;
+export const METHOD_IDS = [
+  "still-sammeln",
+  "eins-zwei-vier",
+  "schaetzen",
+  "free",
+  "rueckblick",
+  "scheitern",
+  "ideenrunde",
+  "was-na-und",
+] as const;
 export const methodIdSchema = z.enum(METHOD_IDS);
 export type MethodId = z.infer<typeof methodIdSchema>;
 
@@ -63,7 +75,9 @@ export type OutputKind = z.infer<typeof outputKindSchema>;
 
 /** What the notes of a step are, where a step that is no step of writing takes notes beside its own work
  *  (docs/architektur-methoden.md 1): `reason`, the short reason beside a first estimate (stage M3). A step of
- *  writing or sorting takes notes by its type and needs none of it. */
+ *  writing or sorting takes notes by its type and needs none of it. `action` (stage M5): the notes written in the
+ *  step are actions; in a step of type `decide` the moderation gives an action its „Wer“ and „Bis wann“ and so
+ *  agrees on it (domain/rules.ts, `note.action`). */
 export const noteKindSchema = z.enum(["idea", "reason", "action", "decision", "criterion"]);
 export type NoteKind = z.infer<typeof noteKindSchema>;
 
@@ -85,10 +99,12 @@ export const TEAM_MAX_SIZE = 7;
 /** How a step in pairs or small groups gets its teams (stage M4, domain/teams.ts): `size` is the size it aims at
  *  (a count that does not divide makes some teams one larger, never a team of 1); `form` says where they come
  *  from: `random`, the app forms them anew from the people present, at random; `merge`, the teams of the step
- *  before are put together two by two (pairs become fours). */
+ *  before are put together two by two (pairs become fours); `keep` (stage M5), the teams in force stay as they are,
+ *  with areas of their own beside the last ones (the next round of „Was? Na und? Was nun?“), and where there are
+ *  none yet they are formed at random. */
 export const teamSettingsSchema = z.object({
   size: z.int().check(z.minimum(2), z.maximum(TEAM_MAX_SIZE)),
-  form: z.enum(["random", "merge"]),
+  form: z.enum(["random", "merge", "keep"]),
 });
 export type TeamSettings = z.infer<typeof teamSettingsSchema>;
 
@@ -116,6 +132,14 @@ export const stepSchema = z.object({
   /** A step in pairs or small groups: how its teams are formed (domain/teams.ts). Its notes are seen by the
    *  writer's team (`visibility: "team"`). */
   team: z.optional(teamSettingsSchema),
+  /** A step of type `reveal` that shows the hidden notes one at a time (stage M5, domain/turns.ts): in an order
+   *  interleaved by writer and without names, frozen when the wall enters the step; the moderation shows the next
+   *  one with „Nächster Zettel“. Reaching the step shows nothing by itself: a note is shown when its turn comes, or
+   *  by a later step that shows everything. */
+  turns: z.optional(z.literal(true)),
+  /** A step that votes over the notes written in one earlier step of its method, named by its key, and not over the
+   *  groups and the notes of the whole wall (stage M5: the actions of „Rückblick nach Ziel und Daten“). */
+  optionsFrom: z.optional(stepKeySchema),
 });
 export type Step = z.infer<typeof stepSchema>;
 
@@ -130,7 +154,8 @@ export interface Method {
   minutes: number | null;
   /** How many people it is made for, from and to. */
   groupSize: readonly [min: number, max: number];
-  /** A licence that asks for a visible attribution (PLAN-METHODEN.md 7, question 6): „1-2-4-Alle“ (stage M4). The
+  /** A licence that asks for a visible attribution (PLAN-METHODEN.md 7, question 6): „1-2-4-Alle“ (stage M4), „Was?
+   *  Na und? Was nun?“ (stage M5). The
    *  words of the attribution stand in methods/texts.ts (`ATTRIBUTION`). */
   attribution?: "liberatingStructures";
 }

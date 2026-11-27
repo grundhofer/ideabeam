@@ -85,6 +85,7 @@ const sync = {
   results: [],
   teams: null,
   manual: [],
+  turns: [],
 };
 const answer = {
   proposal: { groups: [{ title: "Meetings", noteIds: [ID] }], loose: [] },

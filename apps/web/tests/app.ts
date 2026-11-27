@@ -123,6 +123,10 @@ export type Guest = {
   cast(step: number, ballot: Record<string, unknown>): Promise<void>;
   /** The moderation's: counts the vote of the step the wall is in. */
   count(step: number): Promise<void>;
+  /** The moderation's „Nächster Zettel“ in a step that reveals by turn (stage M5), made for `shown` shown notes. */
+  turn(step: number, shown: number): Promise<void>;
+  /** The moderation's: agrees on an action with who and by when (stage M5), or (null) no longer. */
+  agree(noteId: string, action: { who: string; due: string } | null): Promise<void>;
 };
 
 /** Somebody on the wall who is no browser: a socket of the test itself; with the wall's admin token, its
@@ -180,6 +184,8 @@ export function join(wallId: string, name: string, adminToken?: string): Promise
         go: (from, to) => ask({ type: "admin.step.go", from, to }),
         cast: (step, ballot) => ask({ type: "ballot.cast", step, ballot }),
         count: (step) => ask({ type: "admin.step.count", step }),
+        turn: (step, shown) => ask({ type: "admin.turn.next", step, shown }),
+        agree: (noteId, action) => ask({ type: "note.action", noteId, action }),
       });
     });
     ws.addEventListener("error", () => reject(new Error(`${name}: the socket failed`)));
@@ -466,4 +472,73 @@ export async function enterTeams(
   if (fours) await ben.go(TEAM_STEPS.pairs, TEAM_STEPS.fours);
   await expect(page.locator(".app-state__team")).toContainText(/^Du bist in Team \d mit /);
   return { ...wall, guests: [ben, cem, dora] };
+}
+
+/** „Stille Ideenrunde mit Rangfolge“ (stage M5): collect 0, reveal by turn 1, clarify 2, rank 3, result 4. */
+export const ROUND_STEPS = { collect: 0, reveal: 1, clarify: 2, rank: 3, result: 4 } as const;
+export const ROUND_QUESTION = "Was soll das Team als Nächstes angehen?";
+export const ROUND_IDEAS = [
+  "Onboarding verkürzen",
+  "Tests stabilisieren",
+  "Release-Notizen automatisieren",
+  "Doku aufräumen",
+];
+
+/** A wall of „Stille Ideenrunde“ made by a moderation that is no browser (Ben), who writes the four ideas and moves on
+ *  into revealing by turn, where `shown` of them are shown (two by default); with `rank`, Ben shows them all, clarifies
+ *  and moves into the ranking. Ben leaves; the page goes onto the wall as Anna, with the admin token where `admin`
+ *  says so. */
+export async function enterRound(page: Page, options: { admin?: boolean; shown?: number; rank?: boolean } = {}) {
+  const { admin = false, shown = 2, rank = false } = options;
+  const wall = await makeWall(page, ROUND_QUESTION, { agenda: { items: [{ methodId: "ideenrunde" }] } });
+  const ben = await join(wall.wallId, "Ben", wall.adminToken);
+  for (const [n, text] of ROUND_IDEAS.entries()) await ben.write(text, n * 256, 0);
+  await ben.go(ROUND_STEPS.collect, ROUND_STEPS.reveal);
+  const turns = rank ? ROUND_IDEAS.length : shown;
+  for (let n = 0; n < turns; n++) await ben.turn(ROUND_STEPS.reveal, n);
+  if (rank) {
+    await ben.go(ROUND_STEPS.reveal, ROUND_STEPS.clarify);
+    await ben.go(ROUND_STEPS.clarify, ROUND_STEPS.rank);
+  }
+  await ben.leave();
+  await know(page, [
+    { id: wall.wallId, question: ROUND_QUESTION, as: "Anna", ...(admin ? { adminToken: wall.adminToken } : {}) },
+  ]);
+  // the surface also on a phone, where the app would show the list
+  await lookAt(page, "surface");
+  await page.goto(`/w/${wall.wallId}`);
+  await page
+    .locator(rank ? ".app-rank" : ".app-state__sentence")
+    .first()
+    .waitFor();
+  return wall;
+}
+
+/** „Scheitern vorwegdenken“ (stage M5): the plan 0, reasons 1, reveal by turn 2, risks 3, adjust the plan 4. */
+export const FAILURE_STEPS = { plan: 0, reasons: 1, reveal: 2, risks: 3, adjust: 4 } as const;
+export const FAILURE_QUESTION = "Plan: Umzug in die neue Cloud bis März";
+
+/** A wall of „Scheitern vorwegdenken“ in its last step, made by a moderation that is no browser (Ben): two reasons,
+ *  revealed, and two changes to the plan, the first agreed on with who and by when. Ben leaves; the page goes onto the
+ *  wall as Anna, with the admin token where `admin` says so. */
+export async function enterAdjust(page: Page, options: { admin?: boolean } = {}) {
+  const { admin = false } = options;
+  const wall = await makeWall(page, FAILURE_QUESTION, { agenda: { items: [{ methodId: "scheitern" }] } });
+  const ben = await join(wall.wallId, "Ben", wall.adminToken);
+  await ben.go(FAILURE_STEPS.plan, FAILURE_STEPS.reasons);
+  await ben.write("Niemand kennt die alten Skripte", 0, 0);
+  await ben.write("Die Kosten steigen im ersten Monat", 256, 0);
+  await ben.go(FAILURE_STEPS.reasons, FAILURE_STEPS.reveal);
+  await ben.go(FAILURE_STEPS.reveal, FAILURE_STEPS.risks);
+  await ben.go(FAILURE_STEPS.risks, FAILURE_STEPS.adjust);
+  const first = await ben.write("Skripte vorher dokumentieren", 0, 400);
+  await ben.write("Budget für den ersten Monat freigeben", 256, 400);
+  await ben.agree(first, { who: "Dora", due: "15. Januar" });
+  await ben.leave();
+  await know(page, [
+    { id: wall.wallId, question: FAILURE_QUESTION, as: "Anna", ...(admin ? { adminToken: wall.adminToken } : {}) },
+  ]);
+  await page.goto(`/w/${wall.wallId}`);
+  await page.locator(".app-actions").waitFor();
+  return wall;
 }

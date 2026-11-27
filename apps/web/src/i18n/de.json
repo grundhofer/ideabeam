@@ -408,7 +408,22 @@
       "adminPresent": "Du moderierst: Ruf die Teams nacheinander auf; jedes stellt seine Kernidee vor. Alle Zettel sind jetzt für alle zu sehen, ohne Namen.",
       "memberPresent": "Jedes Team stellt seine Kernidee vor. Alle Zettel sind jetzt für alle zu sehen, ohne Namen.",
       "adminBeforeTeams": "Du moderierst: Starte die Uhr; dann denken alle allein nach und schreiben, du auch, und niemand liest mit. Ist die Zeit um, bildet die App Paare und es geht von selbst weiter.",
-      "memberBeforeTeams": "Denk allein nach und schreib deine Ideen auf Zettel. Niemand liest mit; danach tauschst du dich zu zweit aus."
+      "memberBeforeTeams": "Denk allein nach und schreib deine Ideen auf Zettel. Niemand liest mit; danach tauschst du dich zu zweit aus.",
+      "adminRank": "Du moderierst: Alle wählen für sich ihre wichtigsten Ideen und ordnen sie, du auch, und drücken „Abgeben“. Niemand sieht, wer wie gerankt hat. Wenn alle abgegeben haben, zeigt „Auszählen“ allen zugleich das Ergebnis.",
+      "adminRankCast": "Du moderierst: Deine Rangfolge ist abgegeben, ändern geht bis zum Auszählen. Wenn alle abgegeben haben, zeigt „Auszählen“ allen zugleich das Ergebnis.",
+      "memberRank": "Wähl deine wichtigsten Ideen, ordne sie mit „Nach oben“ und „Nach unten“ und drück „Abgeben“. Niemand sieht deine Rangfolge, nur das Ergebnis.",
+      "memberRankCast": "Deine Rangfolge ist abgegeben. Ändern geht, bis die Moderation auszählt, und niemand sieht sie.",
+      "adminTurn": "Du moderierst: „Nächster Zettel“ deckt einen Zettel nach dem anderen auf, reihum und ohne Namen. Lest jeden vor und klärt Fragen, bevor der nächste kommt.",
+      "adminTurnDone": "Du moderierst: Alle Zettel sind aufgedeckt. Mit „Weiter“ geht es in den nächsten Schritt.",
+      "memberTurn": "Die Moderation deckt die Zettel einzeln auf, reihum und ohne Namen. Wer schreibt, sieht niemand.",
+      "adminListen": "Du moderierst: Jetzt wird vorgestellt, geschrieben wird erst im nächsten Schritt. „Weiter“ führt dorthin.",
+      "memberListen": "Hör zu, was vorgestellt wird. Geschrieben wird im nächsten Schritt.",
+      "adminDecide": "Du moderierst: Leg die Aktionen fest, jede mit Wer und Bis wann, und sprich dabei zuletzt. Was festgelegt ist, steht in der Datei als Aufgabe.",
+      "memberDecide": "Die Moderation legt die Aktionen fest, mit Wer und Bis wann. Sagt vorher, was euch wichtig ist.",
+      "adminBeforeGroups": "Du moderierst: Alle notieren für sich, du auch, und niemand liest mit. Mit „Weiter“ kommen die Kleingruppen zusammen.",
+      "memberBeforeGroups": "Notier für dich, was dir einfällt. Niemand liest mit; danach tauschst du dich in deiner Kleingruppe aus.",
+      "adminPresentGroups": "Du moderierst: Ruf die Kleingruppen nacheinander auf; jede stellt vor, was sie festgehalten hat. Alle Zettel sind jetzt für alle zu sehen, ohne Namen.",
+      "memberPresentGroups": "Jede Kleingruppe stellt vor, was sie festgehalten hat. Alle Zettel sind jetzt für alle zu sehen, ohne Namen."
     },
     "adminLinkCopied": "Moderationslink kopiert. Wer ihn hat, moderiert diese Wand und kann sie löschen: Gib ihn nur weiter, wenn jemand mit dir moderieren soll.",
     "team": {
@@ -435,6 +450,18 @@
       "on": "Nach Ablauf selbst weitergehen",
       "saidOff": "Dieser Schritt wartet nach Ablauf der Zeit auf „Weiter“.",
       "saidOn": "Dieser Schritt geht nach Ablauf der Zeit selbst weiter."
+    },
+    "turn": {
+      "state": "Reihum aufgedeckt: {{shown}} von {{total}} Zetteln.",
+      "next": "Nächster Zettel",
+      "left_one": "Noch 1 Zettel verdeckt.",
+      "left_other": "Noch {{count}} Zettel verdeckt.",
+      "leftNone": "Alle Zettel sind aufgedeckt.",
+      "said": "Zettel {{shown}} von {{total}} aufgedeckt.",
+      "hint": "Die Moderation deckt die Zettel einzeln auf, ohne Namen."
+    },
+    "listen": {
+      "hint": "Geschrieben wird im nächsten Schritt."
     }
   },
   "surface": {
@@ -758,5 +785,44 @@
     "title": "Fehler",
     "text": "Diese Ansicht ließ sich nicht anzeigen. Lade die Seite noch einmal.",
     "retry": "Noch mal versuchen"
+  },
+  "rank": {
+    "heading_one": "Deine Rangfolge: 1 Platz",
+    "heading_other": "Deine Rangfolge: die ersten {{count}}",
+    "left_one": "Noch 1 Platz frei",
+    "left_other": "Noch {{count}} Plätze frei",
+    "none": "Alle Plätze vergeben.",
+    "chosen": "Gewählt, in deiner Reihenfolge",
+    "rest": "Zur Auswahl",
+    "empty": "Noch nichts gewählt: Wähl unten, was dir am wichtigsten ist.",
+    "allChosen": "Alles ist gewählt.",
+    "choose": "Wählen: {{name}}",
+    "chooseWord": "Wählen",
+    "up": "Nach oben: {{name}}, Platz {{place}}",
+    "down": "Nach unten: {{name}}, Platz {{place}}",
+    "remove": "Entfernen: {{name}}",
+    "problemEmpty": "Wähl mindestens eine Option, dann drück „Abgeben“.",
+    "hint": "Niemand sieht deine Rangfolge, auch die Moderation nicht: Alle sehen nur das Ergebnis, wenn ausgezählt ist."
+  },
+  "actions": {
+    "heading": "Aktionen",
+    "agreedCount_one": "1 von {{of}} festgelegt.",
+    "agreedCount_other": "{{count}} von {{of}} festgelegt.",
+    "none": "Noch keine Aktionen.",
+    "open": "Noch nicht festgelegt",
+    "agreed": "Festgelegt",
+    "whoIs": "Wer: {{who}}",
+    "dueIs": "Bis wann: {{due}}",
+    "who": "Wer",
+    "due": "Bis wann",
+    "agree": "Festlegen",
+    "change": "Ändern",
+    "unagree": "Nicht mehr festlegen",
+    "add": "Neue Aktion",
+    "addHelp": "Alle sehen sie, ohne deinen Namen.",
+    "addKey": "Aktion hinzufügen",
+    "said": "Festgelegt: {{text}}",
+    "saidUndone": "Nicht mehr festgelegt: {{text}}",
+    "hint": "Wer und Bis wann stehen in der Datei so, wie ihr sie schreibt."
   }
 }

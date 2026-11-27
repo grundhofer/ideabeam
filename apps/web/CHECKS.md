@@ -157,8 +157,8 @@ run the rest; their result is the run itself. Keep this file current.
 - The hidden vote (stage M2): `tests/vote.spec.ts` reads every frame of a second browser before counting (no other
   person's ballot, no tally), sends a ballot twice, counts, and walks the ballot with the keyboard alone; the
   screens `wand-wahl` and `wand-ergebnis` run axe in light at 390 px, dark at 1440 px and at 200 %. The ballot panel
-  offers points and choices (`dots`, `approval`); ranking (`rank`) and scores (`score`) are rules and Worker only,
-  without a panel: no method uses them yet. Nobody looked at the panel at 2000 px or with a screen reader; the guide
+  offers points and choices (`dots`, `approval`); ranking (`rank`) has its panel since stage M5 (below), scores
+  (`score`) are rules and Worker only, without a panel: no method uses them yet. Nobody looked at the panel at 2000 px or with a screen reader; the guide
   sentences speak of points, which is true for the one vote there is. „5 von 8“ counts the people here now, at least
   as many as have voted.
 - Estimating in rounds (stage M3): `tests/estimate.spec.ts` plays „Schätzen – Diskutieren – Schätzen“ with two
@@ -184,6 +184,19 @@ run the rest; their result is the run itself. Keep this file current.
   test of the reducer's input and by `tests/teams.spec.ts` for a move the moderation made. Nobody looked at the
   areas at 2000 px or with a screen reader; the areas on the surface are drawn and hidden from screen readers, the
   list says the same with a heading per team.
+- The methods of stage M5: `tests/methods-m5.spec.ts` plays each of the four methods with two browsers (the
+  moderation and one who joins at the door) through all its steps and saves its export. „Stille Ideenrunde mit
+  Rangfolge“: after every „Nächster Zettel“ each browser's received frames are read for the other's notes, and a note
+  is in a browser's frames exactly when it is on its surface (no note before its turn); the ranking is done with the
+  keyboard alone (Tab to „Wählen“, Enter, Shift+Tab to „Nach oben“, Enter with the focus following the row, Tab to
+  „Abgeben“). „Rückblick nach Ziel und Daten“ reads the other browser's frames for a hidden action. „Was? Na und? Was
+  nun?“ reads them for each round's hidden note. The Worker reads the frames of three people through a whole round
+  by turn (`apps/worker/test/methods-m5.test.ts`). The screens `wand-reihum` (the moderation in a step that reveals by
+  turn), `wand-rangfolge` (the ranking with two chosen) and `wand-aktionen` (the moderation's actions with their
+  fields) run axe in light at 390 px, dark at 1440 px and at 200 %, `wand-aktionen-lesen` in light and dark. Not
+  seen: the small groups of „Was? Na und? Was nun?“ and of the retrospective with more than one team in a browser
+  (the Worker test plays eight people in two teams), the turn step in the list view, the ranking and the actions at
+  2000 px or with a screen reader, the actions' fields filled by somebody without a mouse beyond Enter in a field.
 
 ## Waivers
 

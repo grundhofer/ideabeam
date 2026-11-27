@@ -85,23 +85,43 @@ describe("a wall's agenda", () => {
 
 describe("what a step allows", () => {
   it("writing hidden: notes and the clock, no groups and no arranging, and nobody reads the others' notes", () => {
-    expect(WRITING).toEqual({
+    expect(WRITING).toMatchObject({
       sight: "hidden",
-      can: { write: true, move: true, group: false, arrange: false, clock: true, ballot: false },
+      writes: "hidden",
+      seen: "hidden",
+      can: {
+        write: true,
+        move: true,
+        group: false,
+        arrange: false,
+        clock: true,
+        ballot: false,
+        turn: false,
+        decide: false,
+      },
     });
   });
 
   it("every step after revealing but the vote, and the free wall: notes, groups and arranging, no clock", () => {
     for (const step of [1, 2, 4]) {
-      expect(stepContext(HIDDEN_AGENDA, at(step)), String(step)).toEqual(OPEN);
+      expect(stepContext(HIDDEN_AGENDA, at(step)), String(step)).toEqual({ ...OPEN, at: step });
     }
-    expect(stepContext(OPEN_AGENDA, at(0))).toEqual(OPEN);
+    expect(stepContext(OPEN_AGENDA, at(0))).toEqual({ ...OPEN, at: 0 });
   });
 
   it("the vote: ballots, and nothing else: no note, no move, no group, no clock; the notes stay seen", () => {
-    expect(stepContext(HIDDEN_AGENDA, at(3))).toEqual({
+    expect(stepContext(HIDDEN_AGENDA, at(3))).toMatchObject({
       sight: "all",
-      can: { write: false, move: false, group: false, arrange: false, clock: false, ballot: true },
+      can: {
+        write: false,
+        move: false,
+        group: false,
+        arrange: false,
+        clock: false,
+        ballot: true,
+        turn: false,
+        decide: false,
+      },
     });
   });
 
@@ -134,7 +154,7 @@ describe("visibility only widens", () => {
     expect(back).toMatchObject({ kind: "changed", flow: { step: 0, reach: 2 }, widens: false });
     if (back.kind !== "changed") return;
     // in the writing step again: the notes stay seen, and what is allowed is the writing step's
-    expect(stepContext(HIDDEN_AGENDA, back.flow)).toEqual({ sight: "all", can: WRITING.can });
+    expect(stepContext(HIDDEN_AGENDA, back.flow)).toEqual({ ...WRITING, sight: "all", writes: "all", seen: "all" });
     // and forward from there widens nothing either
     expect(decideStep({ ...at(0, 2) }, HIDDEN_AGENDA, go(0, 1), anna)).toMatchObject({ widens: false });
     expect(stepWidens(HIDDEN_AGENDA, { reach: 2 }, 1)).toBe(false);
@@ -210,7 +230,7 @@ describe("a wall of a build before the methods (schema 3)", () => {
     const read = readStoredFlow({ phase: "open", clock: { rev: 2, endsAt: null, leftMs: null }, seq: 9 }, null);
     expect(read.legacy).toEqual(OPEN_AGENDA);
     expect(read.flow).toMatchObject({ v: 2, step: 0, reach: 0, seq: 9 });
-    expect(stepContext(OPEN_AGENDA, read.flow)).toEqual(OPEN);
+    expect(stepContext(OPEN_AGENDA, read.flow)).toEqual({ ...OPEN, at: 0 });
   });
 
   it("a wall that stores its agenda reads its flow as it is, in either shape", () => {

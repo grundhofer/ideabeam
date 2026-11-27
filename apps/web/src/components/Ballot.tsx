@@ -6,6 +6,7 @@
 //
 // The options are the ones the wall froze when it entered the step (domain/vote.ts); their words are read from the
 // wall as it stands: a group by its title, with the notes in it as a line under it, a note by its text.
+import type { TFunction } from "i18next";
 import { useTranslation } from "react-i18next";
 import type { Group, Note, RankingResult, VoteOption, VoteRound } from "@ideabeam/shared";
 import { Icon } from "../sebaro/react/Icon";
@@ -16,7 +17,7 @@ export type Marks = Readonly<Record<string, number>>;
 
 /** What a vote shows of its options: the words, and for a group the notes in it. */
 function wordsOf(
-  t: ReturnType<typeof useTranslation>["t"],
+  t: TFunction,
   option: Pick<VoteOption, "id" | "kind">,
   notes: readonly Note[],
   groups: readonly Group[],

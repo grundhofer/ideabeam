@@ -10,12 +10,14 @@ Cloudflare's AI: „Ordnen“, its preview, „Anwenden“, „Rückgängig“) 
 Mistral, OpenAI or Anthropic: „Eigener KI-Schlüssel“) are merged into `main` by the owner's word (2026-11-24); no
 provider's model is measured yet, so nobody is offered 4b (see „The moderation's own key“ below). Grouping in the browser (4c)
 follows. The guided methods have their own plan, [`PLAN-METHODEN.md`](PLAN-METHODEN.md): stage M1 (methods as data, a
-wall's agenda and its steps, „Weiter“ and „Zurück“, the choice of the method on `/neu`) and stage M2 (hidden voting:
-ballots, counting, the result as a ranking) are merged into `main` and deployed (2026-11-27); stage M3 (estimates in
-two rounds: median, middle half, range, reasons without names) is committed on `methoden-m4` (`78ea465`), and stage
-M4 (pairs and small groups: teams formed at random, swaps by the moderation, team visibility, steps that move on by
-themselves through the one alarm, „1-2-4-Alle“) is built on `methoden-m4`, not committed. Each stage's state is
-under its heading there.
+wall's agenda and its steps, „Weiter“ and „Zurück“, the choice of the method on `/neu`), stage M2 (hidden voting:
+ballots, counting, the result as a ranking), stage M3 (estimates in two rounds: median, middle half, range, reasons
+without names) and stage M4 (pairs and small groups: teams formed at random, swaps by the moderation, team visibility,
+steps that move on by themselves through the one alarm, „1-2-4-Alle“) are merged into `main` and deployed (`cd154d5`,
+2026-11-27, with the evidence rating removed); stage M5 (revealing by turn, the ranking panel, actions with „Wer“ and
+„Bis wann“, rounds that hide again, and the methods „Rückblick nach Ziel und Daten“, „Scheitern vorwegdenken“,
+„Stille Ideenrunde mit Rangfolge“, „Was? Na und? Was nun?“) is built on `methoden-m5`, not committed. Each stage's
+state is under its heading there.
 
 ## Commands
 

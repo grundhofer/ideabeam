@@ -78,6 +78,7 @@ const sync = (notes: Note[] = NOTES, seq = notes.length): ServerEvent => ({
   results: [],
   teams: null,
   manual: [],
+  turns: [],
 });
 
 /** What the Worker answers to „Ordnen“: set by each test, asked for by the app's request. */

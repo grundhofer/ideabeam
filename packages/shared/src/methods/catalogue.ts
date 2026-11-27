@@ -37,9 +37,68 @@ import type { Method, MethodId } from "../domain/method.js";
 //  - „Freie Wand“: one step, writing and arranging, every note there for everyone at once: the wall made without
 //    hidden writing.
 //
+// Stage M5 (PLAN-METHODEN.md 5, „Paket A“), from the catalogue's methods 1, 8, 4 and 10:
+//
+//  - „Rückblick nach Ziel und Daten“ (method 1): the goal and then the facts and numbers, each written in private;
+//    revealed; small groups find reasons for the gap; the groups present and bundle them; everybody proposes actions
+//    in private; the actions are revealed; everybody votes on them with points; the moderation agrees on up to three,
+//    each with „Wer“ and „Bis wann“. The catalogue's „Einstimmen“ is the wall's question (which names what and which
+//    period), its „Abschluss“ part of agreeing on the actions: nine steps instead of ten. The catalogue votes on the
+//    actions while they are hidden; a vote never offers what nobody has seen, so a short step reveals them first
+//    (`revealActions`). Its texts say that the data step asks for facts and numbers, from records rather than memory,
+//    and claim nothing about why the method works (docs/belege-pruefung.md: the benefit found comes from objective
+//    data, not from the comparison with a goal).
+//  - „Scheitern vorwegdenken“ (method 8): the plan is presented (nobody writes); everybody imagines it has failed and
+//    writes in private why (the catalogue's prompt is the step's own sentence: one step instead of two); the reasons
+//    are revealed one at a time, by turn, without names (`turns`); they are bundled into risks; the plan is adjusted:
+//    the changes are actions, which the moderation agrees on with „Wer“ and „Bis wann“.
+//  - „Stille Ideenrunde mit Rangfolge“ (method 4): everybody collects ideas in private (the question is the wall's:
+//    „Frage stellen“ is part of it); the ideas are revealed one at a time, by turn; they are clarified, without
+//    judging, and the same ideas may be bundled; everybody ranks their top five in private (Borda); the result.
+//  - „Was? Na und? Was nun?“ (method 10, from Liberating Structures, CC BY-SA 4.0 with the attribution of
+//    methods/texts.ts): three rounds, „Was ist passiert?“, „Was bedeutet das?“, „Was tun wir jetzt?“, each alone
+//    and hidden, then in small groups of about five, then presented to everybody. The small groups are formed at
+//    random in the first round and kept for the next two (`keep`), each round with areas of its own. The catalogue's
+//    „Einführung“ is the wall's question. Every step waits for „Weiter“ (the owner's decision 2: moving on by itself
+//    only in short, timed methods like 1-2-4-Alle).
+//
 // A step's capabilities (what may be done in it) follow from its type and visibility (domain/agenda.ts).
 
 const MINUTE = 60;
+
+/** The three steps of a round of „Was? Na und? Was nun?“: alone and hidden, in the small group, presented. */
+function roundOfThree(prefix: "what" | "soWhat" | "nowWhat", form: "random" | "keep"): Method["steps"] {
+  return [
+    {
+      key: `${prefix}Alone`,
+      type: "write",
+      mode: "individual",
+      visibility: "hidden",
+      durationSec: 1 * MINUTE,
+      advance: "moderation",
+      output: "notes",
+    },
+    {
+      key: `${prefix}Group`,
+      type: "discuss",
+      mode: "group",
+      visibility: "team",
+      durationSec: 5 * MINUTE,
+      advance: "moderation",
+      output: "notes",
+      team: { size: 5, form },
+    },
+    {
+      key: `${prefix}Present`,
+      type: "discuss",
+      mode: "presentation",
+      visibility: "all",
+      durationSec: 3 * MINUTE,
+      advance: "moderation",
+      output: "notes",
+    },
+  ];
+}
 
 export const CATALOGUE: Readonly<Record<MethodId, Method>> = {
   "still-sammeln": {
@@ -202,6 +261,222 @@ export const CATALOGUE: Readonly<Record<MethodId, Method>> = {
     minutes: 25,
     groupSize: [5, 30],
   },
+  rueckblick: {
+    id: "rueckblick",
+    version: 1,
+    purpose: "review",
+    steps: [
+      {
+        key: "goal",
+        type: "write",
+        mode: "individual",
+        visibility: "hidden",
+        durationSec: 4 * MINUTE,
+        advance: "moderation",
+        output: "notes",
+      },
+      {
+        key: "data",
+        type: "write",
+        mode: "individual",
+        visibility: "hidden",
+        durationSec: 6 * MINUTE,
+        advance: "moderation",
+        output: "notes",
+      },
+      {
+        key: "reveal",
+        type: "reveal",
+        mode: "plenary",
+        visibility: "anonymous",
+        durationSec: 2 * MINUTE,
+        advance: "moderation",
+        output: "none",
+      },
+      {
+        key: "reasons",
+        type: "discuss",
+        mode: "group",
+        visibility: "team",
+        durationSec: 10 * MINUTE,
+        advance: "moderation",
+        output: "notes",
+        team: { size: 4, form: "random" },
+      },
+      {
+        key: "present",
+        type: "cluster",
+        mode: "presentation",
+        visibility: "all",
+        durationSec: 5 * MINUTE,
+        advance: "moderation",
+        output: "groups",
+      },
+      {
+        key: "actions",
+        type: "write",
+        mode: "individual",
+        visibility: "hidden",
+        durationSec: 4 * MINUTE,
+        advance: "moderation",
+        output: "actions",
+        noteKind: "action",
+      },
+      {
+        key: "revealActions",
+        type: "reveal",
+        mode: "plenary",
+        visibility: "anonymous",
+        durationSec: 1 * MINUTE,
+        advance: "moderation",
+        output: "none",
+      },
+      {
+        key: "vote",
+        type: "vote",
+        mode: "individual",
+        visibility: "aggregate",
+        durationSec: 3 * MINUTE,
+        advance: "moderation",
+        output: "ranking",
+        vote: { kind: "dots", perPerson: null, maxPerOption: null },
+        optionsFrom: "actions",
+      },
+      {
+        key: "decide",
+        type: "decide",
+        mode: "plenary",
+        visibility: "all",
+        durationSec: 5 * MINUTE,
+        advance: "moderation",
+        output: "actions",
+        noteKind: "action",
+      },
+    ],
+    minutes: 45,
+    groupSize: [3, 12],
+  },
+  scheitern: {
+    id: "scheitern",
+    version: 1,
+    purpose: "risk",
+    steps: [
+      {
+        key: "plan",
+        type: "present",
+        mode: "presentation",
+        visibility: "all",
+        durationSec: 5 * MINUTE,
+        advance: "moderation",
+        output: "none",
+      },
+      {
+        key: "reasons",
+        type: "write",
+        mode: "individual",
+        visibility: "hidden",
+        durationSec: 8 * MINUTE,
+        advance: "moderation",
+        output: "notes",
+      },
+      {
+        key: "reveal",
+        type: "reveal",
+        mode: "plenary",
+        visibility: "anonymous",
+        durationSec: 8 * MINUTE,
+        advance: "moderation",
+        output: "none",
+        turns: true,
+      },
+      {
+        key: "risks",
+        type: "cluster",
+        mode: "plenary",
+        visibility: "anonymous",
+        durationSec: 5 * MINUTE,
+        advance: "moderation",
+        output: "groups",
+      },
+      {
+        key: "adjust",
+        type: "decide",
+        mode: "plenary",
+        visibility: "all",
+        durationSec: 8 * MINUTE,
+        advance: "moderation",
+        output: "actions",
+        noteKind: "action",
+      },
+    ],
+    minutes: 35,
+    groupSize: [3, 12],
+  },
+  ideenrunde: {
+    id: "ideenrunde",
+    version: 1,
+    purpose: "decide",
+    steps: [
+      {
+        key: "collect",
+        type: "write",
+        mode: "individual",
+        visibility: "hidden",
+        durationSec: 10 * MINUTE,
+        advance: "moderation",
+        output: "notes",
+      },
+      {
+        key: "reveal",
+        type: "reveal",
+        mode: "plenary",
+        visibility: "anonymous",
+        durationSec: 10 * MINUTE,
+        advance: "moderation",
+        output: "none",
+        turns: true,
+      },
+      {
+        key: "clarify",
+        type: "discuss",
+        mode: "plenary",
+        visibility: "anonymous",
+        durationSec: 8 * MINUTE,
+        advance: "moderation",
+        output: "none",
+      },
+      {
+        key: "rank",
+        type: "rank",
+        mode: "individual",
+        visibility: "aggregate",
+        durationSec: 5 * MINUTE,
+        advance: "moderation",
+        output: "ranking",
+        vote: { kind: "rank", top: 5 },
+      },
+      {
+        key: "result",
+        type: "discuss",
+        mode: "plenary",
+        visibility: "all",
+        durationSec: 5 * MINUTE,
+        advance: "moderation",
+        output: "none",
+      },
+    ],
+    minutes: 40,
+    groupSize: [4, 10],
+  },
+  "was-na-und": {
+    id: "was-na-und",
+    version: 1,
+    purpose: "review",
+    steps: [...roundOfThree("what", "random"), ...roundOfThree("soWhat", "keep"), ...roundOfThree("nowWhat", "keep")],
+    minutes: 30,
+    groupSize: [4, 30],
+    attribution: "liberatingStructures",
+  },
   free: {
     id: "free",
     version: 1,
@@ -224,7 +499,16 @@ export const CATALOGUE: Readonly<Record<MethodId, Method>> = {
 
 /** The methods in the order of the choice on `/neu` (docs/methoden-katalog.md, (b)): by purpose, the one that is
  *  chosen at first leading, „Freie Wand“ last. */
-export const METHOD_ORDER: readonly MethodId[] = ["still-sammeln", "eins-zwei-vier", "schaetzen", "free"];
+export const METHOD_ORDER: readonly MethodId[] = [
+  "still-sammeln",
+  "eins-zwei-vier",
+  "ideenrunde",
+  "schaetzen",
+  "rueckblick",
+  "was-na-und",
+  "scheitern",
+  "free",
+];
 
 /** The method a new wall gets when nothing else is asked: the best supported one (PLAN-METHODEN.md 3). */
 export const DEFAULT_METHOD: MethodId = "still-sammeln";

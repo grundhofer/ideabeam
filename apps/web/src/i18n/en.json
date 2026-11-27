@@ -408,7 +408,22 @@
       "adminPresent": "You moderate: call on the teams one after the other; each presents its core idea. All notes are now there for everyone, without names.",
       "memberPresent": "Each team presents its core idea. All notes are now there for everyone, without names.",
       "adminBeforeTeams": "You moderate: start the clock; then everyone thinks alone and writes, you too, and nobody reads along. When the time is up the app forms pairs and moves on by itself.",
-      "memberBeforeTeams": "Think alone and write your ideas on notes. Nobody reads along; afterwards you share them in a pair."
+      "memberBeforeTeams": "Think alone and write your ideas on notes. Nobody reads along; afterwards you share them in a pair.",
+      "adminRank": "You moderate: everyone picks their most important ideas and puts them in order, you too, and presses “Cast vote”. Nobody sees who ranked what. Once everyone has voted, “Count votes” shows the result to everyone at once.",
+      "adminRankCast": "You moderate: your ranking is cast, and you can change it until counting. Once everyone has voted, “Count votes” shows the result to everyone at once.",
+      "memberRank": "Pick your most important ideas, order them with “Up” and “Down”, and press “Cast vote”. Nobody sees your ranking, only the result.",
+      "memberRankCast": "Your ranking is cast. You can change it until the moderation counts, and nobody sees it.",
+      "adminTurn": "You moderate: “Next note” reveals one note after another, in turn and without names. Read each one out and clear up questions before the next.",
+      "adminTurnDone": "You moderate: all notes are revealed. “Next” leads on to the next step.",
+      "memberTurn": "The moderation reveals the notes one at a time, in turn and without names. Nobody sees who wrote what.",
+      "adminListen": "You moderate: now is the time to present; writing comes in the next step. “Next” leads there.",
+      "memberListen": "Listen to what is presented. Writing comes in the next step.",
+      "adminDecide": "You moderate: agree on the actions, each with who and by when, and speak last. What is agreed goes into the file as a task.",
+      "memberDecide": "The moderation agrees on the actions, with who and by when. Say beforehand what matters to you.",
+      "adminBeforeGroups": "You moderate: everyone notes for themselves, you too, and nobody reads along. “Next” brings the small groups together.",
+      "memberBeforeGroups": "Note for yourself what comes to mind. Nobody reads along; afterwards you share it in your small group.",
+      "adminPresentGroups": "You moderate: call on the small groups one after the other; each presents what it noted. All notes are now there for everyone, without names.",
+      "memberPresentGroups": "Each small group presents what it noted. All notes are now there for everyone, without names."
     },
     "adminLinkCopied": "Facilitator link copied. Anyone who has it facilitates this wall and can delete it: share it only if someone should facilitate with you.",
     "team": {
@@ -435,6 +450,18 @@
       "on": "Move on by itself when the time is up",
       "saidOff": "This step waits for “Next” when the time is up.",
       "saidOn": "This step moves on by itself when the time is up."
+    },
+    "turn": {
+      "state": "Revealed in turn: {{shown}} of {{total}} notes.",
+      "next": "Next note",
+      "left_one": "1 note still hidden.",
+      "left_other": "{{count}} notes still hidden.",
+      "leftNone": "All notes are revealed.",
+      "said": "Note {{shown}} of {{total}} revealed.",
+      "hint": "The moderation reveals the notes one at a time, without names."
+    },
+    "listen": {
+      "hint": "Writing comes in the next step."
     }
   },
   "surface": {
@@ -758,5 +785,44 @@
     "title": "Error",
     "text": "This view could not be shown. Load the page again.",
     "retry": "Try again"
+  },
+  "rank": {
+    "heading_one": "Your ranking: 1 place",
+    "heading_other": "Your ranking: your top {{count}}",
+    "left_one": "1 place left",
+    "left_other": "{{count}} places left",
+    "none": "All places taken.",
+    "chosen": "Chosen, in your order",
+    "rest": "To choose from",
+    "empty": "Nothing chosen yet: pick below what matters most to you.",
+    "allChosen": "Everything is chosen.",
+    "choose": "Choose: {{name}}",
+    "chooseWord": "Choose",
+    "up": "Up: {{name}}, place {{place}}",
+    "down": "Down: {{name}}, place {{place}}",
+    "remove": "Remove: {{name}}",
+    "problemEmpty": "Choose at least one option, then press “Cast vote”.",
+    "hint": "Nobody sees your ranking, not even the moderation: everyone sees only the result once it is counted."
+  },
+  "actions": {
+    "heading": "Actions",
+    "agreedCount_one": "1 of {{of}} agreed.",
+    "agreedCount_other": "{{count}} of {{of}} agreed.",
+    "none": "No actions yet.",
+    "open": "Not agreed yet",
+    "agreed": "Agreed",
+    "whoIs": "Who: {{who}}",
+    "dueIs": "By when: {{due}}",
+    "who": "Who",
+    "due": "By when",
+    "agree": "Agree",
+    "change": "Change",
+    "unagree": "No longer agreed",
+    "add": "New action",
+    "addHelp": "Everyone sees it, without your name.",
+    "addKey": "Add action",
+    "said": "Agreed: {{text}}",
+    "saidUndone": "No longer agreed: {{text}}",
+    "hint": "Who and by when go into the file as you write them."
   }
 }

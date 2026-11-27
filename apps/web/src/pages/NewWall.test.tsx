@@ -105,14 +105,23 @@ test("the method: „Still sammeln“ is chosen at first, „Freie Wand“ is th
   await screen.findByRole("heading", { level: 1, name: "Neue Wand" });
   const group = screen.getByRole("group", { name: "Methode" });
   const options = within(group).getAllByRole<HTMLInputElement>("radio");
-  expect(options.map((option) => option.value)).toEqual(["still-sammeln", "eins-zwei-vier", "schaetzen", "free"]);
-  expect(options.map((option) => option.checked)).toEqual([true, false, false, false]);
+  expect(options.map((option) => option.value)).toEqual([
+    "still-sammeln",
+    "eins-zwei-vier",
+    "ideenrunde",
+    "schaetzen",
+    "rueckblick",
+    "was-na-und",
+    "scheitern",
+    "free",
+  ]);
+  expect(options.map((option) => option.checked)).toEqual([true, false, false, false, false, false, false, false]);
   // under headings by purpose
   expect(
     within(group)
       .getAllByRole("heading", { level: 2 })
       .map((heading) => heading.textContent),
-  ).toEqual(["Ideen sammeln", "Entscheiden", "Ohne festen Ablauf"]);
+  ).toEqual(["Ideen sammeln", "Entscheiden", "Rückblick", "Risiken", "Ohne festen Ablauf"]);
   fireEvent.click(screen.getByRole("radio", { name: "Freie Wand" }));
   type("Was hält uns auf?");
   submit();

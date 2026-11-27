@@ -161,6 +161,12 @@ function spanOf(areas: ReadonlyArray<TeamArea | undefined>): TeamArea {
   return { first, count: end - first };
 }
 
+/** The areas of teams that are kept for another round (stage M5, `keep`): the same spans, beside the last ones. */
+export function shiftedAreas(areas: readonly TeamArea[]): TeamArea[] {
+  const end = Math.max(0, ...areas.map((area) => area.first + area.count));
+  return areas.map((area) => ({ first: area.first + end, count: area.count }));
+}
+
 /** Somebody who is in no team comes (late, or back after the forming): they join the smallest team, the first of
  *  the smallest where several are. null: they are in a team already, or there is no team to join. */
 export function placeLatecomer(teams: readonly string[][], person: string): string[][] | null {
@@ -198,7 +204,8 @@ export function sameTeams(a: readonly string[][], b: readonly string[][]): boole
 
 /** The teams after the wall entered step `at` (`step`), or null: the step works in no teams, or the teams in force
  *  were formed for it already. A step entered again (the moderation went back) gets the teams it had; one entered
- *  for the first time forms them as it says: anew at random, or by merging the teams in force. Whoever is present
+ *  for the first time forms them as it says: anew at random, by merging the teams in force, or by keeping them with
+ *  fresh areas (stage M5). Whoever is present
  *  and in no team then joins one (`placeLatecomer`). `now` is the moment the grouping in force is replaced. */
 export function enterTeams(
   current: Teams | null,
@@ -220,6 +227,11 @@ export function enterTeams(
     areas = known.areas.map((area) => ({ ...area }));
   } else if (settings.form === "merge" && current !== null && current.teams.length > 0) {
     ({ teams, areas } = mergeTeams(current.teams, current.areas));
+  } else if (settings.form === "keep" && current !== null && current.teams.length > 0) {
+    // the same teams, each with a fresh area beside the last ones: the notes of this round do not land on those of
+    // the round before
+    teams = current.teams.map((team) => [...team]);
+    areas = shiftedAreas(current.areas);
   } else {
     teams = formTeams(present, settings.size, seed);
     areas = freshAreas(teams.length);
@@ -369,7 +381,8 @@ export function areaHead(area: TeamArea): { x: number; y: number; w: number; h: 
  *  pair finds both its notes written alone side by side in its area, and a four, whose area holds its pairs' areas,
  *  finds them where they were (but those of somebody the moderation swapped, which follow them). Notes whose writer
  *  is in no team stay where they are. One movement, one row written (the layout row), in the transaction of the step
- *  move. */
+ *  move. The worker hands in the notes that are not shown to everybody yet (stage M5): a note the whole wall has seen
+ *  stays where the wall put it, also when the teams of the next round are kept. */
 export function layoutIntoAreas(
   notes: ReadonlyArray<{ id: string; authorId: string; text: string; x: number; y: number; groupId: string | null }>,
   teams: Pick<Teams, "teams" | "areas">,

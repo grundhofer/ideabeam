@@ -148,7 +148,8 @@ describe("a wall that an older build made", () => {
     // the page that asks a newcomer for their name is the first to reach it
     expect((await SELF.fetch(`https://example.com/api/walls/${wallId}`)).status).toBe(200);
     expect(await tables(wallId)).toEqual(ALL_TABLES);
-    expect(await schemaVersion(wallId)).toBe("4");
+    // the notes' table of now, with the step of a note (schema 5)
+    expect(await schemaVersion(wallId)).toBe("5");
 
     const anna = await join(wallId, "Anna");
     expect(anna.sync).toMatchObject({ seq: 0, ...FREE, hidden: 0, notes: [], groups: [] });
@@ -178,7 +179,7 @@ describe("a wall that an older build made", () => {
     );
     expect((await SELF.fetch(`https://example.com/api/walls/${wallId}`)).status).toBe(200);
     expect((await resync(anna.socket)).notes).toHaveLength(1);
-    expect(await schemaVersion(wallId)).toBe("4");
+    expect(await schemaVersion(wallId)).toBe("5");
   });
 
   it("of stage 2 keeps working and becomes a revealed wall: its notes stay visible to everyone, without a name", async () => {

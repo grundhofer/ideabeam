@@ -886,3 +886,213 @@ describe("what 1-2-4-Alle costs", { timeout: 60_000 }, () => {
     expect(total).toBeLessThanOrEqual(RUN_ROWS);
   });
 });
+
+// The methods of stage M5 (PLAN-METHODEN.md 5, „Paket A“), each with 8 people from its first step to its last.
+// Counted are the rows of the method after everybody has joined, the alarms that are set among them included (a set
+// alarm is a row written; these methods start no clock of their own). The lead's bound for M5: about 60 rows each
+// for 8 people. Notes cost a row each, so each line says how many it writes; a wall with more notes costs a row more
+// for each, and a step that reveals by turn a row more for each note it shows.
+describe("what the methods of stage M5 cost", { timeout: 60_000 }, () => {
+  /** The lead's bound for M5: rows written by one run of a method with 8 people. */
+  const METHOD_ROWS = 60;
+
+  /** A wall of the method with everybody on it, the rows counted from here on, by what the run does. */
+  async function run(methodId: string) {
+    const { wallId, stub } = newWall(env);
+    const adminToken = "a".repeat(32);
+    await runInDurableObject(stub, (instance) =>
+      instance.initialize({
+        wallId,
+        question: "What do we learn from it?",
+        adminToken,
+        hidden: true,
+        agenda: { items: [{ methodId: methodId as "ideenrunde" }] },
+      }),
+    );
+    const sockets: TestSocket[] = [];
+    for (const name of PEOPLE) {
+      const socket = await connect(wallId);
+      socket.send({
+        type: "join",
+        name,
+        sessionKey: generateSessionKey(),
+        ...(name === "Anna" ? { adminToken } : {}),
+      });
+      await socket.waitFor((event) => event.type === "sync");
+      sockets.push(socket);
+    }
+    const moderation = sockets[0] as TestSocket;
+    const rows: Record<string, number> = {};
+    let into = "steps";
+    await runInDurableObject(stub, (instance, state) => {
+      counted(instance, (_read, written) => {
+        rows[into] = (rows[into] ?? 0) + written;
+      });
+      const setAlarm = state.storage.setAlarm.bind(state.storage);
+      state.storage.setAlarm = (...args: Parameters<typeof setAlarm>) => {
+        rows[into] = (rows[into] ?? 0) + 1; // an alarm that is set is a row written
+        return setAlarm(...args);
+      };
+    });
+    const said = async (socket: TestSocket, kind: string, command: Record<string, unknown>) => {
+      into = kind;
+      const opId = generateHexId();
+      socket.send({ ...command, opId });
+      const answer = await socket.waitFor(
+        (event) => (event.type === "ack" || event.type === "reject") && event.opId === opId,
+      );
+      expect(answer.type, JSON.stringify(answer)).toBe("ack");
+    };
+    let step = 0;
+    const next = () => said(moderation, "steps", { type: "admin.step.go", from: step, to: (step += 1) });
+    /** A note of each of the first `count` people, in turn, as long as `notes` says; the note ids. */
+    const notes = async (stage: string, count: number) => {
+      const ids: string[] = [];
+      for (let n = 0; n < count; n++) {
+        const noteId = generateHexId();
+        ids.push(noteId);
+        await said(sockets[n % sockets.length] as TestSocket, "notes", {
+          type: "note.create",
+          noteId,
+          text: `${stage} ${n}`,
+          x: (n % 8) * 260,
+          y: 1300,
+        });
+      }
+      return ids;
+    };
+    const total = () => Object.values(rows).reduce((sum, value) => sum + value, 0);
+    const done = async (line: string) => {
+      expect(await runInDurableObject(stub, isCounted), "the wall's object was replaced on the way").toBe(true);
+      const parts = Object.entries(rows).map(([kind, value]) => `${kind} ${value}`);
+      // eslint-disable-next-line no-console -- the one test whose job is to say what it measured
+      console.log(`${line}:\n  ${parts.join(", ")}: ${total()} rows written`);
+      return total();
+    };
+    return { moderation, sockets, said, next, notes, rows, done };
+  }
+
+  it(`„Stille Ideenrunde mit Rangfolge“ with ${PEOPLE.length} people writes at most ${METHOD_ROWS} rows`, async () => {
+    const { moderation, sockets, said, next, notes, rows, done } = await run("ideenrunde");
+    const ideas = await notes("idea", 2 * PEOPLE.length);
+    await next(); // reveal by turn
+    for (let shown = 0; shown < ideas.length; shown++) {
+      await said(moderation, "turns", { type: "admin.turn.next", step: 1, shown });
+    }
+    await next(); // clarify
+    await next(); // rank
+    for (const [n, socket] of sockets.entries()) {
+      const order = [0, 1, 2, 3, 4].map((k) => ideas[(n + k) % ideas.length] as string);
+      await said(socket, "ballots", { type: "ballot.cast", step: 3, ballot: { kind: "rank", order } });
+    }
+    await said(moderation, "count", { type: "admin.step.count", step: 3 });
+    await next(); // result
+    const total = await done(`„Stille Ideenrunde“ with ${PEOPLE.length} people (16 ideas, 16 turns, 8 rankings)`);
+    // a row a note and the mark of the wall's day; a row a turn; four step moves; a row a ranking and the table;
+    // counting the result and the flow
+    expect(rows.notes).toBe(2 * PEOPLE.length + 1);
+    expect(rows.turns).toBe(2 * PEOPLE.length);
+    expect(rows.steps).toBe(4);
+    expect(rows.ballots).toBe(PEOPLE.length + 2);
+    expect(rows.count).toBe(2);
+    expect(total).toBeLessThanOrEqual(METHOD_ROWS);
+  });
+
+  it(`„Scheitern vorwegdenken“ with ${PEOPLE.length} people writes at most ${METHOD_ROWS} rows`, async () => {
+    const { moderation, said, next, notes, rows, done } = await run("scheitern");
+    await next(); // write the reasons
+    const reasons = await notes("reason", 2 * PEOPLE.length);
+    await next(); // reveal by turn
+    for (let shown = 0; shown < reasons.length; shown++) {
+      await said(moderation, "turns", { type: "admin.turn.next", step: 2, shown });
+    }
+    await next(); // group into risks
+    const groups: string[] = [];
+    for (let n = 0; n < 3; n++) {
+      const groupId = generateHexId();
+      groups.push(groupId);
+      await said(moderation, "risks", {
+        type: "group.create",
+        groupId,
+        title: `Risk ${n + 1}`,
+        x: n * 600,
+        y: 0,
+        w: 528,
+        h: 400,
+      });
+    }
+    await said(moderation, "risks", {
+      type: "notes.move",
+      moves: reasons.map((noteId, n) => ({ noteId, x: (n % 3) * 600 + 16, y: 40, groupId: groups[n % 3] })),
+    });
+    await next(); // adjust the plan
+    const changes = await notes("change", 3);
+    for (const noteId of changes) {
+      await said(moderation, "actions", { type: "note.action", noteId, action: { who: "Anna", due: "Friday" } });
+    }
+    const total = await done(
+      `„Scheitern vorwegdenken“ with ${PEOPLE.length} people (16 reasons, 16 turns, 3 risks, 3 changes agreed)`,
+    );
+    expect(rows.notes).toBe(2 * PEOPLE.length + 3 + 1);
+    expect(rows.turns).toBe(2 * PEOPLE.length);
+    expect(rows.steps).toBe(4);
+    expect(rows.actions).toBe(3);
+    expect(total).toBeLessThanOrEqual(METHOD_ROWS);
+  });
+
+  it(`„Rückblick nach Ziel und Daten“ with ${PEOPLE.length} people writes at most ${METHOD_ROWS} rows`, async () => {
+    const { moderation, sockets, said, next, notes, rows, done } = await run("rueckblick");
+    await notes("goal", 4);
+    await next(); // data
+    await notes("data", PEOPLE.length);
+    await next(); // reveal
+    await next(); // reasons, in small groups
+    await notes("reason", 4);
+    await next(); // present and bundle
+    await next(); // propose actions
+    const actions = await notes("action", PEOPLE.length);
+    await next(); // reveal the actions
+    await next(); // vote on them
+    for (const [n, socket] of sockets.entries()) {
+      await said(socket, "ballots", {
+        type: "ballot.cast",
+        step: 7,
+        ballot: { kind: "dots", points: { [actions[n % 3] as string]: 2 } },
+      });
+    }
+    await said(moderation, "count", { type: "admin.step.count", step: 7 });
+    await next(); // agree on up to three
+    for (const noteId of actions.slice(0, 3)) {
+      await said(moderation, "actions", { type: "note.action", noteId, action: { who: "Ben", due: "next sprint" } });
+    }
+    const total = await done(
+      `„Rückblick nach Ziel und Daten“ with ${PEOPLE.length} people (24 notes, 8 ballots, 3 actions agreed)`,
+    );
+    expect(rows.notes).toBe(4 + PEOPLE.length + 4 + PEOPLE.length + 1);
+    // eight step moves, into the small groups the teams beside the flow (the notes there are seen by everybody
+    // already, so none moves into an area and the layout row is not written)
+    expect(rows.steps).toBe(8 + 1);
+    expect(rows.ballots).toBe(PEOPLE.length + 2);
+    expect(rows.count).toBe(2);
+    expect(rows.actions).toBe(3);
+    expect(total).toBeLessThanOrEqual(METHOD_ROWS);
+  });
+
+  it(`„Was? Na und? Was nun?“ with ${PEOPLE.length} people writes at most ${METHOD_ROWS} rows`, async () => {
+    const { next, notes, rows, done } = await run("was-na-und");
+    for (const round of ["what", "soWhat", "nowWhat"]) {
+      await notes(`${round} alone`, PEOPLE.length);
+      await next(); // into the small groups
+      await notes(`${round} group`, 2);
+      await next(); // the small groups present
+      if (round !== "nowWhat") await next(); // the next round
+    }
+    const total = await done(
+      `„Was? Na und? Was nun?“ with ${PEOPLE.length} people (3 rounds of 8 notes alone and 2 a round in the groups)`,
+    );
+    expect(rows.notes).toBe(3 * (PEOPLE.length + 2) + 1);
+    // eight step moves; into each round's small groups the teams and the layout row beside the flow
+    expect(rows.steps).toBe(8 + 3 * 2);
+    expect(total).toBeLessThanOrEqual(METHOD_ROWS);
+  });
+});

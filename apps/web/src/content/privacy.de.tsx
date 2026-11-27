@@ -145,8 +145,18 @@ export function PrivacyDe() {
         <li>
           <strong>Zettel:</strong> bis zu 500 je Wand, jeweils der Text (höchstens 300 Zeichen), die Kennung der Person,
           die ihn geschrieben hat, der Ort auf der Fläche (wo der Zettel angelegt wurde und wo er jetzt liegt), die
-          Gruppe, zu der er gehört, und die Zeitpunkte, zu denen er angelegt und sein Text zuletzt geändert wurde. Wer
-          einen Zettel verschoben hat, wird nicht gespeichert.
+          Gruppe, zu der er gehört, und die Zeitpunkte, zu denen er angelegt und sein Text zuletzt geändert wurde; bei
+          einer Wand, die verdeckt reihum aufdeckt oder nach dem Aufdecken noch einmal verdeckt schreiben lässt, auch
+          der Schritt, in dem er geschrieben wurde. Wer einen Zettel verschoben hat, wird nicht gespeichert.
+        </li>
+        <li>
+          <strong>Aktionen:</strong> in einer Methode, die Aktionen festlegt (etwa „Rückblick nach Ziel und Daten“ oder
+          „Scheitern vorwegdenken“), sind die Aktionen Zettel wie jeder andere (oben). Legt die Moderation eine Aktion
+          fest, speichert die Wand beim Zettel zwei Felder: <strong>„Wer“ und „Bis wann“</strong>, jeweils freier Text
+          (höchstens 60 und 40 Zeichen), so wie das Team ihn eintippt, etwa einen Namen oder ein Datum. Was dort steht,
+          bestimmt das Team; die Anwendung prüft es nicht. Beides bleibt gespeichert, solange die Wand besteht
+          (Abschnitt 3.3), alle auf der Wand sehen es, und die Datei von „Als Markdown sichern“ enthält es bei den
+          festgelegten Aktionen. Wer eine Aktion festgelegt hat, wird nicht gespeichert.
         </li>
         <li>
           <strong>Gruppen:</strong> bis zu 80 je Wand, jeweils der Titel (höchstens 60 Zeichen, er darf fehlen), Ort und
@@ -179,7 +189,8 @@ export function PrivacyDe() {
           nach dem Schritt mit den Teams. In einem Schritt mit Teams sieht jede Person die Zettel ihres Teams, ohne
           Namen; die Moderation sieht, wer in welchem Team ist, alle anderen nur ihr eigenes Team mit den Namen darin.
           In einem Paar ist leicht zu erraten, wer welchen Zettel schrieb. Die Datei von „Als Markdown sichern“ nennt
-          nur, wie viele Teams es gab, nie wer darin war.
+          nur, wie viele Teams es gab, nie wer darin war. In einer Methode mit mehreren Runden (etwa „Was? Na und? Was
+          nun?“) bleiben die Kleingruppen von Runde zu Runde dieselben.
         </li>
       </ul>
       <p>
@@ -194,7 +205,12 @@ export function PrivacyDe() {
         viele es sind. Das Aufdecken ist Sache der Moderation, fragt vorher und lässt sich nicht zurücknehmen; danach
         sehen alle alle Zettel. Die Uhr der Schreibphase stellt nur die Moderation; alle sehen die Restzeit. Läuft sie
         ab, geschieht nichts von selbst, außer in kurzen, getakteten Schritten wie denen von „1-2-4-Alle“: Dort geht die
-        Wand nach Ablauf der Uhr selbst zum nächsten Schritt, was die Moderation je Schritt abschalten kann.
+        Wand nach Ablauf der Uhr selbst zum nächsten Schritt, was die Moderation je Schritt abschalten kann. In einer
+        Methode, die reihum aufdeckt (etwa „Stille Ideenrunde mit Rangfolge“), legt der Server beim Beginn des Schritts
+        eine Reihenfolge der verdeckten Zettel fest, abwechselnd nach Person und ohne Namen; sie verlässt den Server
+        nicht. Mit „Nächster Zettel“ deckt die Moderation einen Zettel nach dem anderen für alle auf. Eine Methode, die
+        nach dem Aufdecken noch einmal verdeckt schreiben lässt, hält die neuen Zettel verdeckt, bis ein späterer
+        Schritt sie zeigt; was schon aufgedeckt war, bleibt für alle sichtbar.
       </p>
       <p>
         <strong>Verdeckt wählen.</strong> Gewählt wird im eigenen Browser; erst „Abgeben“ sendet den Stimmzettel an den
@@ -264,9 +280,9 @@ export function PrivacyDe() {
           Beitritt zählt auch das Wiederkommen und jede automatische Neuverbindung. Die Frist rückt höchstens einmal am
           Tag weiter; die Löschung liegt deshalb 29 bis 30 Tage nach dem letzten Beitritt. Tritt niemand bei, löscht
           sich die Wand 30 Tage nach dem Anlegen. Die Anwendung löscht dabei den gesamten Speicher der Wand, mit allen
-          Zetteln, Gruppen, Stimmzetteln, Teams und Ergebnissen. Bis dahin bleiben die Stimmzettel je Person und die
-          Zuordnung zu den Teams gespeichert. Der Link führt danach zu „Unbekannte Wand“, wie bei einer Wand, die es nie
-          gab.
+          Zetteln, Gruppen, Stimmzetteln, Teams, Aktionen und Ergebnissen. Bis dahin bleiben die Stimmzettel je Person,
+          die Zuordnung zu den Teams und bei den Aktionen „Wer“ und „Bis wann“ gespeichert. Der Link führt danach zu
+          „Unbekannte Wand“, wie bei einer Wand, die es nie gab.
         </li>
         <li>
           Die Moderation kann die Wand <strong>jederzeit löschen</strong> („Wand löschen“): sofort und vollständig, mit

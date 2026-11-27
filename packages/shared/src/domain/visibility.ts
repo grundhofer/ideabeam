@@ -19,6 +19,12 @@ import { shareTeam, type TeamSight } from "./teams.js";
 // of whoever shares a team with them (`shareTeam`); of everybody else's they learn the number, as while hidden. The
 // teams only ever widen what is seen: a merge or a swap brings a person notes, never takes one away.
 //
+// Per note (stage M5): a method that shows its notes and then asks for new ones in private hides the new ones while
+// what was shown stays shown (`writingFrom`, domain/agenda.ts), and a step that reveals by turn shows one note at a
+// time (domain/turns.ts). There what is seen is no longer one level for the whole wall but a level for the notes of
+// each step and the set of notes shown by turn (`NoteSight`, made by `sightOf` in domain/flow.ts). Where every note
+// is seen alike the level stands alone, as before (`Seen`).
+//
 // The worker stores notes with their writer (`StoredNote`) and sends them through the functions below: a snapshot
 // and an export through `notesFor`, a stored change through `eventFor`, the revealing through `revealedFor`. They
 // are the only way from a stored note to a frame, so snapshot and stream cannot disagree about what a person reads.
@@ -27,25 +33,47 @@ import { shareTeam, type TeamSight } from "./teams.js";
  *  person who had the wall forget them leaves notes under an id that is nobody's any more. */
 export type StoredNote = Omit<Note, "mine"> & { authorId: string };
 
+/** What is seen of the notes where it differs from note to note (stage M5): the level of a note written in each step
+ *  (`levels[step]`, the step a note was written in, `Note.step`, 0 where it says none), and the notes shown by turn,
+ *  which everybody sees whatever their level. */
+export interface NoteSight {
+  levels: readonly NoteLevel[];
+  shown: ReadonlySet<string>;
+}
+
+/** What is seen of the notes: one level for every note, or a level per note (`NoteSight`). */
+export type Seen = NoteLevel | NoteSight;
+
+/** The level of one note. */
+export function levelFor(seen: Seen, note: { id?: string; step?: number | undefined }): NoteLevel {
+  if (typeof seen === "string") return seen;
+  const level = seen.levels[note.step ?? 0] ?? seen.levels[0] ?? "hidden";
+  return level !== "all" && note.id !== undefined && seen.shown.has(note.id) ? "all" : level;
+}
+
 /** Whether a person may read a note: their own always, anybody's once the wall is revealed, and in a step of teams
  *  the notes of their team (`shared`: the note's writer shares a team with them that lets them read it; a browser
- *  holds no note it may not read, so for it every note it holds is shared). */
-export function maySeeNote(sight: NoteLevel, note: Pick<Note, "mine"> & { shared?: boolean }): boolean {
-  return sight === "all" || note.mine || (sight === "team" && note.shared === true);
+ *  holds no note it may not read, so for it every note it holds is shared). Where the worker has worked out for the
+ *  note itself whether the person reads it (`seen`, stage M5: what is seen differs from note to note), that answers. */
+export function maySeeNote(sight: NoteLevel, note: Pick<Note, "mine"> & { shared?: boolean; seen?: boolean }): boolean {
+  if (note.mine) return true;
+  if (note.seen !== undefined) return note.seen;
+  return sight === "all" || (sight === "team" && note.shared === true);
 }
 
 /** Whether a person may read a stored note: what `maySeeNote` says, with whether it is theirs and whether it is
- *  shared worked out from its writer. */
+ *  shared worked out from its writer, and its level from the step it was written in. */
 export function maySeeStored(
-  note: Pick<StoredNote, "authorId" | "createdAt">,
-  sight: NoteLevel,
+  note: Pick<StoredNote, "authorId" | "createdAt"> & { id?: string; step?: number | undefined },
+  sight: Seen,
   viewer: string | null,
   teams?: TeamSight | null,
 ): boolean {
-  if (sight === "all") return true;
+  const level = levelFor(sight, note);
+  if (level === "all") return true;
   if (viewer === null) return false;
   if (note.authorId === viewer) return true;
-  return sight === "team" && shareTeam(teams, note.authorId, viewer, note.createdAt);
+  return level === "team" && shareTeam(teams, note.authorId, viewer, note.createdAt);
 }
 
 /** A stored note as one person gets it: without its writer, with `mine`. `viewer` is null for nobody in
@@ -67,7 +95,7 @@ export interface NotesView {
  *  of teams the person's own and their team's (`teams`). */
 export function notesFor(
   notes: readonly StoredNote[],
-  sight: NoteLevel,
+  sight: Seen,
   viewer: string | null,
   teams?: TeamSight | null,
 ): NotesView {
@@ -80,7 +108,7 @@ export function notesFor(
 
 /** What a person can read of the notes at one moment: the level of the furthest step reached, and the teams. */
 export interface Sight {
-  level: NoteLevel;
+  level: Seen;
   teams?: TeamSight | null;
 }
 
@@ -116,7 +144,8 @@ export function hiddenChange(change: Change | ContentEvent): -1 | 0 | 1 {
  *
  *  Once the notes are shown everybody hears the change, and a new note says for each whether it is theirs. While
  *  they are hidden a change is always to a note of whoever made it (domain/rules.ts), so they alone hear it;
- *  everybody else hears its number and the count. */
+ *  everybody else hears its number and the count. Where what is seen differs from note to note (stage M5), `sees`
+ *  answers it as in a step of teams. */
 export function eventFor(
   event: ContentEvent,
   by: string,
@@ -126,7 +155,7 @@ export function eventFor(
   sees?: (noteId: string) => boolean,
 ): ServerEvent {
   if (viewer === by) return event;
-  if (sight === "team" && sees !== undefined) {
+  if (sees !== undefined) {
     const occupancy: ServerEvent = { type: "wall.occupancy", seq: event.seq, hidden };
     switch (event.type) {
       case "note.created":
@@ -138,9 +167,12 @@ export function eventFor(
         const moves = event.moves.filter((move) => sees(move.noteId));
         return moves.length === 0 ? occupancy : { ...event, moves };
       }
+      case "note.action":
+        return sees(event.noteId) ? event : occupancy;
       default:
-        // groups and arranging are not done in a step of teams (domain/agenda.ts, `capabilities`)
-        return occupancy;
+        // groups and arranging are done only where every note is seen (domain/agenda.ts, `capabilities`): in a step
+        // of teams they are not done at all
+        return sight === "all" ? event : occupancy;
     }
   }
   if (sight !== "all") return { type: "wall.occupancy", seq: event.seq, hidden };

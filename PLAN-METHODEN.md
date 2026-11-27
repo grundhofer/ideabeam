@@ -332,6 +332,73 @@ messbaren Ergebnissen.
 
 Abnahme je Methode: ein Ende-zu-Ende-Test, ein Export-Test, eine Zeile im Kostentest, ihre Texte in beiden Sprachen.
 
+**Stand M5 (27.11.2026, Branch `methoden-m5` auf `cd154d5`, nicht committet):** gebaut, von dir nicht abgenommen,
+nicht deployt.
+
+- Vier Methoden mit Texten DE/EN in `methods/catalogue.ts` und `methods/texts.ts`, jede mit Kurzbeschreibung, Dauer
+  und Gruppengröße auf `/neu` (ohne Evidenz) und einem Satz je Schritt, was jetzt zu tun ist (`hint`, auf der Wand
+  unter der Zeile des Schritts):
+  - „Rückblick nach Ziel und Daten“ (`rueckblick`, Rückblick, 3–12 Personen, 45 Minuten): Ziel und Fakten verdeckt,
+    Aufdecken, Gründe in Kleingruppen (zufällig, etwa vier), vorstellen und bündeln, Aktionen verdeckt vorschlagen,
+    Aktionen aufdecken, Aktionen wählen (Punkte, nur über die Aktionen), bis zu drei festlegen mit Wer und Bis wann.
+    Die Kurzbeschreibung und die Texte stellen Fakten und Zahlen nach vorn und behaupten nicht, dass der Abgleich mit
+    dem Ziel die Wirkung macht (`docs/belege-pruefung.md`); der Datenschritt fragt nach Fakten und Zahlen, „am besten
+    aus Aufzeichnungen statt aus dem Gedächtnis“.
+  - „Scheitern vorwegdenken“ (`scheitern`, Risiken, 3–12 Personen, 35 Minuten): Plan vorstellen (niemand schreibt),
+    Gründe verdeckt aufschreiben, reihum aufdecken, zu Risiken bündeln, Plan anpassen (die Änderungen sind Aktionen
+    mit Wer und Bis wann).
+  - „Stille Ideenrunde mit Rangfolge“ (`ideenrunde`, Entscheiden, 4–10 Personen, 40 Minuten): still sammeln, reihum
+    aufdecken, klären ohne zu bewerten, die fünf wichtigsten ranken (Borda), Ergebnis.
+  - „Was? Na und? Was nun?“ (`was-na-und`, Rückblick, 4–30 Personen, 30 Minuten, Liberating Structures mit derselben
+    Namensnennung wie 1-2-4-Alle): drei Runden aus allein und verdeckt, Kleingruppe (etwa fünf), vorstellen.
+- Bausteine in `packages/shared`: **Reihum aufdecken** (`domain/turns.ts`, Schritt mit `turns`): beim ersten Betreten
+  friert der Server die verdeckten Zettel in eine Reihenfolge ein (abwechselnd nach Person, die Personen nach einem
+  Startwert aus `crypto.getRandomValues`), in `flow.turns`; die Reihenfolge verlässt den Server nie, ein Browser
+  erfährt „gezeigt“ und „übrig“. „Nächster Zettel“ (`admin.turn.next`) zeigt allen zugleich genau einen Zettel (eine
+  Zeile, ein Frame `turn.shown`). In diesem Schritt wird nicht geschrieben, gelöscht oder gruppiert; der nächste
+  Schritt zeigt den Rest. **Runden, die wieder verdecken**: ein Zettel merkt sich den Schritt, in dem er geschrieben
+  wurde (`Note.step`), und zählt ab dem Beginn seiner Runde (`writingFrom`); was schon allen gezeigt war, bleibt
+  gezeigt (`sightOf` gibt dann eine Sicht je Zettel statt einer Stufe für die Wand). **Teams behalten** (`keep`): die
+  Kleingruppen der ersten Runde bleiben, mit neuen Bereichen daneben; schon gezeigte Zettel werden nicht in Bereiche
+  gelegt. **Wahl über die Zettel eines Schritts** (`optionsFrom`). **Aktionen**: Zettel eines Schritts mit
+  `noteKind: "action"`; in einem Schritt vom Typ `decide` legt die Moderation sie mit „Wer“ und „Bis wann“ fest
+  (`note.action`, freier Text bis 60 und 40 Zeichen). `checkAgenda` prüft alle drei neuen Teile. Protokoll 10.
+- Worker: Schema 5, die Spalten `step` und `action` an den Zetteln, nur bei Wänden, die dieser Build anlegt; eine Wand
+  von Schema 3 oder 4 wird nicht umgebaut (kein Schreiben beim Besuch) und bleibt bei Schema 4 ohne die Spalten (ihre
+  Methoden brauchen sie nicht). Jede Nachricht über Zettel geht in einer Wand mit Sicht je Zettel durch dieselbe
+  Prüfung je Zettel wie in einem Schritt mit Teams. „Ordnen“ ist aus, solange Zettel für jemanden verdeckt sind.
+- App: die Rangfolge (`components/Rank.tsx`: wählen, nach oben, nach unten, entfernen, nur Tasten, der Fokus folgt
+  der Zeile), die Aktionen (`components/Actions.tsx`: Wer, Bis wann, Festlegen, Neue Aktion), der Schritt „Reihum
+  aufdecken“ mit „Nächster Zettel“ als Hauptaktion der Moderation und „Noch 5 Zettel verdeckt.“, ein Schritt zum
+  Zuhören ohne „Neuer Zettel“; neue Sätze, was jetzt zu tun ist. Export: Zettel nach dem Schritt, in dem sie
+  geschrieben wurden, die festgelegten Aktionen als Aufgaben (`- [ ] … — Wer: …, bis: …`, maskiert), was reihum noch
+  verdeckt ist, fehlt mit einem Satz. Datenschutzerklärung 3.1 und 3.3 in beiden Sprachen (Aktionen mit Wer und Bis
+  wann, der Schritt eines Zettels, die Reihenfolge, die Kleingruppen über Runden).
+- Abweichungen: (1) Rückblick: „Einstimmen“ steckt in der Frage, „Abschluss“ im Festlegen; dafür ein Schritt
+  „Aktionen aufdecken“ vor der Wahl, weil der Katalog über verdeckte Aktionen abstimmen lässt und eine Wahl nie
+  anbietet, was niemand gesehen hat: neun statt zehn Schritte. (2) Scheitern: der „Impuls“ ist der Satz des
+  Schreibschritts; fünf statt sechs Schritte. (3) Ideenrunde: „Frage stellen“ steckt im Sammeln; das Ergebnis zeigt
+  Punkte und wie viele die Idee gerankt haben, keine Streuung je Idee (der Ergebnistext sagt das). (4) Was? Na und?
+  Was nun?: die „Einführung“ ist die Frage; alle Schritte warten auf „Weiter“ (deine Entscheidung 2: selbst weiter nur
+  in kurzen, getakteten Methoden wie 1-2-4-Alle); die dritte Runde schreibt Zettel, keine Aktionen. (5) Kein „Auch
+  bekannt als“ für „Pre-Mortem“ und „Nominalgruppentechnik“: beide „Register offen“, niemand hat in TMview gesucht;
+  „What, So What, Now What?“ steht nur im Deutschen. (6) Die Spalte `step` (Architektur 1) kommt erst mit Schema 5 und
+  nur für neue Wände; Methoden, die nicht wieder verdecken, senden und speichern keinen Schritt (alles zählt ab
+  Schritt 0 wie bisher). (7) Höchstens drei Aktionen ist ein Satz, keine Regel. (8) „15. Januar“ steht im Export als
+  `15\. Januar` (die Maskierung eines Feldanfangs; die Darstellung ist dieselbe). (9) In `Ballot.tsx` und
+  `Estimate.tsx` ist nur ein Typ geändert (`TFunction`): mit den neuen Texten wurde der Typ von i18next zu tief. (10)
+  `packages/shared/package.json` sagt jetzt `"sideEffects": ["./src/protocol.ts"]` (dort steht `z.config`): ohne die
+  Angabe legte der Bundler mit dem größeren Katalog die Texte der Methoden in die Datei, die der Start lädt, was
+  `apps/web/tests/worker.spec.ts` verbietet; mit ihr lädt der Start 174 statt 182 KB (gzip).
+- `CI=1 pnpm checks` grün: 405 Tests im geteilten Paket, 126 in `packages/arrange`, 266 im Worker, 301 in der App, 362 Ende-zu-Ende, keiner übersprungen. Kosten mit 8 Personen: Ideenrunde 49 Zeilen (16 Ideen, 16 Mal „Nächster Zettel“,
+  8 Rangfolgen), Scheitern 47 (16 Gründe, 16 Mal „Nächster Zettel“, 3 Risiken, 3 festgelegte Änderungen), Rückblick 49
+  (24 Zettel, 8 Stimmzettel, 3 festgelegte Aktionen), Was? Na und? Was nun? 45 (30 Zettel in drei Runden); jeder Zettel
+  und jedes „Nächster Zettel“ kostet eine Zeile mehr.
+- Nicht geprüft: kein Bildschirmleser, nicht bei 2000 px angesehen; kein Ende-zu-Ende-Test mit mehr als einem Team in
+  den Kleingruppen (der Worker-Test spielt acht Personen in zwei Teams); im Browser zeigt das Verschieben eines
+  fremden, reihum aufgedeckten Zettels sich erst mit der Antwort des Servers (die Regeln des Browsers kennen die
+  Reihenfolge nicht); Texte aus dem Katalog nicht neu an den Quellen geprüft (sie behaupten keine Evidenz).
+
 ### M7: Agenda und Startseite
 
 Mehrere Methoden hintereinander auf einer Wand (anhängen, entfernen, verschieben ohne Ziehen), Schritte ändern, die

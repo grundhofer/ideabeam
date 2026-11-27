@@ -7,6 +7,7 @@
 // and no colour that says anything (sebaro, KERN): median, middle half, range, how many estimated; and from the
 // second round on how the median and the middle half moved.
 import type { FormEvent } from "react";
+import type { TFunction } from "i18next";
 import { useTranslation } from "react-i18next";
 import { estimateNumber, NOTE_TEXT_MAX, type EstimateResult, type EstimateSummary } from "@ideabeam/shared";
 import { useLang } from "../i18n";
@@ -20,11 +21,7 @@ function amount(lang: "de" | "en", value: number, unit: string | null): string {
 }
 
 /** The summary of a round as one sentence: what the state and a screen reader say. */
-export function summarySentence(
-  t: ReturnType<typeof useTranslation>["t"],
-  lang: "de" | "en",
-  result: EstimateResult,
-): string {
+export function summarySentence(t: TFunction, lang: "de" | "en", result: EstimateResult): string {
   const summary = result.summary;
   if (summary === null) return t("estimate.none");
   return t("estimate.sentence", {

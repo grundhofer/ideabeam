@@ -28,7 +28,20 @@ function frames(page: Page) {
  *  an estimate. */
 function numbersIn(raw: readonly string[]): Set<number> {
   const found = new Set<number>();
-  const skip = new Set(["seq", "createdAt", "updatedAt", "serverNow", "x", "y", "w", "h", "rev", "endsAt", "at"]);
+  const skip = new Set([
+    "seq",
+    "protocolVersion",
+    "createdAt",
+    "updatedAt",
+    "serverNow",
+    "x",
+    "y",
+    "w",
+    "h",
+    "rev",
+    "endsAt",
+    "at",
+  ]);
   const walk = (value: unknown, key: string) => {
     if (typeof value === "number" && !skip.has(key)) found.add(value);
     else if (Array.isArray(value)) value.forEach((item) => walk(item, key));

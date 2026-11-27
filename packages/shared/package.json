@@ -4,6 +4,9 @@
   "description": "IdeaBeam: the protocol and the rules that browser and worker share. Plain functions, no I/O.",
   "license": "AGPL-3.0-or-later",
   "type": "module",
+  "sideEffects": [
+    "./src/protocol.ts"
+  ],
   "exports": {
     ".": "./src/index.ts"
   },

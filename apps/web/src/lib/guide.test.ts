@@ -263,3 +263,42 @@ test("pairs and small groups (stage M4): before the teams, in a team, and when t
   );
   expect(say({ admin: true, notes: 3, people: 4, hidden: true, teams: "team" }, "en")).toContain("“More” → “Teams”");
 });
+
+test("stage M5: ranking, revealing by turn, listening, deciding, and small groups that wait for „Weiter“", () => {
+  const rank = (admin: boolean, cast: boolean) =>
+    guide({ admin, notes: 3, people: 4, vote: { cast, counted: false, rank: true } });
+  expect([rank(true, false), rank(true, true), rank(false, false), rank(false, true)]).toEqual([
+    "adminRank",
+    "adminRankCast",
+    "memberRank",
+    "memberRankCast",
+  ]);
+  // counted, a ranking says what every counted vote says
+  expect(guide({ admin: true, notes: 3, people: 4, vote: { cast: true, counted: true, rank: true } })).toBe(
+    "adminCounted",
+  );
+  const turn = (admin: boolean, left: number) => guide({ admin, notes: 3, people: 4, turn: { left } });
+  expect([turn(true, 2), turn(true, 0), turn(false, 2)]).toEqual(["adminTurn", "adminTurnDone", "memberTurn"]);
+  expect([
+    guide({ admin: true, notes: 0, people: 4, step: "present" }),
+    guide({ admin: false, notes: 0, people: 4, step: "present" }),
+  ]).toEqual(["adminListen", "memberListen"]);
+  expect([
+    guide({ admin: true, notes: 2, people: 4, step: "decide" }),
+    guide({ admin: false, notes: 2, people: 4, step: "decide" }),
+  ]).toEqual(["adminDecide", "memberDecide"]);
+  const groups = (admin: boolean, teams: "beforeGroups" | "presentGroups", hidden: boolean) =>
+    guide({ admin, notes: 3, people: 4, hidden, teams });
+  expect([groups(true, "beforeGroups", true), groups(false, "beforeGroups", true)]).toEqual([
+    "adminBeforeGroups",
+    "memberBeforeGroups",
+  ]);
+  expect([groups(true, "presentGroups", false), groups(false, "presentGroups", false)]).toEqual([
+    "adminPresentGroups",
+    "memberPresentGroups",
+  ]);
+  expect(say({ admin: true, notes: 3, people: 4, turn: { left: 3 } })).toContain("„Nächster Zettel“");
+  expect(say({ admin: false, notes: 3, people: 4, vote: { cast: false, counted: false, rank: true } }, "en")).toContain(
+    "“Cast vote”",
+  );
+});

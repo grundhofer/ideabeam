@@ -3,10 +3,10 @@
 
 import { methodAttribution, methodTexts, stepName } from "../methods/texts.js";
 import type { ArrangeLanguage, Group } from "../protocol.js";
-import type { NoteLevel } from "./agenda.js";
-import type { MethodId } from "./method.js";
+import { keepsSteps } from "./agenda.js";
+import type { MethodId, Step } from "./method.js";
 import { teamCounts, type Teams } from "./teams.js";
-import { notesFor, type StoredNote } from "./visibility.js";
+import { notesFor, type Seen, type StoredNote } from "./visibility.js";
 import { CATALOGUE } from "../methods/catalogue.js";
 import type { EstimateResult, EstimateSummary, RankingResult, VoteResult } from "./vote.js";
 
@@ -45,6 +45,12 @@ type VoteKind = RankingResult["kind"];
 //    in them; the notes the teams wrote stand like every note, once a step shows them to everybody (the presenting
 //    of „1-2-4-Alle“). While a step of teams lasts, a person's file holds their own notes and their team's.
 //  - **The attribution a method's licence asks for** (Liberating Structures, CC BY-SA 4.0), under its description.
+//  - **Notes by the step they were written in** (stage M5), for a method of more than one round of writing or with
+//    actions: the notes in no group stand under the name of their step (the goal, the facts, the reasons, each round
+//    of „Was? Na und? Was nun?“), in the order of the steps; groups stand as before. The actions the moderation
+//    agreed on stand last, as task lines with who does them and by when (`- [ ] … — Wer: …, bis: …`), as typed and
+//    escaped like every text; an action nobody agreed on stays a note of its step. A note still waiting for its turn
+//    is left out like a hidden one, and a line says how many are.
 //  - **The fixed words in the language of whoever asks** (`de` or `en`, as „Ordnen“ takes it: a wall has no
 //    language of its own). They stand in the table below and nowhere else; the Worker writes the file, so they
 //    cannot come from the app's string tables.
@@ -54,8 +60,11 @@ export interface ExportInput {
   question: string;
   /** The method the wall runs: its name and short description stand above the results. */
   methodId: MethodId;
-  /** What is seen of the others' notes (domain/agenda.ts, `noteLevel`). */
-  sight: NoteLevel;
+  /** What is seen of the others' notes (domain/flow.ts, `sightOf`): one level, or a level per note (stage M5). */
+  sight: Seen;
+  /** The wall's steps as it stores them (its agenda): the names of the steps the notes were written in, and which take
+   *  actions. Left out: the catalogue's steps of the method. */
+  steps?: readonly Step[];
   /** Every note of the wall, with its writer: what of it goes into the file is decided here, by `notesFor`. */
   notes: readonly StoredNote[];
   groups: readonly Group[];
@@ -89,6 +98,13 @@ const COUNTED_EN: Record<VoteKind, (limit: number) => string> = {
 const WORDS = {
   de: {
     reasons: "Begründungen",
+    agreed: "Festgelegte Aktionen",
+    who: "Wer",
+    due: "bis",
+    hiddenSome: (count: number) =>
+      count === 1
+        ? "1 Zettel ist noch verdeckt und fehlt hier."
+        : `${count} Zettel sind noch verdeckt und fehlen hier.`,
     teams: (parts: string) => `In Teams gearbeitet: ${parts}.`,
     teamCount: (step: string, n: number) => `${step}: ${n === 1 ? "1 Team" : `${n} Teams`}`,
     hiddenTeam: (count: number) =>
@@ -137,6 +153,11 @@ const WORDS = {
   },
   en: {
     reasons: "Reasons",
+    agreed: "Agreed actions",
+    who: "Who",
+    due: "by",
+    hiddenSome: (count: number) =>
+      count === 1 ? "1 note is still hidden and left out here." : `${count} notes are still hidden and left out here.`,
     teams: (parts: string) => `Worked in teams: ${parts}.`,
     teamCount: (step: string, n: number) => `${step}: ${n === 1 ? "1 team" : `${n} teams`}`,
     hiddenTeam: (count: number) =>
@@ -258,14 +279,24 @@ export function wallMarkdown(input: ExportInput): string {
   const groups = [...input.groups].sort((a, b) => a.ord - b.ord || (a.id < b.id ? -1 : a.id > b.id ? 1 : 0));
   const notes = [...view.notes].sort((a, b) => a.createdAt - b.createdAt || (a.id < b.id ? -1 : a.id > b.id ? 1 : 0));
   const known = new Set(groups.map((group) => group.id));
+  const steps = input.steps ?? CATALOGUE[input.methodId].steps;
+  // a method of more than one round of writing, or with actions, lists its notes by the step they were written in
+  const actionSteps = new Set(steps.flatMap((step, at) => (step.noteKind === "action" ? [at] : [])));
+  const sectioned = keepsSteps(steps);
+  // the actions the moderation agreed on: as task lines at the end, nowhere else
+  const agreed = sectioned ? notes.filter((note) => note.action !== undefined && actionSteps.has(note.step ?? 0)) : [];
   const inGroup = new Map<string, string[]>();
   const loose: string[] = [];
+  const looseBy = new Map<number, string[]>();
   for (const note of notes) {
+    if (agreed.includes(note)) continue;
     // a note whose group is gone counts as in none, as in the list
-    if (note.groupId === null || !known.has(note.groupId)) loose.push(note.text);
-    else inGroup.set(note.groupId, [...(inGroup.get(note.groupId) ?? []), note.text]);
+    if (note.groupId === null || !known.has(note.groupId)) {
+      loose.push(note.text);
+      looseBy.set(note.step ?? 0, [...(looseBy.get(note.step ?? 0) ?? []), note.text]);
+    } else inGroup.set(note.groupId, [...(inGroup.get(note.groupId) ?? []), note.text]);
   }
-  const writing = input.sight !== "all";
+  const writing = typeof input.sight === "string" ? input.sight !== "all" : view.hidden > 0;
   const method = methodTexts(input.language, input.methodId);
 
   const lines: string[] = [
@@ -280,7 +311,6 @@ export function wallMarkdown(input: ExportInput): string {
   if (attribution !== null) lines.push(`_${escapeMarkdown(`${attribution.credit} ${attribution.licence}`)}_`, "");
   const counts = teamCounts(input.teams);
   if (counts.length > 0) {
-    const steps = CATALOGUE[input.methodId].steps;
     const parts = counts.map(({ step, teams }) =>
       words.teamCount(stepName(input.language, input.methodId, steps[step]?.key ?? ""), teams),
     );
@@ -306,7 +336,13 @@ export function wallMarkdown(input: ExportInput): string {
     lines.push("");
   }
   if (writing && view.hidden > 0) {
-    lines.push(`_${input.sight === "team" ? words.hiddenTeam(view.hidden) : words.hidden(view.hidden)}_`, "");
+    const said =
+      typeof input.sight !== "string"
+        ? words.hiddenSome(view.hidden)
+        : input.sight === "team"
+          ? words.hiddenTeam(view.hidden)
+          : words.hidden(view.hidden);
+    lines.push(`_${said}_`, "");
   }
   if (notes.length === 0 && groups.length === 0) lines.push(`_${writing ? words.noneOwn : words.none}_`, "");
 
@@ -318,9 +354,27 @@ export function wallMarkdown(input: ExportInput): string {
     for (const text of texts) lines.push(`- ${escapeMarkdown(text)}`);
     lines.push("");
   }
-  if (loose.length > 0) {
+  if (sectioned) {
+    // by the step they were written in, in the order of the steps
+    for (const [step, texts] of [...looseBy.entries()].sort((a, b) => a[0] - b[0])) {
+      lines.push(`## ${escapeMarkdown(stepName(input.language, input.methodId, steps[step]?.key ?? ""))}`, "");
+      for (const text of texts) lines.push(`- ${escapeMarkdown(text)}`);
+      lines.push("");
+    }
+    if (agreed.length > 0) {
+      lines.push(`## ${words.agreed}`, "");
+      for (const note of agreed) {
+        const parts = [
+          ...(note.action?.who ? [`${words.who}: ${escapeMarkdown(note.action.who)}`] : []),
+          ...(note.action?.due ? [`${words.due}: ${escapeMarkdown(note.action.due)}`] : []),
+        ];
+        lines.push(`- [ ] ${escapeMarkdown(note.text)}${parts.length > 0 ? ` — ${parts.join(", ")}` : ""}`);
+      }
+      lines.push("");
+    }
+  } else if (loose.length > 0) {
     // on a wall without groups these are simply its notes; while the notes are hidden, one's own (as the list says)
-    const reasons = CATALOGUE[input.methodId].steps.some((step) => step.noteKind === "reason");
+    const reasons = steps.some((step) => step.noteKind === "reason");
     lines.push(
       `## ${groups.length > 0 ? words.ungrouped : writing ? (input.sight === "team" ? words.ownTeam : words.own) : reasons ? words.reasons : words.notes}`,
       "",

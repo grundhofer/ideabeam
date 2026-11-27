@@ -19,6 +19,7 @@ import { NO_CLOCK, stoppedClock } from "./clock.js";
 import { NO_STEP, stepContext, type StepContext } from "./flow.js";
 import { decide, type WallReader } from "./rules.js";
 import type { TeamView } from "./teams.js";
+import type { TurnView } from "./turns.js";
 import type { Ballot, VoteResult, VoteRound } from "./vote.js";
 
 /** What a wall holds: its notes with their places, and its groups. Both in the order they were made. */
@@ -72,6 +73,8 @@ export interface WallState extends WallContent {
   teams: TeamView | null;
   /** The steps that move on by themselves whose moving on the moderation has switched off. */
   manual: number[];
+  /** The steps that reveal by turn which the wall has entered: how many notes are shown and left (stage M5). */
+  turns: TurnView[];
   // `notes` and `groups` are what the worker has told: the wall as it is stored. What a browser shows is `shown()`.
   /** The number of the last stored change this browser has heard of (protocol.ts, `seq`). */
   seq: number;
@@ -102,6 +105,7 @@ export const initialWallState: WallState = {
   results: [],
   teams: null,
   manual: [],
+  turns: [],
   notes: [],
   groups: [],
   seq: 0,
@@ -133,6 +137,7 @@ export function applyServerEvent(state: WallState, event: ServerEvent): WallStat
         results: event.results,
         teams: event.teams,
         manual: event.manual,
+        turns: event.turns,
         notes: event.notes,
         groups: event.groups,
         seq: event.seq,
@@ -168,6 +173,7 @@ export function applyServerEvent(state: WallState, event: ServerEvent): WallStat
     case "note.created":
     case "note.updated":
     case "note.deleted":
+    case "note.action":
     case "notes.moved":
     case "group.created":
     case "group.updated":
@@ -208,6 +214,15 @@ export function applyServerEvent(state: WallState, event: ServerEvent): WallStat
         hidden: event.hidden,
         ...numbered(state, event.seq),
       };
+    case "turn.shown":
+      // „Nächster Zettel“: the note this browser did not have, and the step's turns as they stand
+      return {
+        ...state,
+        notes: event.notes.reduce((notes, note) => place(without(notes, note.id), note, madeBefore), state.notes),
+        hidden: event.hidden,
+        turns: withTurn(state.turns, event.turn),
+        ...numbered(state, event.seq),
+      };
     case "auto.changed":
       return { ...state, manual: event.manual, ...numbered(state, event.seq) };
     case "step.changed":
@@ -227,6 +242,8 @@ export function applyServerEvent(state: WallState, event: ServerEvent): WallStat
         votes: event.round === undefined ? state.votes : withRound(state.votes, event.round),
         voted: event.voted ?? 0,
         ballot: event.ballot ?? null,
+        // into a step that reveals by turn: its turns as they stand
+        turns: event.turn === undefined ? state.turns : withTurn(state.turns, event.turn),
         ...numbered(state, event.seq),
       };
     case "ballot.stored":
@@ -264,6 +281,11 @@ export function applyServerEvent(state: WallState, event: ServerEvent): WallStat
  *  frame carries the last of its numbers. */
 function numbered(state: WallState, seq: number, took = 1): Pick<WallState, "seq" | "gap"> {
   return { seq, gap: state.gap || seq !== state.seq + took };
+}
+
+/** The turns with one step's as it stands now. */
+function withTurn(turns: TurnView[], turn: TurnView): TurnView[] {
+  return [...turns.filter((known) => known.step !== turn.step), turn];
 }
 
 /** The votes with one of them as it stands now. */
@@ -323,6 +345,17 @@ export function applyChange(content: WallContent, change: Change | ContentEvent)
       };
     case "note.deleted":
       return { notes: without(notes, change.noteId), groups };
+    case "note.action":
+      return {
+        notes: notes.map((note) => {
+          if (note.id !== change.noteId) return note;
+          if (change.action !== null) return { ...note, action: change.action };
+          const rest = { ...note };
+          delete rest.action;
+          return rest;
+        }),
+        groups,
+      };
     case "notes.moved": {
       const to = new Map(change.moves.map((move) => [move.noteId, move]));
       return {
@@ -396,7 +429,7 @@ export function readerOf(content: WallContent, arrangeRun: string | null = null)
 /** What the step the wall is in allows, and what is seen of the others' notes, as this browser knows it. Before the
  *  first `sync`: nothing (`NO_STEP`). One answer per state, as `shown()` gives. */
 export function stepContextOf(state: Pick<WallState, "agenda" | "step" | "reach">): StepContext {
-  return state.agenda === null ? NO_STEP : stepContext(state.agenda, state);
+  return state.agenda === null ? NO_STEP : stepContext(state.agenda, { step: state.step, reach: state.reach });
 }
 
 /** The person this browser is, once the wall is known. */

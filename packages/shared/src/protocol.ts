@@ -5,6 +5,7 @@ import * as z from "zod/mini";
 import { agendaRequestSchema, resolvedAgendaSchema } from "./domain/agenda.js";
 import { MAX_STEPS } from "./domain/method.js";
 import { teamViewSchema } from "./domain/teams.js";
+import { turnViewSchema } from "./domain/turns.js";
 import { ballotSchema, voteResultSchema, voteRoundSchema } from "./domain/vote.js";
 import { hexIdSchema, wallIdSchema } from "./ids.js";
 import { sessionKeySchema } from "./session-key.js";
@@ -31,12 +32,14 @@ z.config({ jitless: true });
 // Stage M2 brought hidden voting (domain/vote.ts): `ballot.cast`, `admin.step.count`, and to the browsers
 // `ballot.stored` (the voter's own), `votes.count` (a number), `results.published` (once counted). Stage M4 brought
 // pairs and small groups (domain/teams.ts): `admin.teams.set`, `team.changed`, the team in `sync` and `step.changed`;
-// and steps that move on by themselves: `admin.step.auto`, `auto.changed`, the clock a step move starts.
+// and steps that move on by themselves: `admin.step.auto`, `auto.changed`, the clock a step move starts. Stage M5
+// brought revealing by turn (domain/turns.ts): `admin.turn.next`, `turn.shown`, the turns in `sync` and
+// `step.changed`; the step a note was written in (`Note.step`), and actions with „Wer“ and „Bis wann“ (`note.action`).
 
 // The version of these frames. A deploy disconnects every socket, and a tab that reconnects still runs the old
 // script: the worker names its version in every `sync`, and a browser that reads another one asks for a reload
 // instead of guessing. Raised with every change a running tab cannot read (PLAN.md 3.4).
-export const PROTOCOL_VERSION = 9;
+export const PROTOCOL_VERSION = 10;
 
 // The admin's capability, minted with the wall and kept in the creating browser: 128 bits of hex. Anything else
 // cannot be one and is refused before it is compared.
@@ -76,6 +79,16 @@ export const GROUP_MIN_SIZE = 96;
 export const GROUP_MAX_SIZE = 20_000;
 
 export const noteTextSchema = z.string().check(z.trim(), z.minLength(1), z.maxLength(NOTE_TEXT_MAX));
+/** How long „Wer“ and „Bis wann“ of an action are at most (stage M5): a name or two, a date or a word for one. */
+export const ACTION_WHO_MAX = 60;
+export const ACTION_DUE_MAX = 40;
+/** What the moderation agreed on for an action (stage M5, a step of type `decide`): who does it and by when, as the
+ *  team typed it, free text, each of it may be empty. One line each, no control characters. */
+export const noteActionSchema = z.object({
+  who: z.string().check(z.trim(), z.maxLength(ACTION_WHO_MAX), z.regex(/^[^\p{Cc}\u2028\u2029]*$/u)),
+  due: z.string().check(z.trim(), z.maxLength(ACTION_DUE_MAX), z.regex(/^[^\p{Cc}\u2028\u2029]*$/u)),
+});
+export type NoteAction = z.infer<typeof noteActionSchema>;
 export const groupTitleSchema = z.string().check(z.trim(), z.maxLength(GROUP_TITLE_MAX));
 export const coordSchema = z.int().check(z.minimum(-COORD_LIMIT), z.maximum(COORD_LIMIT));
 export const groupSizeSchema = z.int().check(z.minimum(GROUP_MIN_SIZE), z.maximum(GROUP_MAX_SIZE));
@@ -133,6 +146,12 @@ export const noteSchema = z.object({
   groupId: z.nullable(hexIdSchema),
   createdAt: z.int(),
   updatedAt: z.int(),
+  /** The step it was written in (stage M5), where that is not the first: what is seen of it follows from it
+   *  (domain/agenda.ts, `writingFrom`), and an action is a note written in a step that takes actions. Left out: 0.
+   *  A wall of an older build stores none, and every note of it counts from step 0. */
+  step: z.optional(z.int().check(z.minimum(1))),
+  /** An action the moderation agreed on (stage M5): who does it and by when. Left out: none agreed. */
+  action: z.optional(noteActionSchema),
 });
 export type Note = z.infer<typeof noteSchema>;
 
@@ -366,6 +385,14 @@ export const clientCommandSchema = z.discriminatedUnion("type", [
       z.refine((moves) => new Set(moves.map((move) => move.noteId)).size === moves.length),
     ),
   }),
+  // The moderation's, in a step of type `decide` (stage M5): an action is agreed on, with who does it and by when, or
+  // (null) no longer. Absolute: sent again, it finds its work done.
+  z.object({
+    type: z.literal("note.action"),
+    opId: hexIdSchema,
+    noteId: hexIdSchema,
+    action: z.nullable(noteActionSchema),
+  }),
   // A group made by hand: a frame, with a title or still without one.
   z.object({
     type: z.literal("group.create"),
@@ -449,6 +476,15 @@ export const clientCommandSchema = z.discriminatedUnion("type", [
     step: z.int().check(z.minimum(0), z.maximum(MAX_STEPS - 1)),
     on: z.boolean(),
   }),
+  // The moderation's, in a step that reveals by turn (stage M5, domain/turns.ts): „Nächster Zettel“ shows the next
+  // note of the order. `shown` is how many the browser knew to be shown: sent a second time, it finds more shown and
+  // changes nothing.
+  z.object({
+    type: z.literal("admin.turn.next"),
+    opId: hexIdSchema,
+    step: z.int().check(z.minimum(0), z.maximum(MAX_STEPS - 1)),
+    shown: z.int().check(z.minimum(0), z.maximum(MAX_NOTES)),
+  }),
   // The moderation's: counts the vote of the step the wall is in, and everybody gets the result at once. Once.
   z.object({
     type: z.literal("admin.step.count"),
@@ -484,6 +520,7 @@ export type ContentCommand = Extract<
       | "note.create"
       | "note.update"
       | "note.delete"
+      | "note.action"
       | "notes.move"
       | "group.create"
       | "group.update"
@@ -495,6 +532,9 @@ export type ContentCommand = Extract<
 
 /** The moderation's command that moves the wall to another step. */
 export type StepCommand = Extract<ClientCommand, { type: "admin.step.go" }>;
+
+/** The moderation's „Nächster Zettel“. */
+export type TurnCommand = Extract<ClientCommand, { type: "admin.turn.next" }>;
 
 /** The moderation's teams. */
 export type TeamsCommand = Extract<ClientCommand, { type: "admin.teams.set" }>;
@@ -606,6 +646,9 @@ export const serverEventSchema = z.discriminatedUnion("type", [
     teams: z.nullable(teamViewSchema),
     /** The steps that move on by themselves whose moving on the moderation has switched off. */
     manual: z.array(z.int().check(z.minimum(0))),
+    /** The steps that reveal by turn which the wall has entered: how many notes are shown and how many are left
+     *  (domain/turns.ts). Never the order. */
+    turns: z.array(turnViewSchema),
   }),
   // The answer to a command that was taken. `seq` is the number its change got; a command that found its work
   // done changed nothing, and its answer names the number the wall stands at.
@@ -643,6 +686,13 @@ export const serverEventSchema = z.discriminatedUnion("type", [
     updatedAt: z.int(),
   }),
   z.object({ type: z.literal("note.deleted"), seq: z.int(), noteId: hexIdSchema }),
+  // An action agreed on, or no longer (stage M5).
+  z.object({
+    type: z.literal("note.action"),
+    seq: z.int(),
+    noteId: hexIdSchema,
+    action: z.nullable(noteActionSchema),
+  }),
   // Only the notes that went somewhere: a note that lay there already, or is gone, is not in it.
   z.object({ type: z.literal("notes.moved"), seq: z.int(), moves: z.array(noteMoveSchema).check(z.minLength(1)) }),
   z.object({ type: z.literal("group.created"), seq: z.int(), group: groupSchema }),
@@ -710,6 +760,17 @@ export const serverEventSchema = z.discriminatedUnion("type", [
     /** The step's clock, where the move started it (a step that moves on by itself); left out, it stopped. */
     clock: z.optional(clockSchema),
     serverNow: z.optional(z.number()),
+    /** Into a step that reveals by turn: how many notes are shown and how many are left (stage M5). */
+    turn: z.optional(turnViewSchema),
+  }),
+  // „Nächster Zettel“ (stage M5): the note shown now, to everybody who did not have it (its writer had it), and the
+  // step's turns as they stand; `hidden`, how many notes are hidden from this browser now.
+  z.object({
+    type: z.literal("turn.shown"),
+    seq: z.int(),
+    turn: turnViewSchema,
+    notes: z.array(noteSchema),
+    hidden: z.int().check(z.minimum(0)),
   }),
   // The teams changed within the step (stage M4): somebody came late and joined a team, or the moderation swapped
   // people. Each browser gets its own: the teams as it is told them, the notes it may read from now on and could
@@ -755,6 +816,7 @@ export type ContentEvent = Extract<
       | "note.created"
       | "note.updated"
       | "note.deleted"
+      | "note.action"
       | "notes.moved"
       | "group.created"
       | "group.updated"

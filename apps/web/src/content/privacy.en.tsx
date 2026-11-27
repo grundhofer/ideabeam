@@ -130,7 +130,18 @@ export function PrivacyEn() {
         <li>
           <strong>Notes:</strong> up to 500 per wall, each with its text (at most 300 characters), the identifier of the
           person who wrote it, its place on the surface (where the note was created and where it lies now), the group it
-          belongs to, and the times it was created and its text was last changed. Who moved a note is not stored.
+          belongs to, and the times it was created and its text was last changed; on a wall that reveals hidden notes in
+          turn or asks for hidden notes again after revealing, also the step it was written in. Who moved a note is not
+          stored.
+        </li>
+        <li>
+          <strong>Actions:</strong> in a method that agrees on actions (such as “Review against goal and data” or
+          “Imagine the failure”), the actions are notes like any other (above). When the facilitator agrees on an
+          action, the wall stores two fields with the note: <strong>“Who” and “By when”</strong>, each free text (at
+          most 60 and 40 characters), as the team types it, for instance a name or a date. What goes there is the team’s
+          to decide; the application does not check it. Both stay stored for as long as the wall exists (section 3.3),
+          everyone on the wall sees them, and the file of “Save as Markdown” holds them with the agreed actions. Who
+          agreed on an action is not stored.
         </li>
         <li>
           <strong>Groups:</strong> up to 80 per wall, each with its title (at most 60 characters, it may be missing),
@@ -162,7 +173,8 @@ export function PrivacyEn() {
           step with the teams. In a step with teams every person sees their team’s notes, without names; the facilitator
           sees who is in which team, everybody else only their own team with the names in it. In a pair it is easy to
           guess who wrote which note. The file of “Save as Markdown” names only how many teams there were, never who was
-          in them.
+          in them. In a method with several rounds (such as “What? So what? Now what?”) the small groups stay the same
+          from round to round.
         </li>
       </ul>
       <p>
@@ -177,7 +189,12 @@ export function PrivacyEn() {
         many there are. Revealing is the facilitator’s, asks first and cannot be taken back; after it everyone sees all
         notes. Only the facilitator sets the clock of the writing phase; everyone sees the time left. When it runs out,
         nothing happens by itself, except in short, timed steps such as those of “1-2-4-All”: there the wall moves on to
-        the next step by itself when the clock runs out, which the facilitator can switch off per step.
+        the next step by itself when the clock runs out, which the facilitator can switch off per step. In a method that
+        reveals in turn (such as “Silent round with ranking”), the server fixes an order of the hidden notes when the
+        step begins, alternating by person and without names; it never leaves the server. With “Next note” the
+        facilitator reveals one note after another to everyone. A method that asks for hidden notes again after
+        revealing keeps the new notes hidden until a later step shows them; what was revealed already stays visible to
+        everyone.
       </p>
       <p>
         <strong>Voting in secret.</strong> People vote in their own browser; only “Cast vote” sends the ballot to the
@@ -241,9 +258,9 @@ export function PrivacyEn() {
           A wall deletes itself <strong>30 days after the last time a person joined, automatically</strong>. Coming back
           and every automatic reconnection count as joining too. The deadline moves at most once a day; so the deletion
           lies 29 to 30 days after the last join. If nobody joins, the wall deletes itself 30 days after it was created.
-          The application then deletes the whole storage of the wall, with all notes, groups, ballots, teams and
-          results. Until then the ballots stay stored per person, and so does the team assignment. After that the link
-          leads to “Unknown wall”, as for a wall that never existed.
+          The application then deletes the whole storage of the wall, with all notes, groups, ballots, teams, actions
+          and results. Until then the ballots stay stored per person, and so do the team assignment and the “Who” and
+          “By when” of the actions. After that the link leads to “Unknown wall”, as for a wall that never existed.
         </li>
         <li>
           The facilitator can delete the wall <strong>at any time</strong> (“Delete wall”): at once and completely, with

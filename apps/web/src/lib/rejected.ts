@@ -90,6 +90,8 @@ export function rejectKey(rejected: Rejected): RejectKey {
       if (applying || undoing) return "phaseArrange";
       // the teams crossed a step move: the wall is in a step without teams by now
       if (command === "admin.teams.set") return "phaseTeams";
+      // „Nächster Zettel“ that crossed a step move
+      if (command === "admin.turn.next") return "staleStep";
       return command?.startsWith("admin.clock.") ? "phaseClock" : "invalid";
     case "STALE":
       // An arrangement that is no longer the wall's last one cannot be taken back. A step move made for a step the
@@ -100,7 +102,7 @@ export function rejectKey(rejected: Rejected): RejectKey {
       if (command === "ballot.cast") return "staleBallot";
       // teams made for teams that changed meanwhile (somebody came late, another tab of the moderation swapped)
       if (command === "admin.teams.set") return "staleTeams";
-      if (command === "admin.step.count") return "staleStep";
+      if (command === "admin.step.count" || command === "admin.turn.next") return "staleStep";
       return command === "admin.step.go" ? "staleStep" : "staleClock";
     case "DAY_SPENT":
       // the wall's brake: its day's changes are written; the sentence names the time it goes on (`resetsAt`)

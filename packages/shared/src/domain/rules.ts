@@ -39,6 +39,10 @@ import { maySeeNote } from "./visibility.js";
 //
 // Whose a note is, the rules ask as `mine`: the browser knows no more than that about a note, and the worker
 // answers it for whoever sent the command.
+//
+// A note is written in the step the wall is in (`Note.step`, stage M5). In a step of type `decide` the moderation
+// agrees on an action (a note written in a step that takes actions) with who does it and by when (`note.action`), or
+// takes that back; nobody else does, and nothing else is an action.
 
 /** Who sent the command. */
 export type Actor = Pick<Participant, "id" | "role">;
@@ -51,10 +55,12 @@ export type Placement = Pick<Note, "x" | "y" | "groupId">;
  *  is asked for whoever sent the command. */
 export interface WallReader {
   /** A note's text and whether it is the sender's, or null: the wall holds no such note. `shared`: in a step of
-   *  teams, the note's writer shares a team with the sender that lets them read it (domain/teams.ts). */
-  note(id: string): (Pick<Note, "mine" | "text"> & { shared?: boolean }) | null;
+   *  teams, the note's writer shares a team with the sender that lets them read it (domain/teams.ts). `seen`: where
+   *  what is seen differs from note to note (stage M5), whether the sender reads it. `step` and `action`: the step it
+   *  was written in, and the action agreed on (stage M5). */
+  note(id: string): (Pick<Note, "mine" | "text" | "step" | "action"> & { shared?: boolean; seen?: boolean }) | null;
   /** Where a note lies and whether it is the sender's, or null: the wall holds no such note. */
-  placement(id: string): (Placement & Pick<Note, "mine"> & { shared?: boolean }) | null;
+  placement(id: string): (Placement & Pick<Note, "mine"> & { shared?: boolean; seen?: boolean }) | null;
   group(id: string): Group | null;
   /** How many notes the wall holds. */
   noteCount(): number;
@@ -97,7 +103,7 @@ export function mayDeleteNote(note: Pick<Note, "mine">, by: Pick<Actor, "role">)
  *  worker's when it stores, the browser's for what it shows meanwhile. */
 export function decide(wall: WallReader, command: ContentCommand, by: Actor, now: number, ctx: StepContext): Decision {
   // A note the sender may not read is not on the wall for them: no answer tells them otherwise.
-  const seen = <T extends Pick<Note, "mine"> & { shared?: boolean }>(note: T | null): T | null =>
+  const seen = <T extends Pick<Note, "mine"> & { shared?: boolean; seen?: boolean }>(note: T | null): T | null =>
     note !== null && maySeeNote(ctx.sight, note) ? note : null;
   switch (command.type) {
     case "note.create": {
@@ -119,6 +125,8 @@ export function decide(wall: WallReader, command: ContentCommand, by: Actor, now
           groupId: null,
           createdAt: now,
           updatedAt: now,
+          // the step it is written in, where that is not the first (stage M5)
+          ...(ctx.keepsSteps && ctx.at > 0 ? { step: ctx.at } : {}),
         },
       });
     }
@@ -138,6 +146,20 @@ export function decide(wall: WallReader, command: ContentCommand, by: Actor, now
       if (existing === null) return UNCHANGED;
       if (!mayDeleteNote(existing, by)) return refused("NOT_AUTHOR");
       return changed({ type: "note.deleted", noteId: command.noteId });
+    }
+    case "note.action": {
+      if (!ctx.can.decide) return refused("PHASE");
+      if (by.role !== "admin") return refused("NOT_ADMIN");
+      const existing = seen(wall.note(command.noteId));
+      if (existing === null) return refused("NOT_FOUND");
+      // only a note written in a step that takes actions is one
+      if (!ctx.actionSteps.includes(existing.step ?? 0)) return refused("INVALID");
+      const before = existing.action ?? null;
+      const after = command.action;
+      if (before === null ? after === null : after !== null && before.who === after.who && before.due === after.due) {
+        return UNCHANGED;
+      }
+      return changed({ type: "note.action", noteId: command.noteId, action: after });
     }
     case "notes.move": {
       if (!ctx.can.move) return refused("PHASE");

@@ -81,6 +81,7 @@ const sync = (notes: Note[] = NOTES, groups: Group[] = []): ServerEvent => ({
   results: [],
   teams: null,
   manual: [],
+  turns: [],
 });
 
 const json = (status: number, body: unknown) =>

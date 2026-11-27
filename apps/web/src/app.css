@@ -1069,6 +1069,12 @@
 .app-state:has(> .app-state__step) {
   padding-block-start: var(--sb-space-2);
 }
+/* what to do now in the method's words (stage M5): under the step's name, a sentence of the body */
+.app-state__hint {
+  margin: 0 0 var(--sb-space-2);
+  max-inline-size: var(--sb-size-measure-prose);
+  text-wrap: pretty;
+}
 .app-wall__method {
   margin: 0 0 var(--sb-space-2);
   color: var(--sb-color-text-muted);
@@ -1149,6 +1155,39 @@
 }
 .app-results--side {
   margin-block: 0 var(--sb-space-4);
+}
+
+/* A step that ranks (components/Rank.tsx, stage M5): the ballot's column with two lists under headings of their own,
+   the chosen options in their order with their places, the rest to choose from. A step that decides
+   (components/Actions.tsx): the actions as rows, each with „Wer“ and „Bis wann“ for the moderation, the field for a
+   new action under them. */
+.app-rank__heading {
+  margin: var(--sb-space-4) 0 var(--sb-space-1);
+  font: var(--sb-type-body-strong);
+  letter-spacing: var(--sb-type-body-strong-tracking);
+}
+.app-actions__form {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  gap: var(--sb-space-2) var(--sb-space-4);
+  margin-block-start: var(--sb-space-2);
+}
+.app-actions__form .sb-field {
+  /* no sebaro token: two short fields side by side where there is room, under each other where there is none */
+  flex: 1 1 12rem;
+  min-inline-size: 0;
+}
+.app-actions__keys {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--sb-space-2);
+}
+.app-actions__add {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sb-space-2);
+  margin-block-start: var(--sb-space-4);
 }
 
 /* A step that estimates (components/Estimate.tsx, stage M3): the number field with its unit and the reason, in the

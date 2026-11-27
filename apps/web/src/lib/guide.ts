@@ -20,7 +20,9 @@
 // hidden writing: the estimate is what to do there. After a counted round it says what to talk about while another
 // round follows, and where both rounds stand once none does. In a step of pairs or small groups (stage M4) it says to
 // talk in the team and who reads its notes, and to the moderation where the map of the teams is; in the hidden
-// writing before the teams meet, that the teams come next; in a step where the teams present, what that is.
+// writing before the teams meet, that the teams come next; in a step where the teams present, what that is. Stage M5:
+// a vote that ranks says how to rank; a step that reveals by turn says who reveals and how; a step in which somebody
+// presents and nobody writes says to listen; a step that decides says who agrees on the actions and how.
 import { ARRANGE_MIN_NOTES, type StepType } from "@ideabeam/shared";
 
 /** What the sentence depends on. */
@@ -52,13 +54,17 @@ export type Standing = {
   arranged?: "fresh" | "changed" | null;
   /** In a step that votes: whether this person's ballot is stored, whether the vote is counted, and whether it is
    *  an estimate. */
-  vote?: { cast: boolean; counted: boolean; estimate?: boolean } | null;
+  vote?: { cast: boolean; counted: boolean; estimate?: boolean; rank?: boolean } | null;
+  /** In a step that reveals by turn (stage M5): how many notes are left to reveal. null or left out: no such step. */
+  turn?: { left: number } | null;
   /** After a counted estimate, outside a step that votes: another round of estimates follows (`talk`), or none does
    *  (`result`). null or left out: the wall has counted no estimate. */
   estimates?: "talk" | "result" | null;
   /** The step works in teams (stage M4): `team`. The step is the presenting of the teams' results: `present`. The
-   *  hidden writing before a step of teams: `before`. Left out: none of these. */
-  teams?: "team" | "present" | "before" | null;
+   *  hidden writing before a step of teams: `before`. Stage M5, where the small groups are no pairs that grew into
+   *  fours by themselves: the presenting of the small groups (`presentGroups`), the hidden writing before them, which
+   *  waits for „Weiter“ (`beforeGroups`). Left out: none of these. */
+  teams?: "team" | "present" | "before" | "presentGroups" | "beforeGroups" | null;
 };
 
 export type GuideKey =
@@ -107,7 +113,22 @@ export type GuideKey =
   | "adminPresent"
   | "memberPresent"
   | "adminBeforeTeams"
-  | "memberBeforeTeams";
+  | "memberBeforeTeams"
+  | "adminRank"
+  | "adminRankCast"
+  | "memberRank"
+  | "memberRankCast"
+  | "adminTurn"
+  | "adminTurnDone"
+  | "memberTurn"
+  | "adminListen"
+  | "memberListen"
+  | "adminDecide"
+  | "memberDecide"
+  | "adminBeforeGroups"
+  | "memberBeforeGroups"
+  | "adminPresentGroups"
+  | "memberPresentGroups";
 
 /** The sentence that says what to do now. Alone, the next step is to bring the others in; with others, to write;
  *  once notes lie there, to put what belongs together into a group; once groups stand, to move the rest together
@@ -133,13 +154,21 @@ export function guide(standing: Standing): GuideKey {
       const state = vote.counted ? "Estimated" : vote.cast ? "EstimateCast" : "Estimate";
       return `${admin ? "admin" : "member"}${state}`;
     }
+    if (vote.rank === true && !vote.counted) return `${admin ? "admin" : "member"}${vote.cast ? "RankCast" : "Rank"}`;
     const state = vote.counted ? "Counted" : vote.cast ? "VoteCast" : "Vote";
     return `${admin ? "admin" : "member"}${state}`;
   }
+  // a step that reveals by turn: the moderation reveals, one note at a time
+  const turn = standing.turn ?? null;
+  if (turn !== null) return admin ? (turn.left > 0 ? "adminTurn" : "adminTurnDone") : "memberTurn";
+  // somebody presents, and nobody writes yet; the moderation agrees on the actions
+  if (standing.step === "present") return admin ? "adminListen" : "memberListen";
+  if (standing.step === "decide") return admin ? "adminDecide" : "memberDecide";
   // a step of teams: talk in the team, and who reads its notes; the moderation has the map
   const teams = standing.teams ?? null;
   if (teams === "team") return admin ? "adminTeam" : "memberTeam";
   if (hidden && teams === "before" && !alone) return admin ? "adminBeforeTeams" : "memberBeforeTeams";
+  if (hidden && teams === "beforeGroups" && !alone) return admin ? "adminBeforeGroups" : "memberBeforeGroups";
   if (hidden) {
     if (admin) {
       // alone, the link comes first, whatever the clock says
@@ -157,6 +186,7 @@ export function guide(standing: Standing): GuideKey {
   }
   // the teams present what they found
   if (teams === "present" && !alone) return admin ? "adminPresent" : "memberPresent";
+  if (teams === "presentGroups" && !alone) return admin ? "adminPresentGroups" : "memberPresentGroups";
   // a step to talk the result through, with others on the wall
   if (standing.step === "discuss" && !alone) return admin ? "adminDiscuss" : "memberDiscuss";
   // how far the sorting is: no group yet, under way, or every note in a group that has a name

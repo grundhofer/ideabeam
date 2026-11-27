@@ -14,6 +14,7 @@ import {
   decideCount,
   decideStep,
   decideTeamsSet,
+  decideTurn,
   enterTeams,
   displayNameKey,
   eventFor,
@@ -22,6 +23,7 @@ import {
   initialFlow,
   joinNotice,
   layoutIntoAreas,
+  levelFor,
   MAX_FRAME_BYTES,
   MAX_ONLINE,
   MAX_PARTICIPANTS,
@@ -31,20 +33,26 @@ import {
   notesFor,
   numbersOf,
   openRound,
+  optionsStep,
   placeLatecomer,
   planJoin,
   PROTOCOL_VERSION,
   readClientFrame,
   readStoredFlow,
   revealedFor,
+  revealOrder,
   roundOf,
   shareTeam,
+  sightOf,
   stepContext,
   tally,
   teamViewFor,
+  turnRoundOf,
+  turnViewOf,
   WALL_DAILY_ROWS,
   wallBrake,
   wallMarkdown,
+  withTurnRound,
   type AgendaRequest,
   type ArrangeLanguage,
   type ArrangeRecord,
@@ -63,8 +71,10 @@ import {
   type Participant,
   type ParticipantRole,
   type Placement,
+  type NoteAction,
   type RejectCode,
   type ResolvedAgenda,
+  type Seen,
   type ServerEvent,
   type Sight,
   type StepCommand,
@@ -74,6 +84,8 @@ import {
   type Teams,
   type TeamsCommand,
   type TitleSource,
+  type TurnCommand,
+  type TurnRound,
   type VoteOption,
   type VoteResult,
   type VoteRound,
@@ -112,7 +124,13 @@ const BUCKET_REFILL_PER_SEC = 2;
 const RESYNC_COST = 10;
 
 // Raised with every change of what a wall stores; migrate() brings a wall of an older build up to it.
-const SCHEMA_VERSION = 4;
+const SCHEMA_VERSION = 5;
+// Schema 5 (stage M5 of the methods): a note's row holds the step it was written in and the action agreed on for it
+// (`step`, `action`). Only a wall made by this build has the two columns: no wall is altered on a visit, which would
+// write rows where a look should write none, and a wall of an older build runs one of the methods before M5, whose
+// notes all count from step 0 and none of which is an action. Such a wall stays at schema 4 (`NOTES_PLAIN`) and its
+// rows are read and written without the two columns (noteSteps()).
+const NOTES_PLAIN = 4;
 // The oldest schema this build reads as it stands, without a row written: a wall of schema 3 has no agenda row and
 // its flow row in the old shape, and both are read as they are (readFlow()). Its next step move or control of the
 // clock writes them in the shape of schema 4 (writeFlow()).
@@ -158,8 +176,8 @@ const WALL_TABLES = [
     joined_at INTEGER NOT NULL
   ) WITHOUT ROWID`,
 ];
-const CONTENT_TABLES = [
-  `CREATE TABLE IF NOT EXISTS notes (
+// schema 5: the step a note was written in, and the action agreed on for it (JSON, or null)
+const NOTES_TABLE = `CREATE TABLE IF NOT EXISTS notes (
     id TEXT PRIMARY KEY,
     author_id TEXT NOT NULL,
     text TEXT NOT NULL,
@@ -167,8 +185,12 @@ const CONTENT_TABLES = [
     y0 INTEGER NOT NULL,
     created_at INTEGER NOT NULL,
     updated_at INTEGER NOT NULL,
-    seq INTEGER NOT NULL
-  ) WITHOUT ROWID`,
+    seq INTEGER NOT NULL,
+    step INTEGER NOT NULL DEFAULT 0,
+    action TEXT
+  ) WITHOUT ROWID`;
+const CONTENT_TABLES = [
+  NOTES_TABLE,
   `CREATE TABLE IF NOT EXISTS groups (
     id TEXT PRIMARY KEY,
     title TEXT NOT NULL,
@@ -202,7 +224,8 @@ const BALLOT_TABLE = `CREATE TABLE IF NOT EXISTS ballots (
     PRIMARY KEY (step, voter)
   ) WITHOUT ROWID`;
 
-const NOTE_COLUMNS = "id, author_id, text, x0, y0, created_at, updated_at, seq";
+const NOTE_COLUMNS_PLAIN = "id, author_id, text, x0, y0, created_at, updated_at, seq";
+const NOTE_COLUMNS = `${NOTE_COLUMNS_PLAIN}, step, action`;
 const GROUP_COLUMNS = "id, title, title_source, locked, x, y, w, h, ord, seq";
 
 export interface WallCreation {
@@ -239,6 +262,9 @@ interface NoteRow {
   created_at: number;
   updated_at: number;
   seq: number;
+  /** schema 5 */
+  step?: number;
+  action?: string | null;
 }
 
 interface GroupRow {
@@ -384,7 +410,8 @@ export class WallRoom extends DurableObject<Env> {
     const text = wallMarkdown({
       question,
       methodId: methodOfStep(agenda, flow.step),
-      sight: stepContext(agenda, flow).sight,
+      sight: sightOf(agenda, flow),
+      steps: agenda.steps,
       notes: content.notes,
       groups: content.groups,
       // the counted votes' rankings, never a ballot
@@ -489,6 +516,7 @@ export class WallRoom extends DurableObject<Env> {
       case "note.create":
       case "note.update":
       case "note.delete":
+      case "note.action":
       case "notes.move":
       case "group.create":
       case "group.update":
@@ -511,6 +539,9 @@ export class WallRoom extends DurableObject<Env> {
         return;
       case "admin.step.count":
         this.handleCount(ws, participant, command);
+        return;
+      case "admin.turn.next":
+        this.handleTurn(ws, participant, command);
         return;
       case "admin.clock.start":
       case "admin.clock.pause":
@@ -680,7 +711,7 @@ export class WallRoom extends DurableObject<Env> {
   private handleContent(ws: WebSocket, participant: Participant, command: ContentCommand): void {
     const now = Date.now();
     const ctx = this.stepNow();
-    const wall = this.reader(participant.id);
+    const wall = this.reader(participant.id, ctx.seen);
     const decision = decide(wall, command, participant, now, ctx);
     if (decision.kind === "refused") {
       this.reject(ws, command.opId, decision.code);
@@ -698,8 +729,9 @@ export class WallRoom extends DurableObject<Env> {
     }
     // the next number; an arrangement takes as many as the rows it writes, and carries the last of them
     const event = { ...decision.change, seq: seq + numbersOf(decision.change) } as ContentEvent;
-    // in a step of teams: who may read the notes the change is about, read before a delete takes them away
-    const sees = ctx.sight === "team" ? this.seesFor(event, participant.id) : undefined;
+    // in a step of teams, or where what is seen differs from note to note (stage M5): who may read the notes the
+    // change is about, read before a delete takes them away
+    const sees = perNote(ctx.seen) ? this.seesFor(event, participant.id, ctx.seen) : undefined;
     this.store(event, wall, participant.id, brake.fresh ? brake.mark : null, decision.record);
     this.publish(event, participant.id, ctx, sees);
     this.ack(ws, command.opId, event.seq);
@@ -708,7 +740,7 @@ export class WallRoom extends DurableObject<Env> {
   /** The wall as the rules ask about it for one person: whether a note is theirs is answered here, from who wrote
    *  it. Each question is one look into the storage, and nothing is read that the command does not ask for: a
    *  note's text is changed without the positions being read, a note is moved without its text. */
-  private reader(participantId: string): StoredWall {
+  private reader(participantId: string, seen: Seen = "all"): StoredWall {
     let read: Positions | null = null;
     const positions = (): Positions => (read ??= this.readPositions().positions);
     let arranged: ArrangeRecord | null | undefined;
@@ -717,33 +749,59 @@ export class WallRoom extends DurableObject<Env> {
     let teams: Teams | null | undefined;
     const shared = (author: string, createdAt: number): boolean =>
       author !== participantId && shareTeam((teams ??= this.readTeams()), author, participantId, createdAt);
+    // where what is seen differs from note to note (stage M5): whether the sender reads the note, from its step
+    const mixed = typeof seen !== "string";
+    const steps = this.noteSteps() ? ", step, action" : "";
+    const seenBy = (id: string, author: string, createdAt: number, step: number): boolean =>
+      maySeeStored({ id, authorId: author, createdAt, step }, seen, participantId, (teams ??= this.readTeams()));
     return {
       positions,
       note: (id) => {
-        const row = this.sql.exec("SELECT author_id, text, created_at FROM notes WHERE id = ?", id).toArray()[0];
+        const row = this.sql
+          .exec(`SELECT author_id, text, created_at${steps} FROM notes WHERE id = ?`, id)
+          .toArray()[0];
         if (row === undefined) return null;
         const author = String(row.author_id);
         const createdAt = Number(row.created_at);
+        const more = stepAndAction(row);
         // asked by the rules in a step of teams alone: a getter, so no other step reads the teams' row
         return {
           mine: author === participantId,
           text: String(row.text),
+          ...more,
           get shared() {
             return shared(author, createdAt);
           },
+          ...(mixed
+            ? {
+                get seen() {
+                  return seenBy(id, author, createdAt, more.step ?? 0);
+                },
+              }
+            : {}),
         };
       },
       placement: (id) => {
-        const row = this.sql.exec("SELECT author_id, x0, y0, created_at FROM notes WHERE id = ?", id).toArray()[0];
+        const row = this.sql
+          .exec(`SELECT author_id, x0, y0, created_at${steps} FROM notes WHERE id = ?`, id)
+          .toArray()[0];
         if (row === undefined) return null;
         const author = String(row.author_id);
         const createdAt = Number(row.created_at);
+        const step = stepAndAction(row).step ?? 0;
         return {
           ...placementOf(Number(row.x0), Number(row.y0), positions()[id]),
           mine: author === participantId,
           get shared() {
             return shared(author, createdAt);
           },
+          ...(mixed
+            ? {
+                get seen() {
+                  return seenBy(id, author, createdAt, step);
+                },
+              }
+            : {}),
         };
       },
       group: (id) => {
@@ -783,19 +841,25 @@ export class WallRoom extends DurableObject<Env> {
       switch (event.type) {
         case "note.created": {
           const { note } = event;
-          this.sql.exec(
-            `INSERT INTO notes (${NOTE_COLUMNS}) VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
-            note.id,
-            by,
-            note.text,
-            note.x,
-            note.y,
-            note.createdAt,
-            note.updatedAt,
-            event.seq,
-          );
+          const values = [note.id, by, note.text, note.x, note.y, note.createdAt, note.updatedAt, event.seq];
+          // a wall of schema 5 keeps the step it was written in (0 where the note says none)
+          if (this.noteSteps()) {
+            this.sql.exec(
+              `INSERT INTO notes (${NOTE_COLUMNS}) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, NULL)`,
+              ...values,
+              note.step ?? 0,
+            );
+          } else this.sql.exec(`INSERT INTO notes (${NOTE_COLUMNS_PLAIN}) VALUES (?, ?, ?, ?, ?, ?, ?, ?)`, ...values);
           return;
         }
+        case "note.action":
+          this.sql.exec(
+            "UPDATE notes SET action = ?, seq = ? WHERE id = ?",
+            event.action === null ? null : JSON.stringify(event.action),
+            event.seq,
+            event.noteId,
+          );
+          return;
         case "note.updated":
           this.sql.exec(
             "UPDATE notes SET text = ?, updated_at = ?, seq = ? WHERE id = ?",
@@ -1001,10 +1065,22 @@ export class WallRoom extends DurableObject<Env> {
     const teams = formed === null ? before : { ...formed, seq: changedSeq };
     // Into a step that votes for the first time: what may be chosen is frozen now, in the same row (stage M2).
     const config = state.agenda.steps[to]?.vote;
-    const content = widens || decision.opens ? this.readContent() : null;
+    // into a step that reveals by turn, a step entered again included: its order, and which of its notes are still
+    // there (stage M5)
+    const turning = state.agenda.steps[to]?.turns === true;
+    const content = widens || decision.opens || turning ? this.readContent() : null;
+    // what is seen of the notes before the move and after it (stage M5: per note where it differs)
+    const was: Sight = { level: sightOf(state.agenda, state.flow), teams: before };
     // Teams formed anew: every note written alone goes into its writer's team's area (`layoutIntoAreas`), one
-    // movement in the layout row, written with the flow. What the browsers get below lies where it lies now.
-    const moves = formed === null || content === null ? [] : layoutIntoAreas(content.notes, formed);
+    // movement in the layout row, written with the flow. What the browsers get below lies where it lies now. A note
+    // the whole wall has seen already stays where the wall put it (stage M5: the next round's teams are kept).
+    const moves =
+      formed === null || content === null
+        ? []
+        : layoutIntoAreas(
+            content.notes.filter((note) => levelFor(was.level, note) !== "all"),
+            formed,
+          );
     if (content !== null && moves.length > 0) {
       const to = new Map(moves.map((move) => [move.noteId, move]));
       content.notes = content.notes.map((note) => {
@@ -1015,7 +1091,22 @@ export class WallRoom extends DurableObject<Env> {
     let votes = state.flow.votes;
     if (decision.opens && config !== undefined && content !== null) {
       const sight = stepContext(state.agenda, decision.flow).sight;
-      votes = [...(votes ?? []), openRound(to, config, content, sight === "all")];
+      // a vote over the notes of one step (stage M5, `optionsFrom`): those notes, and no groups
+      const from = optionsStep(state.agenda.steps, to);
+      const offered =
+        from === null
+          ? content
+          : { notes: content.notes.filter((note) => (note.step ?? 0) === from), groups: [] as Group[] };
+      votes = [...(votes ?? []), openRound(to, config, offered, sight === "all")];
+    }
+    // Into a step that reveals by turn for the first time (stage M5): the notes nobody but their writer sees (or
+    // their team) are put in their order now, interleaved by writer at random, in the same row.
+    let turns: TurnRound[] | undefined = state.flow.turns;
+    if (decision.turns && content !== null) {
+      const unseen = content.notes.filter(
+        (note) => levelFor(sightOf(state.agenda, { reach: decision.flow.reach, turns: turns ?? [] }), note) !== "all",
+      );
+      turns = withTurnRound(turns, { step: to, order: revealOrder(unseen, randomSeed()), shown: 0 });
     }
     const flow: Flow = {
       v: 2,
@@ -1023,7 +1114,12 @@ export class WallRoom extends DurableObject<Env> {
       seq: changedSeq,
       ...(votes === undefined ? {} : { votes }),
       ...(state.flow.manual === undefined ? {} : { manual: state.flow.manual }),
+      ...(turns === undefined ? {} : { turns }),
     };
+    const will: Sight = { level: sightOf(state.agenda, flow), teams };
+    const turnRound = turnRoundOf(turns, to);
+    const ids = turnRound === null || content === null ? null : new Set(content.notes.map((note) => note.id));
+    const turn = turnRound === null || ids === null ? null : turnViewOf(turnRound, (id) => ids.has(id));
     this.writeFlow(
       state,
       flow,
@@ -1045,12 +1141,11 @@ export class WallRoom extends DurableObject<Env> {
     const admins = teams === null ? null : this.admins();
     const started = decision.flow.clock.endsAt !== null;
     // the movements of the notes a person may read after the move: their own, and their team's
-    const after: Sight = { level: stepContext(state.agenda, decision.flow).sight, teams };
     const writers = new Map((content?.notes ?? []).map((note) => [note.id, note]));
     const movedFor = (viewer: string) =>
       moves.filter((move) => {
         const note = writers.get(move.noteId);
-        return note !== undefined && maySeeStored(note, after.level, viewer, after.teams);
+        return note !== undefined && maySeeStored(note, will.level, viewer, will.teams);
       });
     const changedFor = new Map<string, string>();
     const changed = (viewer: string): string => {
@@ -1067,6 +1162,7 @@ export class WallRoom extends DurableObject<Env> {
           ...(teams === null || admins === null ? {} : { team: teamViewFor(teams, viewer, admins.has(viewer)) }),
           ...(movedFor(viewer).length === 0 ? {} : { moves: movedFor(viewer) }),
           ...(started ? { clock: decision.flow.clock, serverNow: now } : {}),
+          ...(turn === null ? {} : { turn }),
         };
         frame = JSON.stringify(event);
         changedFor.set(viewer, frame);
@@ -1078,8 +1174,6 @@ export class WallRoom extends DurableObject<Env> {
       return changedSeq;
     }
     const { notes } = content;
-    const was: Sight = { level: stepContext(state.agenda, state.flow).sight, teams: before };
-    const will: Sight = { level: stepContext(state.agenda, decision.flow).sight, teams };
     // one text per person, however many tabs they have open
     const revealed = new Map<string, { frame: string; hidden: number }>();
     this.deliver(changedSeq, (viewer) => {
@@ -1150,7 +1244,7 @@ export class WallRoom extends DurableObject<Env> {
     const stored = { ...after, seq };
     if (after.seq <= before.seq) this.setMeta("teams", JSON.stringify(stored));
     const { notes } = this.readContent();
-    const level = this.stepNow().sight;
+    const level = this.stepNow().seen;
     const admins = this.admins();
     const told = new Map<string, { frame: string; hidden: number }>();
     this.deliver(
@@ -1219,25 +1313,36 @@ export class WallRoom extends DurableObject<Env> {
 
   /** In a step of teams: for each person, which of the notes a change is about they may read (eventFor()). Read
    *  before the change is stored, so a note that is deleted is still there to ask about. */
-  private seesFor(event: ContentEvent, by: string): (viewer: string) => (noteId: string) => boolean {
+  private seesFor(event: ContentEvent, by: string, seen: Seen): (viewer: string) => (noteId: string) => boolean {
     const ids =
       event.type === "note.created"
         ? []
-        : event.type === "note.updated" || event.type === "note.deleted"
+        : event.type === "note.updated" || event.type === "note.deleted" || event.type === "note.action"
           ? [event.noteId]
           : event.type === "notes.moved"
             ? event.moves.map((move) => move.noteId)
             : [];
-    const writers = new Map<string, { authorId: string; createdAt: number }>();
-    if (event.type === "note.created") writers.set(event.note.id, { authorId: by, createdAt: event.note.createdAt });
+    const writers = new Map<string, { id: string; authorId: string; createdAt: number; step: number }>();
+    if (event.type === "note.created") {
+      const { note } = event;
+      writers.set(note.id, { id: note.id, authorId: by, createdAt: note.createdAt, step: note.step ?? 0 });
+    }
+    const step = this.noteSteps() ? ", step" : "";
     for (const id of ids) {
-      const row = this.sql.exec("SELECT author_id, created_at FROM notes WHERE id = ?", id).toArray()[0];
-      if (row !== undefined) writers.set(id, { authorId: String(row.author_id), createdAt: Number(row.created_at) });
+      const row = this.sql.exec(`SELECT author_id, created_at${step} FROM notes WHERE id = ?`, id).toArray()[0];
+      if (row !== undefined) {
+        writers.set(id, {
+          id,
+          authorId: String(row.author_id),
+          createdAt: Number(row.created_at),
+          step: Number(row.step ?? 0),
+        });
+      }
     }
     const teams = this.readTeams();
     return (viewer) => (noteId) => {
       const note = writers.get(noteId);
-      return note !== undefined && maySeeStored(note, "team", viewer, teams);
+      return note !== undefined && maySeeStored(note, seen, viewer, teams);
     };
   }
 
@@ -1325,6 +1430,51 @@ export class WallRoom extends DurableObject<Env> {
     const frame = JSON.stringify({ type: "results.published", seq: next, result } satisfies ServerEvent);
     this.deliver(next, () => ({ frames: [frame] }));
     this.ack(ws, command.opId, next);
+  }
+
+  /** The moderation's „Nächster Zettel“ (`admin.turn.next`, stage M5): the rules decide (packages/shared, domain/turns.ts),
+   *  this stores the flow, in which one more note of the step's order is shown (one row), and tells everyone: the note
+   *  to whoever did not have it, with the turns as they stand and how many notes stay hidden from them (`turn.shown`).
+   *  Sent again it finds the note shown and changes nothing. Never refused by the brake, like every move of the
+   *  moderation's. */
+  private handleTurn(ws: WebSocket, participant: Participant, command: TurnCommand): void {
+    const state = this.readFlow();
+    const ids = this.noteIds();
+    const decision = decideTurn(state.flow, state.agenda.steps, command, participant, (id) => ids.has(id));
+    if (decision.kind === "refused") {
+      this.reject(ws, command.opId, decision.code);
+      return;
+    }
+    if (decision.kind === "unchanged") {
+      this.ack(ws, command.opId, this.currentSeq());
+      return;
+    }
+    const seq = this.currentSeq() + 1;
+    const flow: Flow = { ...state.flow, turns: withTurnRound(state.flow.turns, decision.round), seq };
+    this.writeFlow(state, flow);
+    const { notes } = this.readContent();
+    const teams = this.readTeams();
+    const was: Sight = { level: sightOf(state.agenda, state.flow), teams };
+    const will: Sight = { level: sightOf(state.agenda, flow), teams };
+    const turn = turnViewOf(decision.round, (id) => ids.has(id));
+    const told = new Map<string, { frame: string; hidden: number }>();
+    this.deliver(seq, (viewer) => {
+      let one = told.get(viewer);
+      if (one === undefined) {
+        const hidden = hiddenAt(notes, will, viewer);
+        const event: ServerEvent = {
+          type: "turn.shown",
+          seq,
+          turn,
+          notes: revealedFor(notes, viewer, was, will),
+          hidden,
+        };
+        one = { frame: JSON.stringify(event), hidden };
+        told.set(viewer, one);
+      }
+      return { frames: [one.frame], hidden: one.hidden };
+    });
+    this.ack(ws, command.opId, seq);
   }
 
   /** Whether the wall has stored a ballot ever: the table is made with the first one. */
@@ -1423,7 +1573,8 @@ export class WallRoom extends DurableObject<Env> {
       this.setMeta("flow", JSON.stringify(flow));
       if (!state.legacy) return;
       this.setMeta("agenda", JSON.stringify(state.agenda));
-      this.setMeta("schemaVersion", String(SCHEMA_VERSION));
+      // its notes' table stays as it is: schema 4, without the step of a note (noteSteps())
+      this.setMeta("schemaVersion", String(NOTES_PLAIN));
     });
   }
 
@@ -1436,12 +1587,12 @@ export class WallRoom extends DurableObject<Env> {
   /** How many notes the wall holds that are not this person's, as the storage has it. Reads every note: the way of
    *  a socket that carries no count, never the usual way of a command (publish()). */
   private hiddenFor(participantId: string): number {
-    const sight = this.stepNow().sight;
-    if (sight !== "team") {
+    const seen = this.stepNow().seen;
+    if (!perNote(seen)) {
       return Number(this.sql.exec("SELECT COUNT(*) AS n FROM notes WHERE author_id != ?", participantId).one().n);
     }
-    // in a step of teams: those that are neither the person's nor their team's
-    return hiddenAt(this.readContent().notes, { level: sight, teams: this.readTeams() }, participantId);
+    // in a step of teams, or where what is seen differs from note to note: those this person may not read
+    return hiddenAt(this.readContent().notes, { level: seen, teams: this.readTeams() }, participantId);
   }
 
   // ───────────────────────── time ─────────────────────────
@@ -1524,8 +1675,25 @@ export class WallRoom extends DurableObject<Env> {
         this.setMeta("flow", JSON.stringify(initialFlow()));
         this.setMeta("agenda", JSON.stringify(agendaFor({ hidden: false })));
       }
-      this.setMeta("schemaVersion", String(SCHEMA_VERSION));
+      // a wall of stage 1 gets the notes of now; one of stage 2 keeps its notes' table, without the step (schema 4)
+      this.setMeta("schemaVersion", String(from < 2 ? SCHEMA_VERSION : NOTES_PLAIN));
     });
+  }
+
+  /** Whether the wall's notes keep the step they were written in and their action (schema 5): a wall made by this
+   *  build. One row read. */
+  private noteSteps(): boolean {
+    return Number(this.getMeta("schemaVersion") ?? "0") >= SCHEMA_VERSION;
+  }
+
+  /** The ids of the wall's notes: what tells a turn's note that is gone from one that is there. */
+  private noteIds(): Set<string> {
+    return new Set(
+      this.sql
+        .exec("SELECT id FROM notes")
+        .toArray()
+        .map((row) => String(row.id)),
+    );
   }
 
   /** Whether the wall was made and not deleted. A wall that does not exist has no tables at all. */
@@ -1564,7 +1732,7 @@ export class WallRoom extends DurableObject<Env> {
     const { flow, agenda } = this.readFlow();
     const content = this.readContent();
     const teams = this.readTeams();
-    const view = notesFor(content.notes, stepContext(agenda, flow).sight, participantId, teams);
+    const view = notesFor(content.notes, sightOf(agenda, flow), participantId, teams);
     // a step that votes: one's own ballot in it and how many have voted, never anybody else's ballot; and the
     // results of what is counted
     const round = roundOf(flow.votes, flow.step);
@@ -1593,6 +1761,8 @@ export class WallRoom extends DurableObject<Env> {
       // the teams as this person is told them: the moderation the map, everybody else their own team
       teams: teams === null ? null : teamViewFor(teams, participantId, this.admins().has(participantId)),
       manual: flow.manual ?? [],
+      // the steps that reveal by turn: how many are shown and left, never the order
+      turns: (flow.turns ?? []).map((round) => turnViewOf(round, (id) => content.notes.some((note) => note.id === id))),
     };
   }
 
@@ -1601,8 +1771,9 @@ export class WallRoom extends DurableObject<Env> {
   private readContent(): { notes: StoredNote[]; groups: Group[]; seq: number } {
     const layout = this.readPositions();
     let seq = layout.seq;
+    const columns = this.noteSteps() ? NOTE_COLUMNS : NOTE_COLUMNS_PLAIN;
     const notes = this.sql
-      .exec(`SELECT ${NOTE_COLUMNS} FROM notes ORDER BY created_at, id`)
+      .exec(`SELECT ${columns} FROM notes ORDER BY created_at, id`)
       .toArray()
       .map((found): StoredNote => {
         const row = found as unknown as NoteRow;
@@ -1614,6 +1785,7 @@ export class WallRoom extends DurableObject<Env> {
           ...placementOf(Number(row.x0), Number(row.y0), layout.positions[String(row.id)]),
           createdAt: Number(row.created_at),
           updatedAt: Number(row.updated_at),
+          ...stepAndAction(row),
         };
       });
     const groups = this.readGroups();
@@ -1718,15 +1890,21 @@ export class WallRoom extends DurableObject<Env> {
     const moved = hiddenChange(event);
     this.deliver(event.seq, (viewer, attachment) => {
       if (viewer === by) return { frames: [text("by", viewer, 0)] };
-      if (ctx.sight === "all") return { frames: [text("others", viewer, 0)] };
-      // in a step of teams: the change itself to whoever may read its notes, its number to everybody else
+      if (sees === undefined && ctx.seen === "all") return { frames: [text("others", viewer, 0)] };
+      // in a step of teams, or where what is seen differs from note to note: the change itself to whoever may read
+      // its notes, its number to everybody else
       if (sees !== undefined) {
         const told = eventFor(event, by, viewer, ctx.sight, 0, sees(viewer));
         if (told.type !== "wall.occupancy") return { frames: [JSON.stringify(told)] };
       }
       // never below none: a count is a frame every browser has to be able to read
       const hidden = attachment.hidden === undefined ? this.hiddenFor(viewer) : Math.max(0, attachment.hidden + moved);
-      return { frames: [text(`hidden ${hidden}`, viewer, hidden)], hidden };
+      let frame = texts.get(`hidden ${hidden}`);
+      if (frame === undefined) {
+        frame = JSON.stringify({ type: "wall.occupancy", seq: event.seq, hidden } satisfies ServerEvent);
+        texts.set(`hidden ${hidden}`, frame);
+      }
+      return { frames: [frame], hidden };
     });
   }
 
@@ -1808,6 +1986,13 @@ function rowToGroup(row: GroupRow): Group {
   };
 }
 
+/** A note's step and action as a frame carries them: only where there is one (schema 5). */
+function stepAndAction(row: { step?: unknown; action?: unknown }): { step?: number; action?: NoteAction } {
+  const step = Number(row.step ?? 0);
+  const action = typeof row.action === "string" ? (JSON.parse(row.action) as NoteAction) : null;
+  return { ...(step > 0 ? { step } : {}), ...(action === null ? {} : { action }) };
+}
+
 /** Where a note lies: where it was moved to last, or where it was made, in no group. */
 function placementOf(x0: number, y0: number, moved: Positions[string] | undefined): Placement {
   return moved === undefined ? { x: x0, y: y0, groupId: null } : { x: moved[0], y: moved[1], groupId: moved[2] };
@@ -1832,6 +2017,12 @@ function tooLarge(frame: string): boolean {
  *  teams. */
 function randomSeed(): number {
   return crypto.getRandomValues(new Uint32Array(1))[0] ?? 0;
+}
+
+/** Whether what a person reads of the notes has to be worked out note by note: in a step of teams, or where what is
+ *  seen differs from note to note (stage M5). */
+function perNote(seen: Seen): boolean {
+  return typeof seen !== "string" || seen === "team";
 }
 
 /** How many of the wall's notes a person may not read at `sight`. */
