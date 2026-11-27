@@ -76,7 +76,7 @@ type Kind =
   | "note.update, hidden"
   | "notes.move, hidden"
   | "note.delete, hidden"
-  | "admin.phase.set (reveal)"
+  | "admin.step.go (reveal)"
   | "note.create"
   | "note.update"
   | "note.delete"
@@ -308,7 +308,7 @@ async function playTheWall(moved: Moved): Promise<Cost> {
   }
 
   // Revealing: everybody gets the notes of everybody else.
-  await does(moderation, "admin.phase.set (reveal)", { type: "admin.phase.set", phase: "open" });
+  await does(moderation, "admin.step.go (reveal)", { type: "admin.step.go", from: 0, to: 1 });
   await minutesPass();
 
   // Half of the people lose the line once and come back.
@@ -396,7 +396,7 @@ async function playTheWall(moved: Moved): Promise<Cost> {
   current = { frames: 0, written: 0, read: 0 };
   moderation.socket.send({ type: "resync" });
   const end = (await moderation.socket.waitForNext((event) => event.type === "sync")) as Sync;
-  expect(end).toMatchObject({ phase: "open", hidden: 0 });
+  expect(end).toMatchObject({ step: 1, reach: 1, hidden: 0 });
 
   // the counters are worth nothing if the object was replaced on the way
   expect(await runInDurableObject(stub, isCounted), "the wall's object was replaced on the way").toBe(true);
@@ -499,21 +499,22 @@ describe("what a wall costs", { timeout: 120_000 }, () => {
       }
       // The first change of the wall's day writes the day's mark for the brake, once: one row beside its own.
       expect(of(cost, "note.create, hidden").written).toBe(of(cost, "note.create, hidden").frames + 1);
-      // Every control of the clock is one row, and so is revealing: the phase and the clock stand in one row.
+      // Every control of the clock is one row, and so is revealing: the step and the clock stand in one row.
       for (const kind of [
         "admin.clock.start",
         "admin.clock.pause",
         "admin.clock.resume",
         "admin.clock.extend",
-        "admin.phase.set (reveal)",
+        "admin.step.go (reveal)",
       ] as const) {
         expect(of(cost, kind), kind).toMatchObject({ frames: 1, written: 1 });
       }
       // Somebody new is a row and its key's index; somebody who comes back is nothing.
       expect(perFrame("join")).toBe(2);
       expect(of(cost, "join again").written).toBe(0);
-      // Making the wall: the day's budget (1), five tables (11), what the wall knows about itself (7), the alarm (1).
-      expect(of(cost, "wall made").written).toBe(20);
+      // Making the wall: the day's budget (1), five tables (11), what the wall knows about itself (8: its agenda
+      // among it, since stage M1 of the methods), the alarm (1).
+      expect(of(cost, "wall made").written).toBe(21);
 
       // „Ordnen“. A run writes two rows, both the counter's: the estimate that is reserved, and what the run cost
       // in its place. The wall is read for it and writes nothing.
@@ -533,7 +534,7 @@ describe("what a wall costs", { timeout: 120_000 }, () => {
       const deletes = DELETED_HIDDEN + DELETED_OPEN + 1;
       // what arranging writes beyond one row a command: the counter's rows, and the groups and the second layout row
       const arranging = 2 * RUNS + arrangements * (ARRANGED + 1);
-      expect(cost.total.written).toBe(20 + 2 * PEOPLE.length + 1 + commands(cost) + deletes + arranging);
+      expect(cost.total.written).toBe(21 + 2 * PEOPLE.length + 1 + commands(cost) + deletes + arranging);
     }
   });
 

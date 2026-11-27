@@ -44,12 +44,40 @@ export async function createWall(question = "What should we build next?"): Promi
   return (await response.json()) as CreateWallResponse;
 }
 
-/** A wall as the route makes it when nothing else is asked: it starts with hidden writing (the phase `writing`). */
+/** A wall as the route makes it when nothing else is asked: it starts with hidden writing („Still sammeln“, in its
+ *  writing step). */
 export async function createHiddenWall(question = "What should we build next?"): Promise<CreateWallResponse> {
   const response = await postWall({ question });
   expect(response.status).toBe(200);
   return (await response.json()) as CreateWallResponse;
 }
+
+// What a `sync` says of where a wall stands (packages/shared, domain/flow.ts): in the hidden writing step of
+// „Still sammeln“, revealed (its next step), or at the one step of „Freie Wand“, a wall made without hidden writing.
+const STILL = { items: [{ methodId: "still-sammeln", version: 1 }] };
+export const WRITING = { agenda: STILL, step: 0, reach: 0 };
+export const REVEALED = { agenda: STILL, step: 1, reach: 1 };
+export const FREE = { agenda: { items: [{ methodId: "free", version: 1 }] }, step: 0, reach: 0 };
+/** Makes a wall what the builds before the methods stored (schema 3): its flow row in the old shape, with the phase
+ *  in place of the step, the clock and the number it had; no agenda row. */
+export function asSchemaThree(wallId: string, phase: "writing" | "open"): Promise<void> {
+  return runInDurableObject(stubOf(wallId), (_instance, state) => {
+    const sql = state.storage.sql;
+    const flow = JSON.parse(String(sql.exec("SELECT value FROM meta WHERE key = 'flow'").one().value)) as {
+      clock: unknown;
+      seq: number;
+    };
+    sql.exec("UPDATE meta SET value = '3' WHERE key = 'schemaVersion'");
+    sql.exec(
+      "UPDATE meta SET value = ? WHERE key = 'flow'",
+      JSON.stringify({ phase, clock: flow.clock, seq: flow.seq }),
+    );
+    sql.exec("DELETE FROM meta WHERE key = 'agenda'");
+  });
+}
+
+/** Revealing: the moderation's step move from the writing step to the one that shows the notes. */
+export const REVEAL = { type: "admin.step.go", from: 0, to: 1 } as const;
 
 export interface TestSocket {
   ws: WebSocket;

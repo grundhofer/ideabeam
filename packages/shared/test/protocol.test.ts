@@ -29,7 +29,9 @@ import {
   type Group,
   type Note,
   type ServerEvent,
+  MAX_STEPS,
 } from "../src/index.js";
+import { OPEN_SYNC } from "./steps.js";
 
 const WALL_ID = "ab".repeat(32);
 const ADMIN_TOKEN = "cd".repeat(16);
@@ -84,7 +86,8 @@ describe("client commands", () => {
       { type: "group.update", opId: generateHexId(), groupId: group.id, x: 40, y: 40 },
       { type: "group.update", opId: generateHexId(), groupId: group.id, w: GROUP_MIN_SIZE, h: GROUP_MAX_SIZE },
       { type: "group.delete", opId: generateHexId(), groupId: group.id },
-      { type: "admin.phase.set", opId: generateHexId(), phase: "open" },
+      { type: "admin.step.go", opId: generateHexId(), from: 0, to: 1 },
+      { type: "admin.step.go", opId: generateHexId(), from: 2, to: 0 },
       { type: "admin.clock.start", opId: generateHexId(), rev: 0, minutes: 10 },
       { type: "admin.clock.pause", opId: generateHexId(), rev: 1 },
       { type: "admin.clock.resume", opId: generateHexId(), rev: 2 },
@@ -216,15 +219,18 @@ describe("the commands about notes and groups", () => {
   });
 });
 
-describe("the moderation's commands about the phase and the clock", () => {
+describe("the moderation's commands about the step and the clock", () => {
   const opId = generateHexId();
 
-  it("revealing is the one change of phase a command can ask for: there is no way back to hidden writing", () => {
-    expect(wire({ type: "admin.phase.set", opId, phase: "open" })).not.toBeNull();
-    for (const phase of ["writing", "arrange", "", null, undefined]) {
-      expect(wire({ type: "admin.phase.set", opId, phase }), String(phase)).toBeNull();
+  it("a step move names the step it was made in and the step it goes to, each a whole number of the agenda", () => {
+    expect(wire({ type: "admin.step.go", opId, from: 0, to: 1 })).not.toBeNull();
+    expect(wire({ type: "admin.step.go", opId, from: MAX_STEPS - 1, to: 0 })).not.toBeNull();
+    for (const to of [-1, 1.5, MAX_STEPS, "1", null, undefined]) {
+      expect(wire({ type: "admin.step.go", opId, from: 0, to }), String(to)).toBeNull();
     }
-    expect(readClientFrame(JSON.stringify({ type: "admin.phase.set", opId, phase: "writing" }))).toEqual({
+    expect(wire({ type: "admin.step.go", opId, to: 1 })).toBeNull();
+    // the old command of the phases is no command any more
+    expect(readClientFrame(JSON.stringify({ type: "admin.phase.set", opId, phase: "open" }))).toEqual({
       kind: "invalid",
       opId,
     });
@@ -361,7 +367,7 @@ describe("server events", () => {
         participants: [participant],
         you: { participantId: participant.id },
         seq: 12,
-        phase: "open",
+        ...OPEN_SYNC,
         hidden: 0,
         clock: { rev: 0, endsAt: null, leftMs: null },
         notes: [note, { ...note, id: generateHexId(), mine: false, groupId: group.id }],
@@ -392,7 +398,8 @@ describe("server events", () => {
       { type: "wall.occupancy", seq: 8, hidden: 3 },
       { type: "notes.revealed", seq: 9, notes: [{ ...note, mine: false }] },
       { type: "notes.revealed", seq: 9, notes: [] },
-      { type: "phase.changed", seq: 10, phase: "open" },
+      { type: "step.changed", seq: 10, step: 1, reach: 1 },
+      { type: "step.changed", seq: 10, step: 0, reach: 2 },
       {
         type: "clock.changed",
         seq: 11,
@@ -451,7 +458,7 @@ describe("server events", () => {
           participants: [],
           you: { participantId: generateHexId() },
           seq: 0,
-          phase: "open",
+          ...OPEN_SYNC,
           hidden: 0,
           clock: { rev: 0, endsAt: null, leftMs: null },
           notes: [],

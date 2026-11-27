@@ -3,7 +3,7 @@
 // sind da.“ did not say. Pure: which sentence, as its key in the string tables (`wall.guide.*`); and which form the
 // state sentence itself takes once the wall has groups (`wall.*`).
 //
-// While the notes are hidden (the phase `writing`, PLAN.md 2.1) the sentence says so first: everyone writes for
+// While the notes are hidden (a step of hidden writing, PLAN.md 2.1) the sentence says so first: everyone writes for
 // themselves and nobody reads along until the moderation reveals; to the moderation, that revealing is theirs. When
 // the clock of the writing has run out, the clock's own sentence right above says so (lib/clock.ts), and this one
 // says what it means: nothing is locked, and the moderation still decides when to reveal.
@@ -12,7 +12,10 @@
 // arrange: enough notes that lie in no group a person made by hand or renamed. The sentence leads there and names
 // doing it by hand as the equal way. After a run it says that the AI has arranged, what to do with the result, and
 // where the way back is.
-import { ARRANGE_MIN_NOTES } from "@ideabeam/shared";
+//
+// In a step of a method that is about talking (`discuss`, PLAN-METHODEN.md), the sentence says what to talk about,
+// once somebody else is there.
+import { ARRANGE_MIN_NOTES, type StepType } from "@ideabeam/shared";
 
 /** What the sentence depends on. */
 export type Standing = {
@@ -28,8 +31,10 @@ export type Standing = {
   grouped?: number;
   /** how many of the groups have no title yet */
   untitled?: number;
-  /** the notes are hidden: the wall is in the phase `writing` */
+  /** the notes are hidden: the wall has reached no step that shows them */
   hidden?: boolean;
+  /** what the step the wall is in does; left out, a step of writing and sorting */
+  step?: StepType;
   /** the clock of the writing has run out */
   timeUp?: boolean;
   /** how many of the notes the AI may arrange: those in no group a person made by hand or renamed (lib/arrange.ts);
@@ -63,7 +68,9 @@ export type GuideKey =
   | "adminHiddenOver"
   | "memberHiddenAlone"
   | "memberHidden"
-  | "memberHiddenOver";
+  | "memberHiddenOver"
+  | "adminDiscuss"
+  | "memberDiscuss";
 
 /** The sentence that says what to do now. Alone, the next step is to bring the others in; with others, to write;
  *  once notes lie there, to put what belongs together into a group; once groups stand, to move the rest together
@@ -91,6 +98,8 @@ export function guide(standing: Standing): GuideKey {
     if (alone) return "memberHiddenAlone";
     return timeUp ? "memberHiddenOver" : "memberHidden";
   }
+  // a step to talk the result through, with others on the wall
+  if (standing.step === "discuss" && !alone) return admin ? "adminDiscuss" : "memberDiscuss";
   // how far the sorting is: no group yet, under way, or every note in a group that has a name
   const sorting = groups === 0 ? "Notes" : grouped < notes || untitled > 0 ? "Sorting" : "Sorted";
   if (admin) {
@@ -111,7 +120,7 @@ export function guide(standing: Standing): GuideKey {
  *  - `someGrouped`: „12 Zettel, 8 davon in 3 Gruppen.“
  *  - `noneGrouped`: „12 Zettel und 3 leere Gruppen.“
  *  - `noNotesGroups`: „Noch keine Zettel, 3 leere Gruppen.“
- *  While the notes are hidden there are no groups, and the sentence names the phase:
+ *  While the notes are hidden there are no groups, and the sentence says that they are hidden:
  *  - `hiddenNone`: „Verdecktes Schreiben: noch keine Zettel.“
  *  - `hiddenNotes`: „Verdecktes Schreiben: 12 Zettel.“ (one's own and the others') */
 export type SummaryKey =

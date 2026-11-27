@@ -1,5 +1,7 @@
-import { fireEvent, screen, waitFor } from "@testing-library/react";
+import { fireEvent, screen, waitFor, within } from "@testing-library/react";
 import { afterEach, expect, test, vi } from "vitest";
+import { CATALOGUE, METHOD_ORDER, METHOD_TEXTS, methodTexts } from "@ideabeam/shared";
+import i18n from "../i18n";
 import { useWalls } from "../store/walls";
 import { renderApp } from "../test-app";
 
@@ -60,10 +62,10 @@ test("a wall that was made is known with its admin token, and the app goes to it
   type("  Was hält uns auf? ");
   submit();
   await waitFor(() => expect(useWalls.getState().walls).toHaveLength(1));
-  // hidden writing is on unless it is switched off
+  // „Still sammeln“ unless another method is chosen
   expect(JSON.parse(String(fetched.mock.calls[0]?.[1]?.body))).toEqual({
     question: "Was hält uns auf?",
-    hidden: true,
+    agenda: { items: [{ methodId: "still-sammeln" }] },
   });
   const [wall] = useWalls.getState().walls;
   expect(wall).toMatchObject({ id: WALL, question: "Was hält uns auf?" });
@@ -95,25 +97,80 @@ test("a day whose walls are taken says when it goes on, keeps the question, and 
   expect(useWalls.getState().walls).toEqual([]);
 });
 
-test("„Verdeckt schreiben“ is a choice that is on; switched off, the wall is made without hidden writing", async () => {
+test("the method: „Still sammeln“ is chosen at first, „Freie Wand“ is the last choice, and is asked for by its id", async () => {
   const fetched = vi
     .spyOn(globalThis, "fetch")
     .mockImplementation(() => Promise.resolve(new Response(JSON.stringify({ wallId: WALL, adminToken: TOKEN }))));
   renderApp("/neu");
   await screen.findByRole("heading", { level: 1, name: "Neue Wand" });
-  const hidden = screen.getByRole("switch", { name: "Verdeckt schreiben" });
-  expect(hidden.getAttribute("aria-checked")).toBe("true");
-  // the sentence under it says what the choice means, both ways
-  expect(document.getElementById(hidden.getAttribute("aria-describedby")!)?.textContent).toBe(
-    "Alle schreiben für sich, und niemand liest mit, bis die Moderation aufdeckt. Ausgeschaltet sehen alle jeden Zettel sofort.",
-  );
-  fireEvent.click(hidden);
-  expect(hidden.getAttribute("aria-checked")).toBe("false");
+  const group = screen.getByRole("group", { name: "Methode" });
+  const options = within(group).getAllByRole<HTMLInputElement>("radio");
+  expect(options.map((option) => option.value)).toEqual(["still-sammeln", "free"]);
+  expect(options.map((option) => option.checked)).toEqual([true, false]);
+  // under headings by purpose
+  expect(
+    within(group)
+      .getAllByRole("heading", { level: 2 })
+      .map((heading) => heading.textContent),
+  ).toEqual(["Ideen sammeln", "Ohne festen Ablauf"]);
+  fireEvent.click(screen.getByRole("radio", { name: "Freie Wand" }));
   type("Was hält uns auf?");
   submit();
   await waitFor(() => expect(useWalls.getState().walls).toHaveLength(1));
   expect(JSON.parse(String(fetched.mock.calls[0]?.[1]?.body))).toEqual({
     question: "Was hält uns auf?",
-    hidden: false,
+    agenda: { items: [{ methodId: "free" }] },
   });
+});
+
+// The rule of PLAN-METHODEN.md 2: wherever a method is chosen, its short description stands with its name, always
+// visible, and a screen reader reads it with the name. The other half: packages/shared, test/methods.test.ts.
+test.each(["de", "en"] as const)(
+  "every method of the catalogue shows its short description on `/neu` (%s)",
+  async (lang) => {
+    await i18n.changeLanguage(lang);
+    try {
+      renderApp("/neu");
+      await screen.findByRole("heading", { level: 1, name: lang === "de" ? "Neue Wand" : "New wall" });
+      for (const method of METHOD_ORDER) {
+        const { name, short } = methodTexts(lang, method);
+        const option = screen.getByRole("radio", { name });
+        // always visible: no part of „Mehr dazu“, nothing hidden
+        const description = screen.getByText(short);
+        expect(description.closest("[hidden]")).toBeNull();
+        expect(option.getAttribute("aria-describedby")?.split(" ")).toContain(description.id);
+        // the facts: the time, the group size and the evidence level as a word
+        const facts = document.getElementById(`app-method-${method}-facts`)?.textContent ?? "";
+        expect(facts).toContain(METHOD_TEXTS[lang].evidence[CATALOGUE[method].evidence].label);
+        expect(facts).toContain(`${CATALOGUE[method].groupSize[0]}–${CATALOGUE[method].groupSize[1]}`);
+      }
+    } finally {
+      await i18n.changeLanguage("de");
+    }
+  },
+);
+
+test("„Mehr dazu“ is a key of its own: it opens the steps and the evidence, and chooses nothing", async () => {
+  renderApp("/neu");
+  await screen.findByRole("heading", { level: 1, name: "Neue Wand" });
+  const free = screen.getByRole<HTMLInputElement>("radio", { name: "Freie Wand" });
+  const more = document.querySelector<HTMLButtonElement>('[data-method="still-sammeln"] .app-method__more')!;
+  expect(more.getAttribute("aria-expanded")).toBe("false");
+  const about = document.getElementById(more.getAttribute("aria-controls")!)!;
+  expect(about.hidden).toBe(true);
+  fireEvent.click(more);
+  expect(more.getAttribute("aria-expanded")).toBe("true");
+  expect(about.hidden).toBe(false);
+  expect([...about.querySelectorAll("ol > li")].map((step) => step.textContent)).toEqual([
+    "Ideen schreiben · allein, verdeckt · 7\u00a0Min.",
+    "Aufdecken · alle, alle · 1\u00a0Min.",
+    "Bündeln · alle, alle · 6\u00a0Min.",
+    "Ergebnis besprechen · alle, alle · 5\u00a0Min.",
+  ]);
+  expect(about.textContent).toContain("Meta-Analyse: Mindestens eine Meta-Analyse stützt den Kern des Ablaufs.");
+  // the method that was chosen stays chosen
+  expect(screen.getByRole<HTMLInputElement>("radio", { name: "Still sammeln, bündeln, verdeckt wählen" }).checked).toBe(
+    true,
+  );
+  expect(free.checked).toBe(false);
 });

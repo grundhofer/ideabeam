@@ -189,6 +189,7 @@ describe("the number of a stored change", () => {
     // phase and the clock, and is written when they change (brake.test.ts, hidden.test.ts)
     expect(stored.meta).toEqual([
       "adminToken",
+      "agenda",
       "createdAt",
       "day",
       "flow",

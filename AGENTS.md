@@ -9,7 +9,9 @@ surface with notes and groups, the list view; hidden writing, revealing, the clo
 Cloudflare's AI: „Ordnen“, its preview, „Anwenden“, „Rückgängig“) and stage 4b (the moderation's own key for
 Mistral, OpenAI or Anthropic: „Eigener KI-Schlüssel“) are merged into `main` by the owner's word (2026-11-24); no
 provider's model is measured yet, so nobody is offered 4b (see „The moderation's own key“ below). Grouping in the browser (4c)
-follows.
+follows. The guided methods have their own plan, [`PLAN-METHODEN.md`](PLAN-METHODEN.md): stage M1 (methods as data, a
+wall's agenda and its steps, „Weiter“ and „Zurück“, the choice of the method on `/neu`) is built on the branch
+`methoden-m1` and not merged; its state is under M1 there.
 
 ## Commands
 
@@ -53,7 +55,8 @@ Node 22, pnpm (the version `package.json` names) and Python 3.10 for the kit of 
 ```
 apps/web         the React app: the sebaro starter `webapp-vite` 3.0.2, adapted (docs/HERKUNFT.md)
 apps/worker      the Hono Worker and the WallRoom Durable Object; the wrangler config lives here
-packages/shared  the protocol and the rules both sides share: plain functions, no I/O
+packages/shared  the protocol and the rules both sides share: plain functions, no I/O; and the catalogue of the
+                 methods with their words in German and English (methods/), which the Worker's export needs too
 packages/arrange „Ordnen“: the prompts, the check of every answer, the proposal, its layout, and the providers of
                  „Eigener Schlüssel“ with their requests and answers: plain functions, no I/O
 docs/            ANSICHTEN.md (views), HERKUNFT.md (what was copied from where), sebaro-luecken.md,

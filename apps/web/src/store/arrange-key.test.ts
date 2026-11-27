@@ -22,6 +22,7 @@ import { ARRANGE_WAIT_MS, useArrange } from "./arrange";
 import { useOwnKey, type OwnKey } from "./key";
 import { useWall } from "./wall";
 import { useWalls } from "./walls";
+import { OPEN_SYNC } from "../test-steps";
 
 const WALL = "ab".repeat(32);
 const TOKEN = "cd".repeat(16);
@@ -68,7 +69,7 @@ const sync = (notes: Note[] = NOTES, groups: Group[] = []): ServerEvent => ({
   participants: [ANNA],
   you: { participantId: ME },
   seq: notes.length,
-  phase: "open",
+  ...OPEN_SYNC,
   hidden: 0,
   clock: NO_CLOCK,
   notes,

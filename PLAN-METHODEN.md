@@ -133,6 +133,28 @@ Abnahme:
 - Der Kostentest einer typischen Wand liegt höchstens 5 Zeilen über heute.
 - Der Test der Umschreibungs-Regel (Abschnitt 2) besteht.
 
+**Stand M1 (27.11.2026, Branch `methoden-m1`, nicht committet, nicht gemergt):** gebaut.
+
+- Methoden als Daten in `packages/shared` (`domain/method.ts`, `methods/catalogue.ts`, `methods/texts.ts` mit allen
+  Texten DE/EN, `domain/agenda.ts` mit Auflösen, Prüfen, Fähigkeiten je Schritt und Sichtbarkeit, `domain/flow.ts` mit
+  `step`/`reach` und `decideStep`). Zwei Methoden: „Still sammeln, bündeln, verdeckt wählen“ mit vier Schritten
+  (Ideen schreiben, Aufdecken, Bündeln, Ergebnis besprechen; „Frage stellen“ steckt in „Ideen schreiben“, die Wahl
+  kommt in M2) und „Freie Wand“ (ein Schritt). Protokoll 7: `admin.step.go`, `step.changed`, `sync` mit Agenda,
+  Schritt und Reichweite. Schema 4: die Wand speichert ihre Agenda beim Anlegen (eine Zeile); eine Wand von Schema 3
+  wird gelesen, wie sie ist (verdeckt → „Still sammeln“ im Schreibschritt, aufgedeckt → „Freie Wand“), und schreibt
+  die neue Form erst mit dem nächsten Schrittwechsel oder Griff an die Uhr (einmal drei Zeilen).
+- `/neu` mit der Auswahl nach Katalog (b), die Wand mit Schritt-Kopf, „Weiter: <Schritt>“, „Zurück“ unter „Mehr“,
+  Methode mit Kurzbeschreibung oben in der Spalte der Personen (im Stand machte sie die Wand zu hoch) und im
+  Export; Datenschutzerklärung 3.1 in beiden Sprachen.
+- Tests im letzten vollen Lauf (`CI=1 pnpm checks`): shared 309 (vorher 279), arrange 126, Worker 233 (vorher 226), App
+  287 (Vitest), Ende-zu-Ende 316, alle grün, keiner übersprungen. Kostentest der typischen Wand: 397 statt 396 Zeilen (+1, die Zeile der
+  Agenda beim Anlegen).
+- Nicht geprüft: kein Ende-zu-Ende-Test geht im Browser „Zurück“ (das prüfen Worker-Tests auf Nachrichtenebene);
+  Kopf und Auswahl nicht bei 2000 px, nicht bei 200 % auf Englisch angesehen; die Texte der „Freien Wand“ sind von
+  M1, nicht aus dem Katalog, und ihre Evidenz („Studien“) ist ein Vorschlag; die Belegsätze nicht neu an den Quellen
+  geprüft; Name und Kurzbeschreibung von „Still sammeln“ versprechen bis M2 eine Wahl, die es noch nicht gibt; eine
+  Wand von Schema 3 nur im Testpool von workerd nachgestellt, nie mit einer echten v0.1-Wand.
+
 ### M2: Verdeckte Abstimmung
 
 Punkte, Auswahl, Rangfolge, Bewertung; Auszählen; Ergebnis; das Ergebnis im Export. „Still sammeln, bündeln, verdeckt

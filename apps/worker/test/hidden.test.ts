@@ -19,12 +19,16 @@ import {
   ask,
   createHiddenWall,
   createWall,
+  FREE,
   join,
   resync,
+  REVEAL,
+  REVEALED,
   settle,
   stubOf,
   type Sync,
   type TestSocket,
+  WRITING,
 } from "./helpers.js";
 
 type Person = Awaited<ReturnType<typeof join>>;
@@ -48,7 +52,7 @@ async function write(socket: TestSocket, text: string, x = 0, y = 0): Promise<st
   return noteId;
 }
 
-const reveal = (socket: TestSocket) => answer(socket, { type: "admin.phase.set", phase: "open" });
+const reveal = (socket: TestSocket) => answer(socket, REVEAL);
 
 /** Every socket may send again as if minutes had passed: a test asks for more snapshots than a person would. */
 function refill(wallId: string): Promise<void> {
@@ -89,7 +93,7 @@ function expectNoLeak(socket: TestSocket, secrets: string[], people: string[], l
 describe("while the notes are hidden", () => {
   it("a note reaches its writer, and everybody else a number: no text, no id, no place, no writer", async () => {
     const { anna, ben, cem } = await wall();
-    expect(ben.sync).toMatchObject({ phase: "writing", hidden: 0, notes: [] });
+    expect(ben.sync).toMatchObject({ ...WRITING, hidden: 0, notes: [] });
 
     const noteId = generateHexId();
     const text = "Anna's secret thought";
@@ -212,7 +216,7 @@ describe("while the notes are hidden", () => {
     expect((await resync(anna.socket)).notes).toMatchObject([{ id: annas, x: 0, y: 0 }]);
   });
 
-  it("has no groups yet: a command about one is refused, and the answer says that it is the phase", async () => {
+  it("has no groups yet: a command about one is refused, and the answer says that it is the step", async () => {
     const { anna, ben } = await wall();
     const groupId = generateHexId();
     for (const person of [anna, ben]) {
@@ -231,7 +235,7 @@ describe("while the notes are hidden", () => {
     const bens = await write(ben.socket, "Ben's own");
 
     const dora = await join(wallId, "Dora");
-    expect(dora.sync).toMatchObject({ phase: "writing", seq: 2, hidden: 2, notes: [] });
+    expect(dora.sync).toMatchObject({ ...WRITING, seq: 2, hidden: 2, notes: [] });
     const tab = await join(wallId, "Ben", { sessionKey: ben.sessionKey });
     expect(tab.sync).toMatchObject({ seq: 2, hidden: 1, notes: [{ id: bens, mine: true }] });
 
@@ -276,12 +280,12 @@ describe("revealing", () => {
   it("is the moderation's alone", async () => {
     const { anna, ben } = await wall();
     await write(anna.socket, "Anna's secret thought");
-    expect(await ask(ben.socket, { type: "admin.phase.set", phase: "open" })).toBe("NOT_ADMIN");
+    expect(await ask(ben.socket, REVEAL)).toBe("NOT_ADMIN");
     await settle();
-    expect(await resync(ben.socket)).toMatchObject({ phase: "writing", hidden: 1, notes: [] });
+    expect(await resync(ben.socket)).toMatchObject({ ...WRITING, hidden: 1, notes: [] });
   });
 
-  it("brings every browser the notes it did not have, and then the phase: two frames, two numbers", async () => {
+  it("brings every browser the notes it did not have, and then the step: two frames, two numbers", async () => {
     const { anna, ben, cem } = await wall();
     const a1 = await write(anna.socket, "Anna 1", 10, 10);
     const b1 = await write(ben.socket, "Ben 1", 20, 20);
@@ -293,9 +297,9 @@ describe("revealing", () => {
     expect(await reveal(anna.socket)).toMatchObject({ type: "ack", seq: 6 });
     const got = async (person: Person) => {
       const revealed = await person.socket.waitFor((event) => event.type === "notes.revealed");
-      const changed = await person.socket.waitFor((event) => event.type === "phase.changed");
-      expect(changed).toEqual({ type: "phase.changed", seq: 6, phase: "open" });
-      // the notes come first, the phase after them
+      const changed = await person.socket.waitFor((event) => event.type === "step.changed");
+      expect(changed).toEqual({ type: "step.changed", seq: 6, step: 1, reach: 1 });
+      // the notes come first, the step after them
       expect(person.socket.events.indexOf(revealed)).toBeLessThan(person.socket.events.indexOf(changed));
       return revealed;
     };
@@ -317,7 +321,7 @@ describe("revealing", () => {
       [cem, [false, false, false]],
     ] as const) {
       const sync = await resync(person.socket);
-      expect(sync).toMatchObject({ phase: "open", hidden: 0, seq: 6 });
+      expect(sync).toMatchObject({ ...REVEALED, hidden: 0, seq: 6 });
       expect(sync.notes.map((note) => note.id)).toEqual([a1, b1, a2]);
       expect(sync.notes.map((note) => note.mine)).toEqual(mine);
     }
@@ -349,13 +353,13 @@ describe("revealing", () => {
     expect(await reveal(anna.socket)).toMatchObject({ type: "ack", seq: 3 });
     // the same command again: an ack with the number the wall stands at, nothing told
     expect(await reveal(anna.socket)).toMatchObject({ type: "ack", seq: 3 });
-    expect(await ask(ben.socket, { type: "admin.phase.set", phase: "open" })).toBe("NOT_ADMIN");
-    // there is no command that hides again
-    expect(await ask(anna.socket, { type: "admin.phase.set", phase: "writing" })).toBe("INVALID");
+    expect(await ask(ben.socket, REVEAL)).toBe("NOT_ADMIN");
+    // going back to the writing step hides nothing again: it is a step move, and no note leaves anybody
+    expect(await answer(anna.socket, { type: "admin.step.go", from: 1, to: 0 })).toMatchObject({ type: "ack", seq: 4 });
     await settle();
-    expect(ofType(ben.socket.events, "phase.changed")).toHaveLength(1);
+    expect(ofType(ben.socket.events, "step.changed")).toHaveLength(2);
     expect(ofType(ben.socket.events, "notes.revealed")).toHaveLength(1);
-    expect(await resync(ben.socket)).toMatchObject({ phase: "open", seq: 3 });
+    expect(await resync(ben.socket)).toMatchObject({ step: 0, reach: 1, seq: 4, notes: [{ text: "Ben's" }] });
   });
 
   it("opens the wall: notes reach everyone, anybody moves any note, groups can be made", async () => {
@@ -387,12 +391,15 @@ describe("revealing", () => {
     const { wallId, adminToken } = await createWall();
     const anna = await join(wallId, "Anna", { adminToken });
     const ben = await join(wallId, "Ben");
-    expect(anna.sync).toMatchObject({ phase: "open", hidden: 0 });
+    expect(anna.sync).toMatchObject({ ...FREE, hidden: 0 });
     await write(anna.socket, "For all to see");
     expect(await ben.socket.waitFor((event) => event.type === "note.created")).toMatchObject({
       note: { text: "For all to see", mine: false },
     });
-    expect(await reveal(anna.socket)).toMatchObject({ type: "ack", seq: 1 });
+    // a „Freie Wand“ has its one step: there is nothing to reveal, and a move to the step it is in finds its work
+    // done
+    expect(await reveal(anna.socket)).toMatchObject({ type: "reject", code: "INVALID" });
+    expect(await answer(anna.socket, { type: "admin.step.go", from: 0, to: 0 })).toMatchObject({ type: "ack", seq: 1 });
   });
 });
 
@@ -452,7 +459,7 @@ describe("stream and snapshot", () => {
       await expectSame(cem.socket, "another member in writing"),
     ];
     // and that wall is the person's own notes with a number for the rest
-    expect(forAnna).toMatchObject({ phase: "writing", seq: 8, hidden: 2 });
+    expect(forAnna).toMatchObject({ ...WRITING, seq: 8, hidden: 2 });
     expect(forAnna.notes.map((note) => note.id)).toEqual(notes.anna);
     expect(forBen).toMatchObject({ seq: 8, hidden: 3 });
     expect(forBen.notes.map((note) => note.id)).toEqual(notes.ben);
@@ -500,7 +507,7 @@ describe("stream and snapshot", () => {
     expect(back.you).toBe(ben.you);
     // nothing lost: his note, where he moved it; nothing revealed: of the others a number
     expect(back.sync).toMatchObject({
-      phase: "writing",
+      ...WRITING,
       seq: 10,
       hidden: 4,
       notes: [{ id: notes.ben[0], mine: true, text: "Ben: better coffee", x: 250, y: 260 }],
@@ -550,7 +557,7 @@ describe("stream and snapshot", () => {
       [cem, "another member"],
     ] as const) {
       const sync = await expectSame(person.socket, `${label} after revealing`);
-      expect(sync).toMatchObject({ phase: "open", seq: 12, hidden: 0 });
+      expect(sync).toMatchObject({ ...REVEALED, seq: 12, hidden: 0 });
       expect(sync.notes).toHaveLength(5);
     }
   });
@@ -566,7 +573,7 @@ describe("stream and snapshot", () => {
     expect(await reveal(anna.socket)).toMatchObject({ type: "ack", seq: 14 });
     await refill(wallId);
     const forBen = await expectSame(ben.socket, "a member after revealing");
-    expect(forBen).toMatchObject({ phase: "open", hidden: 0, seq: 14, clock: { rev: 4, endsAt: null, leftMs: null } });
+    expect(forBen).toMatchObject({ ...REVEALED, hidden: 0, seq: 14, clock: { rev: 4, endsAt: null, leftMs: null } });
     expect(forBen.notes.map((note) => note.mine)).toEqual([false, false, true, false]);
     await expectSame(anna.socket, "the moderation after revealing");
 

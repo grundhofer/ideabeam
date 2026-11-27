@@ -16,10 +16,12 @@ import {
   createWall,
   join,
   resync,
+  REVEAL,
   setDailyRows,
   settle,
   stubOf,
   type TestSocket,
+  WRITING,
 } from "./helpers.js";
 
 /** The lowered number of these tests. */
@@ -114,7 +116,7 @@ describe("the brake of one wall", () => {
 
     // somebody comes, and gets the wall
     const cem = await join(wallId, "Cem");
-    expect(cem.sync).toMatchObject({ phase: "writing", seq: ROWS, hidden: ROWS });
+    expect(cem.sync).toMatchObject({ ...WRITING, seq: ROWS, hidden: ROWS });
     // the moderation's clock
     expect(await ask(anna.socket, { type: "admin.clock.start", rev: 0, minutes: 10 })).toBe("ack");
     expect(await ask(anna.socket, { type: "admin.clock.pause", rev: 1 })).toBe("ack");
@@ -122,7 +124,7 @@ describe("the brake of one wall", () => {
     expect(await ask(anna.socket, { type: "admin.clock.extend", rev: 3 })).toBe("ack");
     expect(await ask(anna.socket, { type: "admin.clock.clear", rev: 4 })).toBe("ack");
     // revealing: everybody gets what was written
-    expect(await answer(anna.socket, { type: "admin.phase.set", phase: "open" })).toMatchObject({ type: "ack" });
+    expect(await answer(anna.socket, REVEAL)).toMatchObject({ type: "ack" });
     expect((await resync(cem.socket)).notes).toHaveLength(ROWS);
     // the wall is still braked for what it holds
     expect(await ask(cem.socket, create())).toBe("DAY_SPENT");
@@ -156,7 +158,17 @@ describe("the brake of one wall", () => {
         .toArray()
         .map((row) => String(row.key)),
     );
-    expect(keys).toEqual(["adminToken", "createdAt", "day", "flow", "id", "question", "retentionAt", "schemaVersion"]);
+    expect(keys).toEqual([
+      "adminToken",
+      "agenda",
+      "createdAt",
+      "day",
+      "flow",
+      "id",
+      "question",
+      "retentionAt",
+      "schemaVersion",
+    ]);
   });
 
   it("counts every stored change of the day, whoever made it and whatever it was: the clock and revealing too", async () => {
@@ -167,7 +179,7 @@ describe("the brake of one wall", () => {
     expect(await ask(anna.socket, { type: "admin.clock.pause", rev: 1 })).toBe("ack");
     expect(await ask(anna.socket, { type: "admin.clock.resume", rev: 2 })).toBe("ack");
     expect(await ask(anna.socket, { type: "admin.clock.extend", rev: 3 })).toBe("ack");
-    expect(await answer(anna.socket, { type: "admin.phase.set", phase: "open" })).toMatchObject({ seq: 10 });
+    expect(await answer(anna.socket, REVEAL)).toMatchObject({ seq: 10 });
     await spend(anna.socket, 2);
     expect(await ask(ben.socket, create())).toBe("DAY_SPENT");
   });

@@ -962,6 +962,92 @@
   margin-block-start: var(--sb-space-4);
 }
 
+/* „Methode“ on `/neu` (components/MethodChoice.tsx, docs/methoden-katalog.md (b)): one group of option fields
+   under headings by purpose. A row: the option field with the name, under it always the short description, then
+   the facts with the evidence word in an outlined tag and „Mehr dazu“ at their end. The description and the facts
+   stand under the name, not under the round mark (no sebaro token: the radio's mark is 20 px in sebaro.css, then
+   the radio's gap). Flat rows with hairlines, as every list */
+.app-methods {
+  min-inline-size: 0;
+  margin: 0;
+  padding: 0;
+  border: 0;
+}
+.app-methods > legend {
+  padding: 0;
+}
+.app-methods .sb-list-header {
+  padding-inline: 0;
+}
+.app-method {
+  position: relative;
+  padding-block: var(--sb-space-2) var(--sb-space-3);
+}
+.app-method + .app-method::before {
+  content: "";
+  position: absolute;
+  inset-block-start: 0;
+  inset-inline: 0;
+  border-block-start: var(--sb-border-width-hairline) solid var(--sb-color-border);
+}
+.app-method__choice {
+  display: flex;
+}
+.app-method__name {
+  font-weight: var(--sb-type-body-strong-weight);
+}
+.app-method__short,
+.app-method__line,
+.app-method__about {
+  margin: 0;
+  margin-inline-start: calc(20px + var(--sb-space-3));
+  max-inline-size: var(--sb-size-measure-prose);
+}
+.app-method__line {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--sb-space-1) var(--sb-space-3);
+}
+.app-method__facts {
+  margin: 0;
+  color: var(--sb-color-text-muted);
+  font: var(--sb-type-caption);
+  letter-spacing: var(--sb-type-caption-tracking);
+  font-variant-numeric: var(--sb-type-numeric-variant);
+}
+.app-method__about > p,
+.app-method__steps {
+  margin: 0 0 var(--sb-space-2);
+}
+.app-method__steps {
+  padding-inline-start: var(--sb-space-5);
+}
+.app-method__heading {
+  margin: var(--sb-space-3) 0 var(--sb-space-1);
+  font: var(--sb-type-label);
+  letter-spacing: var(--sb-type-label-tracking);
+}
+/* the wall's step at the top of the state: the step and the one after it as a label above the large sentence, in
+   the room the state's padding had, so the state is no taller for it. The method with its short description stands
+   at the head of the people's column as a quiet caption */
+.app-state__step {
+  margin: 0 0 var(--sb-space-1);
+  font: var(--sb-type-label);
+  letter-spacing: var(--sb-type-label-tracking);
+  color: var(--sb-color-text-muted);
+}
+.app-state:has(> .app-state__step) {
+  padding-block-start: var(--sb-space-2);
+}
+.app-wall__method {
+  margin: 0 0 var(--sb-space-2);
+  color: var(--sb-color-text-muted);
+  font: var(--sb-type-caption);
+  letter-spacing: var(--sb-type-caption-tracking);
+}
+
 /* paper shows only the content: no head, no action zone (sebaro.css hides the zones and the footer's links,
    tokens.css prints light) */
 @media print {

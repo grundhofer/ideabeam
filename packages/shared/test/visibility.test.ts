@@ -36,10 +36,10 @@ const WALL = [stored("1", ANNA, "Anna's first"), stored("2", BEN, "Ben's"), stor
 
 describe("who may read a note", () => {
   it("their own always, anybody's once the wall is revealed", () => {
-    expect(maySeeNote("writing", { mine: true })).toBe(true);
-    expect(maySeeNote("writing", { mine: false })).toBe(false);
-    expect(maySeeNote("open", { mine: true })).toBe(true);
-    expect(maySeeNote("open", { mine: false })).toBe(true);
+    expect(maySeeNote("hidden", { mine: true })).toBe(true);
+    expect(maySeeNote("hidden", { mine: false })).toBe(false);
+    expect(maySeeNote("all", { mine: true })).toBe(true);
+    expect(maySeeNote("all", { mine: false })).toBe(true);
   });
 });
 
@@ -72,27 +72,27 @@ describe("a note as one person gets it", () => {
 
 describe("the notes of a snapshot or an export", () => {
   it("while the notes are hidden: a person's own, and a number for all the others", () => {
-    expect(notesFor(WALL, "writing", ANNA)).toEqual({
+    expect(notesFor(WALL, "hidden", ANNA)).toEqual({
       notes: [noteFor(stored("1", ANNA, "Anna's first"), ANNA), noteFor(stored("3", ANNA), ANNA)],
       hidden: 2,
     });
-    expect(notesFor(WALL, "writing", BEN)).toEqual({ notes: [noteFor(stored("2", BEN, "Ben's"), BEN)], hidden: 3 });
+    expect(notesFor(WALL, "hidden", BEN)).toEqual({ notes: [noteFor(stored("2", BEN, "Ben's"), BEN)], hidden: 3 });
   });
 
   it("an export before revealing holds no note of somebody else: not a text, not an id, not a writer", () => {
-    const forBen = JSON.stringify(notesFor(WALL, "writing", BEN));
+    const forBen = JSON.stringify(notesFor(WALL, "hidden", BEN));
     for (const foreign of ["Anna's first", "Note 3", "Note 4", id("1"), id("3"), id("4"), ANNA, GONE]) {
       expect(forBen, foreign).not.toContain(foreign);
     }
     expect(forBen).toContain("Ben's");
     // for nobody in particular it holds no note at all
-    expect(notesFor(WALL, "writing", null)).toEqual({ notes: [], hidden: 4 });
+    expect(notesFor(WALL, "hidden", null)).toEqual({ notes: [], hidden: 4 });
     // and somebody who wrote nothing gets nothing but the number
-    expect(notesFor(WALL, "writing", id("c"))).toEqual({ notes: [], hidden: 4 });
+    expect(notesFor(WALL, "hidden", id("c"))).toEqual({ notes: [], hidden: 4 });
   });
 
   it("once revealed: every note, in the order given, each saying whether it is the reader's", () => {
-    const view = notesFor(WALL, "open", BEN);
+    const view = notesFor(WALL, "all", BEN);
     expect(view.hidden).toBe(0);
     expect(view.notes.map((note) => [note.id, note.mine])).toEqual([
       [id("1"), false],
@@ -101,23 +101,23 @@ describe("the notes of a snapshot or an export", () => {
       [id("4"), false],
     ]);
     expect(JSON.stringify(view)).not.toContain(ANNA);
-    expect(notesFor(WALL, "open", null).notes.every((note) => !note.mine)).toBe(true);
+    expect(notesFor(WALL, "all", null).notes.every((note) => !note.mine)).toBe(true);
   });
 
   it("an empty wall hides nothing", () => {
-    expect(notesFor([], "writing", ANNA)).toEqual({ notes: [], hidden: 0 });
+    expect(notesFor([], "hidden", ANNA)).toEqual({ notes: [], hidden: 0 });
   });
 });
 
 describe("revealing", () => {
   it("brings a person exactly the notes they did not have: together with their own, the whole wall", () => {
     for (const viewer of [ANNA, BEN, id("c")]) {
-      const had = notesFor(WALL, "writing", viewer);
+      const had = notesFor(WALL, "hidden", viewer);
       const revealed = revealedFor(WALL, viewer);
       expect(revealed).toHaveLength(had.hidden);
       expect(revealed.every((note) => !note.mine)).toBe(true);
       const all = [...had.notes, ...revealed].sort((a, b) => a.id.localeCompare(b.id));
-      expect(all).toEqual(notesFor(WALL, "open", viewer).notes);
+      expect(all).toEqual(notesFor(WALL, "all", viewer).notes);
     }
   });
 });
@@ -144,8 +144,8 @@ describe("what one person hears of a stored change", () => {
 
   it("while the notes are hidden: whoever made the change hears it, everybody else its number and the count", () => {
     for (const event of events) {
-      expect(eventFor(event, ANNA, ANNA, "writing", 3), event.type).toBe(event);
-      const forBen = eventFor(event, ANNA, BEN, "writing", 3);
+      expect(eventFor(event, ANNA, ANNA, "hidden", 3), event.type).toBe(event);
+      const forBen = eventFor(event, ANNA, BEN, "hidden", 3);
       expect(forBen, event.type).toEqual({ type: "wall.occupancy", seq: 7, hidden: 3 });
       // nothing of the change is in it: no id, no text, no place, no writer
       expect(Object.keys(forBen).sort()).toEqual(["hidden", "seq", "type"]);
@@ -159,23 +159,23 @@ describe("what one person hears of a stored change", () => {
 
   it("once revealed: everybody hears the change, and a new note says for each whether it is theirs", () => {
     const created = events[0] as ContentEvent;
-    expect(eventFor(created, ANNA, ANNA, "open", 0)).toEqual({ type: "note.created", seq: 7, note });
-    expect(eventFor(created, ANNA, BEN, "open", 0)).toEqual({
+    expect(eventFor(created, ANNA, ANNA, "all", 0)).toEqual({ type: "note.created", seq: 7, note });
+    expect(eventFor(created, ANNA, BEN, "all", 0)).toEqual({
       type: "note.created",
       seq: 7,
       note: { ...note, mine: false },
     });
     for (const event of [...events.slice(1), { type: "group.created", seq: 7, group } as ContentEvent]) {
-      expect(eventFor(event, ANNA, BEN, "open", 0), event.type).toBe(event);
-      expect(eventFor(event, ANNA, ANNA, "open", 0), event.type).toBe(event);
+      expect(eventFor(event, ANNA, BEN, "all", 0), event.type).toBe(event);
+      expect(eventFor(event, ANNA, ANNA, "all", 0), event.type).toBe(event);
     }
   });
 
   it("no frame of it names who made the change", () => {
     for (const event of events) {
-      for (const phase of ["writing", "open"] as const) {
-        expect(JSON.stringify(eventFor(event, ANNA, BEN, phase, 1))).not.toContain(ANNA);
-        expect(JSON.stringify(eventFor(event, ANNA, ANNA, phase, 1))).not.toContain(ANNA);
+      for (const sight of ["hidden", "all"] as const) {
+        expect(JSON.stringify(eventFor(event, ANNA, BEN, sight, 1))).not.toContain(ANNA);
+        expect(JSON.stringify(eventFor(event, ANNA, ANNA, sight, 1))).not.toContain(ANNA);
       }
     }
   });

@@ -37,7 +37,7 @@ import {
   writeNotes,
   type AiCall,
 } from "./arrange-helpers.js";
-import { ask, createHiddenWall, createWall, join, resync } from "./helpers.js";
+import { ask, createHiddenWall, createWall, join, resync, REVEAL } from "./helpers.js";
 
 const MINUTE = 60 * 1000;
 const HOUR = 60 * MINUTE;
@@ -199,7 +199,7 @@ describe("POST /api/walls/:id/arrange", () => {
     expect(await refusal(response)).toEqual({ error: "PHASE" });
     expect(ai.calls).toEqual([]);
     // revealed, the same request is taken
-    expect(await ask(anna.socket, { type: "admin.phase.set", phase: "open" })).toBe("ack");
+    expect(await ask(anna.socket, REVEAL)).toBe("ack");
     expect((await arrangeRoute(wallId, adminToken, { ai })).status).toBe(200);
   });
 

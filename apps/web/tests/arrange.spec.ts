@@ -419,7 +419,7 @@ test("a participant never has „Ordnen“; while the notes are hidden the moder
   // a wall as the product makes it: with hidden writing
   await enter(page, { notes: EIGHT });
   const cem = await another(browser, page.url(), "Cem");
-  await expect(primary(page)).toHaveText("Aufdecken");
+  await expect(primary(page)).toHaveText("Weiter: Aufdecken");
   for (const one of [page, cem.page]) {
     await expect(one.getByRole("button", { name: "Ordnen" })).toHaveCount(0);
     await expect(one.locator(".sb-action-hint")).toHaveText([

@@ -8,7 +8,7 @@
 import { runInDurableObject, SELF } from "cloudflare:test";
 import { describe, expect, it } from "vitest";
 import { generateHexId, generateSessionKey } from "@ideabeam/shared";
-import { answer, ask, createHiddenWall, createWall, join, stubOf, type TestSocket } from "./helpers.js";
+import { answer, ask, createHiddenWall, createWall, join, REVEAL, stubOf, type TestSocket } from "./helpers.js";
 
 function exportOf(wallId: string, sessionKey: string | null, lang: string | null = "de"): Promise<Response> {
   const query = lang === null ? "" : `?lang=${lang}`;
@@ -120,10 +120,12 @@ describe("the export while the notes are hidden", () => {
     expect(forBen).toContain("- Bens Geheimnis\n- Bens zweiter\n");
     expect(forBen).not.toContain("Annas");
 
-    expect(await answer(anna.socket, { type: "admin.phase.set", phase: "open" })).toMatchObject({ type: "ack" });
+    expect(await answer(anna.socket, REVEAL)).toMatchObject({ type: "ack" });
     const after = await (await exportOf(wallId, ben.sessionKey)).text();
     expect(after).toContain("## Zettel\n\n- Annas Zettel\n- Bens Geheimnis\n- Bens zweiter\n");
-    expect(after).not.toContain("verdeckt");
+    expect(after).not.toContain("noch verdeckt");
+    // the wall's method above the results, with its short description
+    expect(after).toContain("**Still sammeln, bündeln, verdeckt wählen:** Alle schreiben Ideen verdeckt,");
   });
 });
 

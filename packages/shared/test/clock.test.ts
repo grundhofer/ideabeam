@@ -23,6 +23,7 @@ import {
   type Clock,
   type ClockCommand,
 } from "../src/index.js";
+import { OPEN, WRITING } from "./steps.js";
 
 const MIN = 60_000;
 const T0 = 1_795_300_000_000;
@@ -162,38 +163,38 @@ describe("a control of the clock", () => {
   });
 
   it("is the moderation's", () => {
-    expect(decideClock(NO_CLOCK, start(0), anna, "writing", T0)).toEqual({ kind: "changed", clock: started() });
-    expect(decideClock(NO_CLOCK, start(0), ben, "writing", T0)).toEqual(REFUSED("NOT_ADMIN"));
-    expect(decideClock(started(), control("admin.clock.pause", 1), ben, "writing", T0)).toEqual(REFUSED("NOT_ADMIN"));
+    expect(decideClock(NO_CLOCK, start(0), anna, WRITING, T0)).toEqual({ kind: "changed", clock: started() });
+    expect(decideClock(NO_CLOCK, start(0), ben, WRITING, T0)).toEqual(REFUSED("NOT_ADMIN"));
+    expect(decideClock(started(), control("admin.clock.pause", 1), ben, WRITING, T0)).toEqual(REFUSED("NOT_ADMIN"));
   });
 
   it("is the writing's: a revealed wall has no clock to control", () => {
-    expect(decideClock(NO_CLOCK, start(0), anna, "open", T0)).toEqual(REFUSED("PHASE"));
-    expect(decideClock(started(), control("admin.clock.extend", 1), anna, "open", T0)).toEqual(REFUSED("PHASE"));
+    expect(decideClock(NO_CLOCK, start(0), anna, OPEN, T0)).toEqual(REFUSED("PHASE"));
+    expect(decideClock(started(), control("admin.clock.extend", 1), anna, OPEN, T0)).toEqual(REFUSED("PHASE"));
   });
 
   it("names the revision it was made for, so it never acts twice", () => {
     const pause = control("admin.clock.pause", 1);
-    const first = decideClock(started(), pause, anna, "writing", T0 + MIN);
+    const first = decideClock(started(), pause, anna, WRITING, T0 + MIN);
     expect(first).toEqual({ kind: "changed", clock: { rev: 2, endsAt: null, leftMs: 9 * MIN } });
     // the same frame again, after a reconnect: the clock has moved on
     const clock = first.kind === "changed" ? first.clock : NO_CLOCK;
-    expect(decideClock(clock, pause, anna, "writing", T0 + 2 * MIN)).toEqual(REFUSED("STALE"));
+    expect(decideClock(clock, pause, anna, WRITING, T0 + 2 * MIN)).toEqual(REFUSED("STALE"));
     // five minutes more, sent twice, are five minutes
     const more = control("admin.clock.extend", 1);
-    const extended = decideClock(started(), more, anna, "writing", T0);
+    const extended = decideClock(started(), more, anna, WRITING, T0);
     expect(extended).toMatchObject({ clock: { rev: 2, endsAt: T0 + 15 * MIN } });
-    expect(decideClock(extended.kind === "changed" ? extended.clock : NO_CLOCK, more, anna, "writing", T0)).toEqual(
+    expect(decideClock(extended.kind === "changed" ? extended.clock : NO_CLOCK, more, anna, WRITING, T0)).toEqual(
       REFUSED("STALE"),
     );
     // and a control made for a revision the clock has not reached is none either
-    expect(decideClock(started(), control("admin.clock.pause", 5), anna, "writing", T0)).toEqual(REFUSED("STALE"));
+    expect(decideClock(started(), control("admin.clock.pause", 5), anna, WRITING, T0)).toEqual(REFUSED("STALE"));
   });
 
   it("is refused where it does not fit what the clock is doing", () => {
-    expect(decideClock(NO_CLOCK, control("admin.clock.pause", 0), anna, "writing", T0)).toEqual(REFUSED("INVALID"));
-    expect(decideClock(NO_CLOCK, control("admin.clock.clear", 0), anna, "writing", T0)).toEqual(REFUSED("INVALID"));
-    expect(decideClock(started(), control("admin.clock.resume", 1), anna, "writing", T0)).toEqual(REFUSED("INVALID"));
+    expect(decideClock(NO_CLOCK, control("admin.clock.pause", 0), anna, WRITING, T0)).toEqual(REFUSED("INVALID"));
+    expect(decideClock(NO_CLOCK, control("admin.clock.clear", 0), anna, WRITING, T0)).toEqual(REFUSED("INVALID"));
+    expect(decideClock(started(), control("admin.clock.resume", 1), anna, WRITING, T0)).toEqual(REFUSED("INVALID"));
   });
 
   it("every control makes the next revision", () => {
@@ -206,7 +207,7 @@ describe("a control of the clock", () => {
       control("admin.clock.clear", 4),
     ];
     for (const [index, command] of commands.entries()) {
-      const decision = decideClock(clock, command, anna, "writing", T0 + index * MIN);
+      const decision = decideClock(clock, command, anna, WRITING, T0 + index * MIN);
       if (decision.kind !== "changed") throw new Error(`${command.type}: ${decision.code}`);
       clock = decision.clock;
       expect(clock.rev).toBe(index + 1);

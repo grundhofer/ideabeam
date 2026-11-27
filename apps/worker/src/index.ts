@@ -76,8 +76,9 @@ const smallBody = bodyLimit({
 });
 
 // A new wall. The answer carries its two capabilities: the wall's id, which is its address and lets anyone in, and
-// the admin token, which stays in the creating browser. The wall starts with hidden writing unless the request says
-// `hidden: false` (PLAN.md 2.1).
+// the admin token, which stays in the creating browser. The wall runs the method the request names (`agenda`,
+// PLAN-METHODEN.md); without one it starts with hidden writing („Still sammeln“) unless the request says
+// `hidden: false` („Freie Wand“).
 app.post("/api/walls", smallBody, createLimit(), async (c) => {
   const body: unknown = await c.req.json().catch(() => null);
   const parsed = createWallRequestSchema.safeParse(body);
@@ -96,7 +97,8 @@ app.post("/api/walls", smallBody, createLimit(), async (c) => {
   }
   const { wallId, stub } = newWall(c.env);
   const adminToken = generateSecret();
-  await stub.initialize({ wallId, question: parsed.data.question, adminToken, hidden: parsed.data.hidden });
+  const { question, hidden, agenda } = parsed.data;
+  await stub.initialize({ wallId, question, adminToken, hidden, ...(agenda === undefined ? {} : { agenda }) });
   return c.json({ wallId, adminToken } satisfies CreateWallResponse);
 });
 

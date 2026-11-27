@@ -3,45 +3,50 @@
 
 import { DurableObject } from "cloudflare:workers";
 import {
+  agendaFor,
   decide,
   decideClock,
-  decidePhase,
+  decideStep,
   displayNameKey,
   eventFor,
   exportFileName,
   hiddenChange,
+  initialFlow,
   joinNotice,
   MAX_FRAME_BYTES,
   MAX_ONLINE,
   MAX_PARTICIPANTS,
-  NO_CLOCK,
+  methodOfStep,
   notesFor,
   numbersOf,
   planJoin,
   PROTOCOL_VERSION,
   readClientFrame,
+  readStoredFlow,
   revealedFor,
-  stoppedClock,
+  stepContext,
   WALL_DAILY_ROWS,
   wallBrake,
   wallMarkdown,
+  type AgendaRequest,
   type ArrangeLanguage,
   type ArrangeRecord,
   type ClientCommand,
-  type Clock,
   type ClockCommand,
   type ContentCommand,
   type ContentEvent,
   type DayMark,
   type ErrorCode,
+  type Flow,
   type Group,
   type Participant,
   type ParticipantRole,
-  type Phase,
-  type PhaseCommand,
   type Placement,
   type RejectCode,
+  type ResolvedAgenda,
   type ServerEvent,
+  type StepCommand,
+  type StepContext,
   type StoredNote,
   type TitleSource,
   type WallInfo,
@@ -79,7 +84,11 @@ const BUCKET_REFILL_PER_SEC = 2;
 const RESYNC_COST = 10;
 
 // Raised with every change of what a wall stores; migrate() brings a wall of an older build up to it.
-const SCHEMA_VERSION = 3;
+const SCHEMA_VERSION = 4;
+// The oldest schema this build reads as it stands, without a row written: a wall of schema 3 has no agenda row and
+// its flow row in the old shape, and both are read as they are (readFlow()). Its next step move or control of the
+// clock writes them in the shape of schema 4 (writeFlow()).
+const READS_AS_IS = 3;
 
 // Every table is WITHOUT ROWID. A table with a rowid keeps its text key in a second tree: measured in workerd
 // (2026-11-22, and by FokusBeam before), an insert is then two rows written, without it one. Rows written are the
@@ -98,10 +107,12 @@ const SCHEMA_VERSION = 3;
 // notes, written by the run and deleted when the run is taken back; the next run writes over it. A wall of an
 // older build simply has no such row.
 //
-// The phase and the clock of the writing stand in ONE row of meta, 'flow' (`Flow` below), with the number of the
-// change that wrote it last: revealing is one row written, and so is every control of the clock. What the wall
-// remembers about its day for the brake (packages/shared/src/domain/budget.ts) is the row 'day', written once a
-// day.
+// Where the wall stands in its agenda, the step and the furthest one reached, and the clock of the step stand in ONE
+// row of meta, 'flow' (`Flow`, packages/shared/src/domain/flow.ts), with the number of the change that wrote it
+// last: a step move is one row written (revealing among them), and so is every control of the clock. The wall's
+// agenda, the steps of its method copied at its creation (domain/agenda.ts), is the row 'agenda', written once. What
+// the wall remembers about its day for the brake (packages/shared/src/domain/budget.ts) is the row 'day', written
+// once a day.
 //
 // One statement per entry, each run by itself: a cursor counts the rows of its own statement, and the cost test
 // counts every row a wall writes, its tables included.
@@ -156,16 +167,18 @@ export interface WallCreation {
   wallId: string;
   question: string;
   adminToken: string;
-  /** Whether the wall starts with hidden writing. */
+  /** Whether the wall starts with hidden writing: without an agenda, „Still sammeln“, else „Freie Wand“. */
   hidden: boolean;
+  /** The method the wall runs (domain/agenda.ts). */
+  agenda?: AgendaRequest;
 }
 
-/** The value of meta 'flow': where the wall is in its flow (PLAN.md 2.1). */
-interface Flow {
-  phase: Phase;
-  clock: Clock;
-  /** The number of the change that wrote this row last: revealing, or a control of the clock. */
-  seq: number;
+/** Where the wall stands, as it reads it: its flow, its agenda, and whether the agenda is the one its old phase
+ *  stands for (a wall of schema 3 that has not changed its flow since: readStoredFlow()). */
+interface FlowState {
+  flow: Flow;
+  agenda: ResolvedAgenda;
+  legacy: boolean;
 }
 
 interface ParticipantRow {
@@ -212,7 +225,7 @@ interface StoredWall extends WallReader {
 export type ArrangeNotes =
   /** Never made, or deleted. */
   | { kind: "missing" }
-  /** Not the wall's admin token, or the notes are still hidden. */
+  /** Not the wall's admin token, or the step the wall is in does not arrange (the notes are still hidden). */
   | { kind: "refused"; code: "NOT_ADMIN" | "PHASE" }
   /** The wall's question and the notes that lie in no locked group: id and text, in the order they were made. */
   | { kind: "notes"; question: string; notes: Array<{ id: string; text: string }> };
@@ -258,18 +271,19 @@ export class WallRoom extends DurableObject<Env> {
     const now = Date.now();
     const retentionAt = now + RETENTION_MS;
     for (const table of [...WALL_TABLES, ...CONTENT_TABLES]) this.sql.exec(table);
-    const flow: Flow = { phase: creation.hidden ? "writing" : "open", clock: NO_CLOCK, seq: 0 };
+    const agenda = agendaFor(creation);
     this.sql.exec(
       `INSERT INTO meta (key, value) VALUES
          ('id', ?), ('question', ?), ('adminToken', ?), ('createdAt', ?), ('schemaVersion', ?), ('retentionAt', ?),
-         ('flow', ?)`,
+         ('flow', ?), ('agenda', ?)`,
       creation.wallId,
       creation.question,
       creation.adminToken,
       String(now),
       String(SCHEMA_VERSION),
       String(retentionAt),
-      JSON.stringify(flow),
+      JSON.stringify(initialFlow()),
+      JSON.stringify(agenda),
     );
     await this.ctx.storage.setAlarm(retentionAt);
   }
@@ -292,7 +306,7 @@ export class WallRoom extends DurableObject<Env> {
     this.migrate();
     const stored = this.getMeta("adminToken");
     if (stored === null || !safeEqual(adminToken, stored)) return { kind: "refused", code: "NOT_ADMIN" };
-    if (this.readFlow().phase !== "open") return { kind: "refused", code: "PHASE" };
+    if (!this.stepNow().can.arrange) return { kind: "refused", code: "PHASE" };
     const locked = new Set(
       this.sql
         .exec("SELECT id FROM groups WHERE locked = 1")
@@ -324,9 +338,11 @@ export class WallRoom extends DurableObject<Env> {
     const at = Date.now();
     const question = this.getMeta("question") ?? "";
     const content = this.readContent();
+    const { flow, agenda } = this.readFlow();
     const text = wallMarkdown({
       question,
-      phase: this.readFlow().phase,
+      methodId: methodOfStep(agenda, flow.step),
+      sight: stepContext(agenda, flow).sight,
       notes: content.notes,
       groups: content.groups,
       viewer: String(row.id),
@@ -435,8 +451,8 @@ export class WallRoom extends DurableObject<Env> {
       case "admin.arrange.undo":
         this.handleContent(ws, participant, command);
         return;
-      case "admin.phase.set":
-        this.handlePhase(ws, participant, command);
+      case "admin.step.go":
+        this.handleStep(ws, participant, command);
         return;
       case "admin.clock.start":
       case "admin.clock.pause":
@@ -590,7 +606,7 @@ export class WallRoom extends DurableObject<Env> {
   // ───────────────────────── notes, groups, places ─────────────────────────
 
   /** A command that changes what the wall holds. The rules decide (packages/shared/src/domain/rules.ts) from what
-   *  this object reads for them and the phase the wall is in; what they decide is stored under the next number and
+   *  this object reads for them and the step the wall is in; what they decide is stored under the next number and
    *  told to everyone who may read it (publish()). The sender hears the event like everyone else and its `ack` after
    *  it, so its browser never shows the wall without what it just did. Every command is safe to arrive twice: the
    *  second time the rules find its work done, and it is answered without a row written and without a frame to
@@ -601,9 +617,9 @@ export class WallRoom extends DurableObject<Env> {
    *  first change of a UTC day writes that row, in the transaction of the change. */
   private handleContent(ws: WebSocket, participant: Participant, command: ContentCommand): void {
     const now = Date.now();
-    const { phase } = this.readFlow();
+    const ctx = this.stepNow();
     const wall = this.reader(participant.id);
-    const decision = decide(wall, command, participant, now, phase);
+    const decision = decide(wall, command, participant, now, ctx);
     if (decision.kind === "refused") {
       this.reject(ws, command.opId, decision.code);
       return;
@@ -621,7 +637,7 @@ export class WallRoom extends DurableObject<Env> {
     // the next number; an arrangement takes as many as the rows it writes, and carries the last of them
     const event = { ...decision.change, seq: seq + numbersOf(decision.change) } as ContentEvent;
     this.store(event, wall, participant.id, brake.fresh ? brake.mark : null, decision.record);
-    this.publish(event, participant.id, phase);
+    this.publish(event, participant.id, ctx);
     this.ack(ws, command.opId, event.seq);
   }
 
@@ -814,7 +830,7 @@ export class WallRoom extends DurableObject<Env> {
   // The storage stays the truth and the sockets a copy of it. A wall nobody is on has no socket: the next join
   // reads the number from the rows its snapshot reads anyway (readContent()), and every snapshot holds the copy
   // against those rows (buildSync()). A delete leaves no row behind that could carry its number, so it writes it
-  // into the layout row (store()); revealing and the clock write theirs into the row they change ('flow'). With
+  // into the layout row (store()); a step move and the clock write theirs into the row they change ('flow'). With
   // that, the largest stored number is the wall's number at every moment, and it never runs backwards, whoever
   // comes or goes.
 
@@ -844,19 +860,22 @@ export class WallRoom extends DurableObject<Env> {
          )`,
       )
       .one();
-    return Math.max(Number(row.seq ?? 0), this.readFlow().seq);
+    return Math.max(Number(row.seq ?? 0), this.readFlow().flow.seq);
   }
 
-  // ───────────────────────── the phase, the clock, the brake ─────────────────────────
+  // ───────────────────────── the step, the clock, the brake ─────────────────────────
 
-  /** Revealing (`admin.phase.set`): the writing is over. One row written: the phase, with the clock stopped and the
-   *  number of the change. Every browser gets the notes it did not have, each its own frame, and then the phase.
+  /** A step move (`admin.step.go`): the rules decide (packages/shared/src/domain/flow.ts), this stores the flow and
+   *  tells everyone. One row written: the step, the furthest one reached, the clock stopped and the number of the
+   *  change (and once, for a wall of schema 3, its agenda and schema beside it: writeFlow()). A move that shows the
+   *  hidden notes is revealing: every browser gets the notes it did not have, each its own frame, and then the step.
    *  These are two frames with two numbers, so revealing takes two: a browser counts every frame it gets
-   *  (packages/shared/src/domain/wall.ts), and none of them may stand for two. Sent again, the command finds the
-   *  wall revealed and changes nothing. The brake never refuses it. */
-  private handlePhase(ws: WebSocket, participant: Participant, command: PhaseCommand): void {
-    const flow = this.readFlow();
-    const decision = decidePhase(flow.phase, command, participant);
+   *  (packages/shared/src/domain/wall.ts), and none of them may stand for two. Any other move is one frame with one
+   *  number. Going back hides nothing: what is seen follows the furthest step reached. Sent again, the command finds
+   *  the wall in its step and changes nothing. The brake never refuses it. */
+  private handleStep(ws: WebSocket, participant: Participant, command: StepCommand): void {
+    const state = this.readFlow();
+    const decision = decideStep(state.flow, state.agenda, command, participant);
     if (decision.kind === "refused") {
       this.reject(ws, command.opId, decision.code);
       return;
@@ -866,20 +885,26 @@ export class WallRoom extends DurableObject<Env> {
       this.ack(ws, command.opId, seq);
       return;
     }
-    const [revealedSeq, changedSeq] = [seq + 1, seq + 2];
-    this.writeFlow({ phase: decision.phase, clock: stoppedClock(flow.clock), seq: changedSeq });
-    const { notes } = this.readContent();
+    const changedSeq = decision.widens ? seq + 2 : seq + 1;
+    this.writeFlow(state, { v: 2, ...decision.flow, seq: changedSeq });
     const changed = JSON.stringify({
-      type: "phase.changed",
+      type: "step.changed",
       seq: changedSeq,
-      phase: decision.phase,
+      step: decision.flow.step,
+      reach: decision.flow.reach,
     } satisfies ServerEvent);
+    if (!decision.widens) {
+      this.deliver(changedSeq, () => ({ frames: [changed] }));
+      this.ack(ws, command.opId, changedSeq);
+      return;
+    }
+    const { notes } = this.readContent();
     // one text per person, however many tabs they have open
     const revealed = new Map<string, string>();
     this.deliver(changedSeq, (viewer) => {
       let frame = revealed.get(viewer);
       if (frame === undefined) {
-        const event: ServerEvent = { type: "notes.revealed", seq: revealedSeq, notes: revealedFor(notes, viewer) };
+        const event: ServerEvent = { type: "notes.revealed", seq: seq + 1, notes: revealedFor(notes, viewer) };
         frame = JSON.stringify(event);
         revealed.set(viewer, frame);
       }
@@ -893,14 +918,14 @@ export class WallRoom extends DurableObject<Env> {
    *  here, and the object's one alarm stays the day the wall deletes itself. The brake never refuses a control. */
   private handleClock(ws: WebSocket, participant: Participant, command: ClockCommand): void {
     const now = Date.now();
-    const flow = this.readFlow();
-    const decision = decideClock(flow.clock, command, participant, flow.phase, now);
+    const state = this.readFlow();
+    const decision = decideClock(state.flow.clock, command, participant, stepContext(state.agenda, state.flow), now);
     if (decision.kind === "refused") {
       this.reject(ws, command.opId, decision.code);
       return;
     }
     const seq = this.currentSeq() + 1;
-    this.writeFlow({ ...flow, clock: decision.clock, seq });
+    this.writeFlow(state, { ...state.flow, clock: decision.clock, seq });
     const frame = JSON.stringify({
       type: "clock.changed",
       seq,
@@ -911,15 +936,35 @@ export class WallRoom extends DurableObject<Env> {
     this.ack(ws, command.opId, seq);
   }
 
-  /** Where the wall is in its flow. Every wall of this build has the row (initialize(), migrate()); should it ever
-   *  be missing, the wall hides rather than shows. */
-  private readFlow(): Flow {
-    const stored = this.getMeta("flow");
-    return stored === null ? { phase: "writing", clock: NO_CLOCK, seq: 0 } : (JSON.parse(stored) as Flow);
+  /** Where the wall stands in its agenda, and the agenda. A wall of schema 3 is read as it stands, and nothing is
+   *  written: its old phase stands for a method (readStoredFlow(), packages/shared/src/domain/flow.ts). Every wall of
+   *  this build has both rows (initialize(), migrate()); should the flow ever be missing, the wall hides rather than
+   *  shows. Two rows read. */
+  private readFlow(): FlowState {
+    const flow = this.getMeta("flow");
+    const agenda = this.getMeta("agenda");
+    const stored = agenda === null ? null : (JSON.parse(agenda) as ResolvedAgenda);
+    const read = readStoredFlow(flow === null ? null : JSON.parse(flow), stored);
+    // without a stored agenda there is always the old phase's (readStoredFlow())
+    return { flow: read.flow, agenda: read.legacy ?? (stored as ResolvedAgenda), legacy: read.legacy !== null };
   }
 
-  private writeFlow(flow: Flow): void {
-    this.setMeta("flow", JSON.stringify(flow));
+  /** What the step the wall is in allows, and what is seen of the others' notes. */
+  private stepNow(): StepContext {
+    const { flow, agenda } = this.readFlow();
+    return stepContext(agenda, flow);
+  }
+
+  /** Writes the flow in the shape of now. A wall of schema 3 that has not changed its flow since writes, in the same
+   *  transaction and once, the agenda its old phase stood for and its schema: from then on it is a wall of schema 4.
+   *  Two rows more, once, for a wall that was made before the methods. */
+  private writeFlow(state: FlowState, flow: Flow): void {
+    this.ctx.storage.transactionSync(() => {
+      this.setMeta("flow", JSON.stringify(flow));
+      if (!state.legacy) return;
+      this.setMeta("agenda", JSON.stringify(state.agenda));
+      this.setMeta("schemaVersion", String(SCHEMA_VERSION));
+    });
   }
 
   /** What the wall remembers about its day, or null: it has stored no change yet. */
@@ -978,15 +1023,22 @@ export class WallRoom extends DurableObject<Env> {
    *  From FokusBeam's `migrate`. */
   private migrate(): void {
     const from = Number(this.getMeta("schemaVersion") ?? "0");
-    if (from >= SCHEMA_VERSION) return;
+    // 3 → 4: the agenda and the flow in its new shape (stage M1 of the methods). Nothing is written on a visit:
+    // readFlow() reads a wall of schema 3 as it stands, and its next change of the flow writes the new shape
+    // (writeFlow()). So a wall of schema 3 shows exactly what it showed, and a look at it costs no row.
+    if (from >= READS_AS_IS) return;
     // all of it or none: a wall never stands between two schemas
     this.ctx.storage.transactionSync(() => {
       // 1 → 2: notes, groups and the layout (stage 2). The two tables of stage 1 stay as they were made.
       if (from < 2) for (const table of CONTENT_TABLES) this.sql.exec(table);
       // 2 → 3: the phase and the clock (stage 3). A wall from before the phases showed every note to everyone, and
       // people have read them: it is revealed, and stays as it was. No table changes: a note's row has always held
-      // who wrote it, and what a browser gets of that is decided where the frame is built.
-      if (from < 3) this.writeFlow({ phase: "open", clock: NO_CLOCK, seq: 0 });
+      // who wrote it, and what a browser gets of that is decided where the frame is built. Written in the shape of
+      // schema 4 at once: a „Freie Wand“ at its one step, which is what such a wall was.
+      if (from < 3) {
+        this.setMeta("flow", JSON.stringify(initialFlow()));
+        this.setMeta("agenda", JSON.stringify(agendaFor({ hidden: false })));
+      }
       this.setMeta("schemaVersion", String(SCHEMA_VERSION));
     });
   }
@@ -1021,12 +1073,12 @@ export class WallRoom extends DurableObject<Env> {
 
   /** The whole wall for one person. Built per person, and the one place a snapshot is built: what this person may
    *  read of the notes is decided by the shared rules (`notesFor`), as publish() has them decide it for an event.
-   *  Stored notes leave the object through these two, through revealing (handlePhase()) and through the export
+   *  Stored notes leave the object through these two, through revealing (handleStep()) and through the export
    *  (exportFor(), which asks the same rule), nowhere else. */
   private buildSync(participantId: string): Sync {
-    const flow = this.readFlow();
+    const { flow, agenda } = this.readFlow();
     const content = this.readContent();
-    const view = notesFor(content.notes, flow.phase, participantId);
+    const view = notesFor(content.notes, stepContext(agenda, flow).sight, participantId);
     return {
       type: "sync",
       protocolVersion: PROTOCOL_VERSION,
@@ -1037,7 +1089,9 @@ export class WallRoom extends DurableObject<Env> {
       // A snapshot reads every row anyway, so it knows the number as the storage has it and takes the larger of
       // the two: sockets and storage agree, and where they ever did not, the snapshot puts it right.
       seq: Math.max(this.carriedSeq() ?? 0, content.seq, flow.seq),
-      phase: flow.phase,
+      agenda,
+      step: flow.step,
+      reach: flow.reach,
       hidden: view.hidden,
       clock: flow.clock,
       notes: view.notes,
@@ -1149,13 +1203,13 @@ export class WallRoom extends DurableObject<Env> {
    *  While the notes are hidden, everybody but `by` hears the change's number and how many notes are hidden from
    *  them now. That count is carried on the socket and moved on by the change, so telling it reads no row; a socket
    *  that carries none gets it from the storage. */
-  private publish(event: ContentEvent, by: string, phase: Phase): void {
+  private publish(event: ContentEvent, by: string, ctx: StepContext): void {
     // one text per distinct frame: whoever made the change, everybody else, and each count
     const texts = new Map<string, string>();
     const text = (key: string, viewer: string, hidden: number): string => {
       let frame = texts.get(key);
       if (frame === undefined) {
-        frame = JSON.stringify(eventFor(event, by, viewer, phase, hidden));
+        frame = JSON.stringify(eventFor(event, by, viewer, ctx.sight, hidden));
         texts.set(key, frame);
       }
       return frame;
@@ -1163,7 +1217,7 @@ export class WallRoom extends DurableObject<Env> {
     const moved = hiddenChange(event);
     this.deliver(event.seq, (viewer, attachment) => {
       if (viewer === by) return { frames: [text("by", viewer, 0)] };
-      if (phase === "open") return { frames: [text("others", viewer, 0)] };
+      if (ctx.sight === "all") return { frames: [text("others", viewer, 0)] };
       // never below none: a count is a frame every browser has to be able to read
       const hidden = attachment.hidden === undefined ? this.hiddenFor(viewer) : Math.max(0, attachment.hidden + moved);
       return { frames: [text(`hidden ${hidden}`, viewer, hidden)], hidden };

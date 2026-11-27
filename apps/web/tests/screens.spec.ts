@@ -288,18 +288,18 @@ const screens: Screen[] = [
     prepare: used(press(`Mehr zu „${QUESTION}“`), item("Aus der Liste entfernen")),
   },
   {
-    // the question, and the one choice of a wall's flow: „Verdeckt schreiben“, which is on
+    // the question, and the choice of the method: „Still sammeln“ is chosen, every method with its short description
     name: "neu",
     path: "/neu",
     heading: "Neue Wand",
     view: view("neu"),
     overlay: null,
     prepare: then((page) =>
-      expect(page.getByRole("switch", { name: "Verdeckt schreiben" })).toHaveAttribute("aria-checked", "true"),
+      expect(page.getByRole("radio", { name: "Still sammeln, bündeln, verdeckt wählen" })).toBeChecked(),
     ),
   },
   {
-    // switched off: the wall will show every note at once
+    // „Freie Wand“ chosen: the wall will show every note at once; its „Mehr dazu“ open
     name: "neu-offen",
     path: "/neu",
     heading: "Neue Wand",
@@ -307,9 +307,10 @@ const screens: Screen[] = [
     overlay: null,
     prepare: then(
       (page) => page.fill("#app-f-question", QUESTION),
-      (page) => page.getByRole("switch", { name: "Verdeckt schreiben" }).click(),
-      (page) =>
-        expect(page.getByRole("switch", { name: "Verdeckt schreiben" })).toHaveAttribute("aria-checked", "false"),
+      (page) => page.getByRole("radio", { name: "Freie Wand" }).check(),
+      (page) => page.locator('[data-method="free"] .app-method__more').click(),
+      (page) => expect(page.getByRole("radio", { name: "Freie Wand" })).toBeChecked(),
+      (page) => expect(page.locator('[data-method="free"] .app-method__about')).toBeVisible(),
     ),
   },
   {
@@ -897,7 +898,7 @@ const screens: Screen[] = [
         expect(guide(page)).toHaveText([
           "Du moderierst: Alle schreiben für sich, niemand liest mit. Wenn alle fertig sind, zeigt „Aufdecken“ allen jeden Zettel.",
         ]),
-      (page) => expect(page.locator(".sb-primary-action")).toHaveText("Aufdecken"),
+      (page) => expect(page.locator(".sb-primary-action")).toHaveText("Weiter: Aufdecken"),
       (page) => expect(page.getByRole("button", { name: "Neuer Zettel", exact: true })).toBeVisible(),
       (page) => expect(page.getByRole("button", { name: "Neue Gruppe" })).toHaveCount(0),
       (page) =>
@@ -947,7 +948,7 @@ const screens: Screen[] = [
     path: "/",
     heading: QUESTION,
     overlay: "app-dlg-reveal",
-    prepare: onHidden("surface", press("Aufdecken"), (page) =>
+    prepare: onHidden("surface", press("Weiter: Aufdecken"), (page) =>
       expect(page.locator("#app-dlg-reveal")).toContainText(
         "Auf der Wand liegen 4 Zettel. Nach dem Aufdecken sehen alle jeden Zettel, auch jeden, der noch dazukommt. Das lässt sich nicht rückgängig machen.",
       ),
@@ -1011,7 +1012,7 @@ const screens: Screen[] = [
           ]),
         (page) => expect(clockControls(page).getByRole("button")).toHaveText(["5 Minuten mehr", "Uhr ausschalten"]),
         (page) => expect(page).toHaveTitle(`Zeit um · ${QUESTION} · IdeaBeam`),
-        (page) => expect(page.locator(".sb-primary-action")).toHaveText("Aufdecken"),
+        (page) => expect(page.locator(".sb-primary-action")).toHaveText("Weiter: Aufdecken"),
       ),
     ),
   },

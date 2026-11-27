@@ -14,10 +14,11 @@ import {
   type Decision,
   type Group,
   type Note,
-  type Phase,
   type WallContent,
   type WallReader,
+  type StepContext,
 } from "../src/index.js";
+import { OPEN, WRITING } from "./steps.js";
 
 // Arranging as the wall decides it (domain/arrange.ts): what an arrangement may touch, what it leaves behind, and
 // that taking it back brings the wall back. The wall of these tests is played here in memory: what the rules decide
@@ -63,8 +64,8 @@ interface Wall extends WallContent {
 
 const readerFor = (wall: Wall): WallReader => ({ ...readerOf(wall), arranged: () => wall.record });
 
-const ask = (wall: Wall, command: ContentCommand, by: Actor = anna, phase: Phase = "open"): Decision =>
-  decide(readerFor(wall), command, by, NOW, phase);
+const ask = (wall: Wall, command: ContentCommand, by: Actor = anna, ctx: StepContext = OPEN): Decision =>
+  decide(readerFor(wall), command, by, NOW, ctx);
 
 /** The wall after a command the rules took: its content, and what it remembers. */
 function after(wall: Wall, command: ContentCommand, by: Actor = anna): Wall {
@@ -128,7 +129,7 @@ describe("applying an arrangement", () => {
     const wall = empty(scattered());
     const command = arrangement("r", { c: "123", d: "456" });
     expect(ask(wall, command, ben)).toEqual({ kind: "refused", code: "NOT_ADMIN" });
-    expect(ask(wall, command, anna, "writing")).toEqual({ kind: "refused", code: "PHASE" });
+    expect(ask(wall, command, anna, WRITING)).toEqual({ kind: "refused", code: "PHASE" });
     expect(ask(wall, command, anna).kind).toBe("changed");
   });
 
@@ -305,7 +306,7 @@ describe("taking an arrangement back", () => {
   it("is the moderation's, and names the run it means", () => {
     const arranged = after(empty(scattered()), command);
     expect(ask(arranged, undo("r"), ben)).toEqual({ kind: "refused", code: "NOT_ADMIN" });
-    expect(ask(arranged, undo("r"), anna, "writing")).toEqual({ kind: "refused", code: "PHASE" });
+    expect(ask(arranged, undo("r"), anna, WRITING)).toEqual({ kind: "refused", code: "PHASE" });
     // another run than the wall's last one cannot be taken back any more
     expect(ask(arranged, undo("q"))).toEqual({ kind: "refused", code: "STALE" });
     expect(ask(arranged, undo("r")).kind).toBe("changed");
@@ -450,10 +451,10 @@ describe("taking an arrangement back", () => {
   it("in a browser shows nothing before the wall has spoken: a browser knows which run it was, not what the wall remembers", () => {
     const arranged = after(empty(scattered()), command);
     const browser = readerOf(arranged, id("r"));
-    expect(decide(browser, undo("r"), anna, NOW, "open")).toEqual({ kind: "unchanged" });
-    expect(decide(browser, undo("q"), anna, NOW, "open")).toEqual({ kind: "refused", code: "STALE" });
+    expect(decide(browser, undo("r"), anna, NOW, OPEN)).toEqual({ kind: "unchanged" });
+    expect(decide(browser, undo("q"), anna, NOW, OPEN)).toEqual({ kind: "refused", code: "STALE" });
     // and the same arrangement sent again is known as applied there too
-    expect(decide(browser, command, anna, NOW, "open")).toEqual({ kind: "unchanged" });
+    expect(decide(browser, command, anna, NOW, OPEN)).toEqual({ kind: "unchanged" });
   });
 });
 

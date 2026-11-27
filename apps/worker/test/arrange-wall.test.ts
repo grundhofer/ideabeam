@@ -27,7 +27,19 @@ import {
   wellBehaved,
   writeNotes,
 } from "./arrange-helpers.js";
-import { ask, createHiddenWall, createWall, join, resync, setDailyRows, settle, stubOf, type Sync } from "./helpers.js";
+import {
+  asSchemaThree,
+  ask,
+  createHiddenWall,
+  createWall,
+  FREE,
+  join,
+  resync,
+  setDailyRows,
+  settle,
+  stubOf,
+  type Sync,
+} from "./helpers.js";
 
 type Person = Awaited<ReturnType<typeof join>>;
 type Applied = Extract<ServerEvent, { type: "arrange.applied" }>;
@@ -652,7 +664,8 @@ describe("a wall that an older build made", () => {
     const people = await wall();
     const { anna, ben } = people;
     const groupId = await byHand(ben, people.noteIds.slice(0, 2));
-    // as stage 3 left it: the same tables, schema 3, and no row about a run
+    // as stage 3 left it: the same tables, schema 3, its flow in the old shape, no agenda and no row about a run
+    await asSchemaThree(people.wallId, "open");
     const schema = () =>
       runInDurableObject(stubOf(people.wallId), (_instance, state) => ({
         version: String(state.storage.sql.exec("SELECT value FROM meta WHERE key = 'schemaVersion'").one().value),
@@ -722,7 +735,7 @@ describe("a wall that an older build made", () => {
       adminToken: people.adminToken,
       sessionKey: people.anna.sessionKey,
     });
-    expect(anna.sync).toMatchObject({ phase: "open", arrangeRun: null });
+    expect(anna.sync).toMatchObject({ ...FREE, arrangeRun: null });
     const command = applyOf(proposal, anna.sync);
     expect(await said(anna.socket, command)).toBe("ack");
     expect((await resync(anna.socket)).arrangeRun).toBe(command.opId);

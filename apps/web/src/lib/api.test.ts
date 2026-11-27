@@ -15,32 +15,38 @@ afterEach(() => vi.restoreAllMocks());
 
 test("a new wall comes back with its id and the admin token", async () => {
   const fetched = answer(200, { wallId: WALL, adminToken: TOKEN });
-  expect(await createWall("Was hält uns auf?", true)).toEqual({ ok: true, wall: { wallId: WALL, adminToken: TOKEN } });
+  expect(await createWall("Was hält uns auf?", "still-sammeln")).toEqual({
+    ok: true,
+    wall: { wallId: WALL, adminToken: TOKEN },
+  });
   const [url, init] = fetched.mock.calls[0] ?? [];
   expect(url).toBe("/api/walls");
   expect(init?.method).toBe("POST");
-  expect(JSON.parse(String(init?.body))).toEqual({ question: "Was hält uns auf?", hidden: true });
-  // a wall without hidden writing is asked for
-  await createWall("Was hält uns auf?", false);
+  expect(JSON.parse(String(init?.body))).toEqual({
+    question: "Was hält uns auf?",
+    agenda: { items: [{ methodId: "still-sammeln" }] },
+  });
+  // the method is asked for by its id: a wall without hidden writing is a „Freie Wand“
+  await createWall("Was hält uns auf?", "free");
   expect(JSON.parse(String(fetched.mock.calls[1]?.[1]?.body))).toEqual({
     question: "Was hält uns auf?",
-    hidden: false,
+    agenda: { items: [{ methodId: "free" }] },
   });
 });
 
 test("too many walls from one address is its own answer; everything else is a failure", async () => {
   answer(429, { error: "RATE_LIMITED" });
-  expect(await createWall("x", true)).toEqual({ ok: false, why: "limited" });
+  expect(await createWall("x", "still-sammeln")).toEqual({ ok: false, why: "limited" });
   // the day's walls are taken: the same status, and the time it goes on
   answer(429, { error: "BUDGET_SPENT", resetsAt: 1_795_392_000_000 });
-  expect(await createWall("x", true)).toEqual({ ok: false, why: "spent", resetsAt: 1_795_392_000_000 });
+  expect(await createWall("x", "still-sammeln")).toEqual({ ok: false, why: "spent", resetsAt: 1_795_392_000_000 });
   answer(500, {});
-  expect(await createWall("x", true)).toEqual({ ok: false, why: "failed" });
+  expect(await createWall("x", "still-sammeln")).toEqual({ ok: false, why: "failed" });
   // an answer of another shape is no wall
   answer(200, { wallId: "short", adminToken: TOKEN });
-  expect(await createWall("x", true)).toEqual({ ok: false, why: "failed" });
+  expect(await createWall("x", "still-sammeln")).toEqual({ ok: false, why: "failed" });
   vi.spyOn(globalThis, "fetch").mockRejectedValue(new TypeError("offline"));
-  expect(await createWall("x", true)).toEqual({ ok: false, why: "failed" });
+  expect(await createWall("x", "still-sammeln")).toEqual({ ok: false, why: "failed" });
 });
 
 test("a wall is found by its id, and a wall that is not there is told from a request that failed", async () => {

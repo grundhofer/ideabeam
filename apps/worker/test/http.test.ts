@@ -60,11 +60,11 @@ describe("POST /api/walls", () => {
       const response = await postWall({ question: "What slows us down?", ...body });
       expect(response.status).toBe(200);
       const { wallId } = (await response.json()) as { wallId: string };
-      return (await join(wallId, "Anna")).sync.phase;
+      return (await join(wallId, "Anna")).sync.agenda.items.map((item) => item.methodId);
     };
-    expect(await asked({})).toBe("writing");
-    expect(await asked({ hidden: true })).toBe("writing");
-    expect(await asked({ hidden: false })).toBe("open");
+    expect(await asked({})).toEqual(["still-sammeln"]);
+    expect(await asked({ hidden: true })).toEqual(["still-sammeln"]);
+    expect(await asked({ hidden: false })).toEqual(["free"]);
     for (const hidden of ["no", 0, null]) {
       const response = await postWall({ question: "What slows us down?", hidden });
       expect(response.status, String(hidden)).toBe(400);

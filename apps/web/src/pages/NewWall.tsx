@@ -1,12 +1,15 @@
 // NewWall.tsx: „Neue Wand“: make a wall and go to its door. A wall has no name: the question it asks is its title,
-// and the one field here. Under it stands the one choice of a wall's flow, „Verdeckt schreiben“, on unless it is
-// switched off (PLAN.md 2.1). The primary action stays enabled: its press says at the field what is wrong and moves
+// and the one field here. Under it stands the choice of the method the wall runs (components/MethodChoice.tsx,
+// PLAN-METHODEN.md): „Still sammeln, bündeln, verdeckt wählen“ unless another is chosen, every method with its short
+// description, „Freie Wand“ last. The primary action stays enabled: its press says at the field what is wrong and moves
 // the focus there. While the wall is made the action shows its own progress; a failure stands as a sentence right
 // before it and the field keeps its value: also when the day's walls are taken, where the sentence names the time
 // it goes on. Leaving with a question typed asks first.
 import { useEffect, useRef, useState, type FormEvent } from "react";
 import { useTranslation } from "react-i18next";
 import { useBlocker, useNavigate } from "react-router";
+import { DEFAULT_METHOD, type MethodId } from "@ideabeam/shared";
+import { MethodChoice } from "../components/MethodChoice";
 import { View } from "../components/View";
 import { useLang } from "../i18n";
 import { createWall, type Made } from "../lib/api";
@@ -15,7 +18,6 @@ import { checkText, QUESTION_MAX, tidy, type TextFault } from "../lib/input";
 import { Dialog } from "../sebaro/react/Dialog";
 import { Field } from "../sebaro/react/Field";
 import { Icon } from "../sebaro/react/Icon";
-import { Switch } from "../sebaro/react/Switch";
 import { useWalls } from "../store/walls";
 
 const FIELD = "app-f-question";
@@ -25,8 +27,8 @@ export default function NewWall() {
   const navigate = useNavigate();
   const lang = useLang();
   const [question, setQuestion] = useState("");
-  // hidden writing is how a wall starts; a wall that shows every note at once is asked for
-  const [hidden, setHidden] = useState(true);
+  // the best supported method is how a wall starts; another one, „Freie Wand“ among them, is asked for
+  const [method, setMethod] = useState<MethodId>(DEFAULT_METHOD);
   const [fault, setFault] = useState<TextFault>();
   const [busy, setBusy] = useState(false);
   const [failure, setFailure] = useState<Exclude<Made, { ok: true }> | null>(null);
@@ -62,7 +64,7 @@ export default function NewWall() {
     }
     setBusy(true);
     setFailure(null);
-    const made = await createWall(tidy(question), hidden);
+    const made = await createWall(tidy(question), method);
     setBusy(false);
     if (!made.ok) {
       setFailure(made);
@@ -113,7 +115,7 @@ export default function NewWall() {
             </Field>
           </div>
           <div className="sb-form-grid__wide">
-            <Switch label={t("new.hidden")} help={t("new.hiddenHelp")} checked={hidden} onChange={setHidden} />
+            <MethodChoice lang={lang} value={method} onChange={setMethod} />
           </div>
           <div className="sb-form-grid__actions">
             {/* the reason of a failure: a line of its own in the actions' row, right before them */}

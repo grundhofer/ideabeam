@@ -1,14 +1,8 @@
 // SPDX-FileCopyrightText: 2026 Sebastian Grundhöfer
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import {
-  CLOCK_MAX_MINUTES,
-  CLOCK_MIN_MINUTES,
-  type Clock,
-  type ClockCommand,
-  type Phase,
-  type RejectCode,
-} from "../protocol.js";
+import { CLOCK_MAX_MINUTES, CLOCK_MIN_MINUTES, type Clock, type ClockCommand, type RejectCode } from "../protocol.js";
+import type { StepContext } from "./flow.js";
 import type { Actor } from "./rules.js";
 
 // The clock of the writing (the owner's decision 13, PLAN.md 7.2): the moderation sets a time, everybody sees how
@@ -101,8 +95,9 @@ export function clearClock(clock: Clock): Clock | null {
   return controlled(clock, { endsAt: null, leftMs: null });
 }
 
-/** The clock once the wall is revealed: the writing is over, and with it its time. No control did this, so the
- *  revision stays. The worker stores this and every browser works it out, from the same function. */
+/** The clock once the wall moves to another step (revealing among them): the step is over, and with it its time.
+ *  No control did this, so the revision stays. The worker stores this and every browser works it out, from the
+ *  same function (domain/flow.ts). */
 export function stoppedClock(clock: Clock): Clock {
   return { rev: clock.rev, endsAt: null, leftMs: null };
 }
@@ -113,19 +108,19 @@ export type ClockDecision =
   /** What to store and to tell everyone. */
   | { kind: "changed"; clock: Clock };
 
-/** What a control of the moderation makes of the clock. The clock is the moderation's, and the writing's: once the
- *  wall is revealed there is none (`PHASE`). A control made for another revision than the clock's is not taken
+/** What a control of the moderation makes of the clock. The clock is the moderation's, and the writing's: in a step
+ *  that is no writing there is none (`PHASE`, domain/agenda.ts, `capabilities`). A control made for another revision than the clock's is not taken
  *  (`STALE`): it arrived a second time, or somebody else's control came first. One that does not fit what the clock
  *  is doing is no command (`INVALID`). */
 export function decideClock(
   clock: Clock,
   command: ClockCommand,
   by: Pick<Actor, "role">,
-  phase: Phase,
+  ctx: Pick<StepContext, "can">,
   now: number,
 ): ClockDecision {
   if (by.role !== "admin") return { kind: "refused", code: "NOT_ADMIN" };
-  if (phase !== "writing") return { kind: "refused", code: "PHASE" };
+  if (!ctx.can.clock) return { kind: "refused", code: "PHASE" };
   if (command.rev !== clock.rev) return { kind: "refused", code: "STALE" };
   const next = control(clock, command, now);
   return next === null ? { kind: "refused", code: "INVALID" } : { kind: "changed", clock: next };

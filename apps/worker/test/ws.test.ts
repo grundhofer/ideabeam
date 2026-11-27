@@ -20,9 +20,12 @@ import {
   createWall,
   join,
   resync,
+  REVEAL,
+  REVEALED,
   setDailyRows,
   settle,
   type Sync,
+  WRITING,
 } from "./helpers.js";
 
 const names = (sync: { participants: Array<{ name: string }> }) => sync.participants.map((p) => p.name);
@@ -424,7 +427,7 @@ describe("hibernation", () => {
     await ben.socket.waitFor((event) => event.type === "wall.deleted");
   });
 
-  it("the phase, the hidden notes, the clock and the brake's day mark survive the Durable Object being evicted", async () => {
+  it("the step, the hidden notes, the clock and the brake's day mark survive the Durable Object being evicted", async () => {
     const { wallId, adminToken } = await createHiddenWall("What do we hide?");
     const anna = await join(wallId, "Anna", { adminToken });
     const ben = await join(wallId, "Ben");
@@ -436,7 +439,7 @@ describe("hibernation", () => {
     expect(await ask(anna.socket, { type: "admin.clock.start", rev: 0, minutes: 30 })).toBe("ack");
     expect(await ask(anna.socket, { type: "admin.clock.pause", rev: 1 })).toBe("ack");
     const before = await resync(ben.socket);
-    expect(before).toMatchObject({ phase: "writing", seq: 4, hidden: 1, clock: { rev: 2, endsAt: null } });
+    expect(before).toMatchObject({ ...WRITING, seq: 4, hidden: 1, clock: { rev: 2, endsAt: null } });
     const stored = () =>
       runInDurableObject(stubOf(wallId), (_instance, state) =>
         Object.fromEntries(
@@ -447,7 +450,7 @@ describe("hibernation", () => {
         ),
       );
     const rows = await stored();
-    expect(rows).toMatchObject({ flow: { phase: "writing", seq: 4, clock: before.clock }, day: { seq: 0 } });
+    expect(rows).toMatchObject({ flow: { v: 2, step: 0, reach: 0, seq: 4, clock: before.clock }, day: { seq: 0 } });
     await runInDurableObject(stubOf(wallId), (instance) => {
       Reflect.set(instance, "markOfTheFirstInstance", true);
     });
@@ -459,9 +462,9 @@ describe("hibernation", () => {
     ).toBeUndefined();
     expect(await stored()).toEqual(rows);
 
-    // The phase and what it hides: Ben still gets his own note and a number, in a snapshot and in the stream.
+    // The step and what it hides: Ben still gets his own note and a number, in a snapshot and in the stream.
     const after = await resync(ben.socket);
-    expect(after).toMatchObject({ phase: "writing", seq: 4, hidden: 1, notes: [{ id: bens, mine: true }] });
+    expect(after).toMatchObject({ ...WRITING, seq: 4, hidden: 1, notes: [{ id: bens, mine: true }] });
     expect(after.notes).toEqual(before.notes);
     const more = generateHexId();
     expect(
@@ -497,7 +500,7 @@ describe("hibernation", () => {
     expect((await stored()).day).toEqual(rows.day);
 
     // Revealing through a socket from before the eviction brings the socket from before it what it did not have.
-    expect(await answer(anna.socket, { type: "admin.phase.set", phase: "open" })).toMatchObject({
+    expect(await answer(anna.socket, REVEAL)).toMatchObject({
       type: "ack",
       seq: 9,
     });
@@ -509,7 +512,7 @@ describe("hibernation", () => {
       ],
     });
     await evictAllDurableObjects();
-    expect(await resync(ben.socket)).toMatchObject({ phase: "open", seq: 9, hidden: 0 });
+    expect(await resync(ben.socket)).toMatchObject({ ...REVEALED, seq: 9, hidden: 0 });
   });
 });
 

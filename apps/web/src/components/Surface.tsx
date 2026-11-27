@@ -22,7 +22,7 @@
 // - Nobody sees who wrote a note, and a screen reader does not say it either (the owner's decision of 2026-11-22):
 //   no name is read from a note's author anywhere here. One's own note carries a small word, „Deiner“, for its
 //   writer alone, so a person knows which notes they may change.
-// - While the notes are hidden (the wall's phase `writing`) the surface holds a person's own notes alone. Of the
+// - While the notes are hidden (a step of hidden writing) the surface holds a person's own notes alone. Of the
 //   others' it says how many there are, in one line above the ground (HiddenNotes.tsx): a note the browser may not
 //   read has no text, no length and no place here.
 // - Several notes are selected with Shift and a press or with the keys; „Auswählen“ in the tools is the way for a

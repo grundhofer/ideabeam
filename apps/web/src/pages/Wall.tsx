@@ -4,10 +4,14 @@
 // surface (components/Surface.tsx) or as a list (components/WallList.tsx), and the people on it (docs/ANSICHTEN.md). The wall's tools are in its head: the link to copy and, in „Mehr“, the moderation's. The address is the capability: whoever has it may join. Who moderates holds a second one, the
 // admin token: in the browser that made the wall, or from a moderation link opened here (lib/links.ts).
 //
-// A wall starts with hidden writing unless it was made without (PLAN.md 2.1): everyone sees their own notes and how
-// many the others have written, the state says so, and the moderation reveals, for good („Aufdecken“, its primary
-// action then). While the notes are hidden the moderation can set a clock; everybody reads the time left at the
-// wall's top and in the tab's title (lib/clock.ts).
+// A wall runs a method (PLAN-METHODEN.md): the steps of its agenda, which its state names at the top („Schritt 1 von
+// 4: Ideen schreiben“), with what to do now, the next step, and the method with its short description. The
+// moderation moves on with „Weiter: <next step>“, its primary action where the step has no other, and goes back with
+// „Zurück“ under „Mehr“; going back never hides. „Still sammeln“ starts with hidden writing: everyone sees their own
+// notes and how many the others have written, the state says so, and the moderation reveals, for good („Weiter:
+// Aufdecken“, which asks first). In a writing step the moderation can set a clock; everybody reads the time left at
+// the wall's top and in the tab's title (lib/clock.ts). A „Freie Wand“ has one step, and every note is there for
+// everyone at once.
 //
 // Once the notes are revealed the moderation's primary action is „Ordnen“ (PLAN.md 4.3): the AI proposes groups, the
 // proposal stands on the wall as a preview in the moderation's browser alone, and „Anwenden“ makes it the wall's for
@@ -27,9 +31,14 @@ import {
   generateHexId,
   MAX_GROUPS,
   MAX_NOTES,
+  methodOfStep,
+  methodTexts,
   nameInitials,
   self,
   shown,
+  stepContextOf,
+  stepName,
+  stepWidens,
   WALL_DAILY_RUNS,
   WALL_ID_PATTERN,
   type Participant,
@@ -393,7 +402,7 @@ function OnWall({ wallId }: { wallId: string }) {
   const lang = useLang();
   const { state, status, outdated, rejected, skew, now, arranged } = useWall();
   // the store's actions: they are the same functions as long as the app runs
-  const { look, deleteWall, erase, send, reveal, setClock, dismissRejected } = useWall.getState();
+  const { look, deleteWall, erase, send, goStep, setClock, dismissRejected } = useWall.getState();
   const adminToken = useWalls((walls) => walls.adminTokens[wallId]);
   // the session key this browser joined the wall with: it says who asks for the wall as a file
   const sessionKey = useWalls((walls) => walls.walls.find((wall) => wall.id === wallId)?.sessionKey);
@@ -439,24 +448,46 @@ function OnWall({ wallId }: { wallId: string }) {
   // the moderation waits for a proposal or looks at one: its own changing of the wall rests
   const paused = arranging.is !== "idle";
   const link = wallLink(location.origin, wallId);
-  // While the notes are hidden (the phase `writing`) this browser holds its own notes alone; of the others' it knows
-  // how many there are, and nothing else.
-  const writing = state.phase === "writing";
+  // Where the wall stands in its agenda: what the step allows, and what is seen of the others' notes (packages/shared,
+  // domain/flow.ts). While the notes are hidden this browser holds its own notes alone; of the others' it knows how
+  // many there are, and nothing else.
+  const step = stepContextOf(state);
+  const writing = step.sight !== "all";
+  const steps = state.agenda?.steps ?? [];
+  const methodId = state.agenda === null ? null : methodOfStep(state.agenda, state.step);
+  const method = methodId === null ? null : methodTexts(lang, methodId);
+  /** a step's name, in the words of its own method */
+  const nameOf = (at: number) =>
+    state.agenda === null || steps[at] === undefined
+      ? ""
+      : stepName(lang, methodOfStep(state.agenda, at), steps[at].key);
+  const nextStep = state.step + 1 < steps.length ? state.step + 1 : null;
+  const backStep = state.step > 0 && state.step - 1 < steps.length ? state.step - 1 : null;
+  // the next step shows the notes that are hidden now: moving there is revealing, and asks first
+  const nextReveals = nextStep !== null && state.agenda !== null && stepWidens(state.agenda, state, nextStep);
+  // „Weiter: <next step>“: where it would reveal, it asks first; any other step move acts at once
+  const goNext = () => {
+    if (nextStep === null) return;
+    if (nextReveals) setAsking("reveal");
+    else goStep(nextStep);
+  };
   const total = notes.length + state.hidden;
   // The clock of the writing: what is left at the worker's time as this browser reckons it. The browser counts: it
   // looks again whenever the minute turns.
   useClockTurns(state.clock, skew, look);
   const time = clockLine(state.clock, now);
 
-  // The notes were revealed while this browser was on the wall: said once, for all of them (PLAN.md 3.7), and a
-  // question about revealing that still stood is answered.
-  const [phase, setPhase] = useState(state.phase);
-  if (phase !== state.phase) {
-    setPhase(state.phase);
-    if (state.phase === "open") {
+  // The wall moved to another step while this browser was on it: said once. Where the notes were revealed with it,
+  // that is said, for all of them (PLAN.md 3.7), and a question about revealing that still stood is answered.
+  const [was, setWas] = useState({ step: state.step, sight: step.sight });
+  if (was.step !== state.step || was.sight !== step.sight) {
+    setWas({ step: state.step, sight: step.sight });
+    if (was.sight !== "all" && step.sight === "all") {
       setSaid(notes.length === 0 ? t("wall.revealedNone") : t("wall.revealed", { count: notes.length }));
-      if (asking === "reveal") setAsking(null);
+    } else if (was.step !== state.step) {
+      setSaid(t("wall.step.said", { n: state.step + 1, of: steps.length, name: nameOf(state.step) }));
     }
+    if (asking === "reveal") setAsking(null);
   }
   // The wall was arranged, or an arrangement was taken back, while this browser was on it: said once, for the whole
   // of it (PLAN.md 3.7: „Geordnet: 7 Gruppen.“), to everybody.
@@ -468,7 +499,7 @@ function OnWall({ wallId }: { wallId: string }) {
   }
   // Taking the last arrangement back is the moderation's. Right after the run it loses nothing and acts at once;
   // once the wall has changed since, it asks first (lib/arrange.ts).
-  const undoable = admin && !writing && !paused && state.arrangeRun !== null;
+  const undoable = admin && step.can.arrange && !paused && state.arrangeRun !== null;
   const undoAsksFirst = undoAsks(state, arranged);
   const undo = () => {
     if (state.arrangeRun === null) return;
@@ -502,6 +533,7 @@ function OnWall({ wallId }: { wallId: string }) {
     grouped: Number(sorted),
     untitled: Number(untitled),
     hidden: writing,
+    step: steps[state.step]?.type,
     timeUp: time?.is === "over",
     arrangeable: Number(open),
     arranged: state.arrangeRun === null ? null : undoAsksFirst ? ("changed" as const) : ("fresh" as const),
@@ -634,7 +666,7 @@ function OnWall({ wallId }: { wallId: string }) {
   // „Ordnen“ is the moderation's, once the notes are revealed: its zone is the zone of arranging from then on, also
   // on a wall that is still empty, as „Aufdecken“ is the zone's action before. So the zone has one height whatever
   // lies on the wall, and the surface above it does not jump when the first note arrives.
-  const arranges = admin && !writing;
+  const arranges = admin && step.can.arrange;
   const { ask, askWithKey, cancel, discard, apply } = useArrange.getState();
   const startArranging = () => {
     // what was said last is put away: the same sentence said again is heard again
@@ -716,13 +748,14 @@ function OnWall({ wallId }: { wallId: string }) {
 
   // The wall's tools stand in its head, out of the content's way: the link as a key, and in „Mehr“ what belongs to
   // the moderation. Only a browser that holds the token can hand it on; what deletes stands last, after a line.
-  // the clock's controls are the moderation's, while the notes are hidden
-  const clocked = admin && writing && stood !== "outdated";
+  // the clock's controls are the moderation's, in a writing step
+  const clocked = admin && step.can.clock && stood !== "outdated";
 
   // The wall's primary action stands in the zone above the footer, with the line that says where a note goes. It is
-  // everyone's: „Neuer Zettel“. While the notes are hidden the moderation's next step is another one, and so is its
-  // primary action: „Aufdecken“; „Neuer Zettel“ stays beside it as the zone's second action. Once the notes are
-  // revealed the moderation's next step is „Ordnen“, with „Neuer Zettel“ beside it in the same way. While the AI is
+  // everyone's: „Neuer Zettel“. In a step that does not arrange the moderation's next step is the next step of the
+  // method, and so is its primary action: „Weiter: <next step>“ („Weiter: Aufdecken“ while the notes are hidden);
+  // „Neuer Zettel“ stays beside it as the zone's second action. In a step that arranges the moderation's next step
+  // is „Ordnen“, with „Neuer Zettel“ beside it in the same way, and „Weiter“ stands in the state above. While the AI is
   // asked the zone holds the waiting and „Abbrechen“, while a proposal stands „Anwenden“ and „Verwerfen“: always one
   // primary action and at most one with an outline. The two keys keep their places through all of it, so the focus
   // stays where it is.
@@ -750,6 +783,16 @@ function OnWall({ wallId }: { wallId: string }) {
       tools={<CopyKey quiet word={t("wall.copyLink")} text={link} />}
       more={{
         first: [
+          // the moderation's way back to the step before: nothing that was shown is hidden again
+          ...(admin && backStep !== null
+            ? [
+                {
+                  id: "app-more-back",
+                  label: t("wall.step.back", { name: nameOf(backStep) }),
+                  onPress: () => goStep(backStep),
+                },
+              ]
+            : []),
           ...(admin && adminToken !== undefined
             ? [{ id: "app-more-adminlink", label: t("wall.copyAdminLink"), onPress: () => copyAdminLink(adminToken) }]
             : []),
@@ -843,15 +886,15 @@ function OnWall({ wallId }: { wallId: string }) {
           </ActionZone>
         ) : (
           <ActionZone hint={t(writing ? "common.toServerHidden" : "common.toServer")}>
-            {admin && writing ? (
+            {admin && nextStep !== null ? (
               <div className="app-zone-actions">
                 <button className="sb-secondary-action" type="button" onClick={compose}>
                   <Icon name="plus" />
                   {t("note.new")}
                 </button>
-                <button className="sb-primary-action" type="button" onClick={() => setAsking("reveal")}>
-                  <Icon name="eye" />
-                  <span className="sb-primary-action__label">{t("wall.reveal")}</span>
+                <button className="sb-primary-action" type="button" onClick={goNext}>
+                  <Icon name={nextReveals ? "eye" : "arrow-right"} />
+                  <span className="sb-primary-action__label">{t("wall.step.forward", { name: nameOf(nextStep) })}</span>
                 </button>
               </div>
             ) : (
@@ -870,6 +913,20 @@ function OnWall({ wallId }: { wallId: string }) {
           action, „Neue Gruppe“ */}
       <div className="app-wall-top">
         <section className="app-state" aria-label={t("wall.state")}>
+          {/* where the wall stands in its method: step x of y, its name and the step after it. A method of one step
+              has no steps to count */}
+          {steps.length > 1 && (
+            <p className="app-state__step">
+              {nextStep !== null
+                ? t("wall.step.positionNext", {
+                    n: state.step + 1,
+                    of: steps.length,
+                    name: nameOf(state.step),
+                    next: nameOf(nextStep),
+                  })
+                : t("wall.step.positionLast", { n: state.step + 1, of: steps.length, name: nameOf(state.step) })}
+            </p>
+          )}
           <p className="app-state__sentence" role="status">
             {sentence}
           </p>
@@ -877,7 +934,7 @@ function OnWall({ wallId }: { wallId: string }) {
             <>
               {/* the clock of the writing, as large as the state: said when the minute turns. The region is there
                   before its sentence, so a clock that starts is said too */}
-              {writing && (
+              {step.can.clock && (
                 <p className="app-state__clock" role="status">
                   {timeSentence}
                 </p>
@@ -895,6 +952,16 @@ function OnWall({ wallId }: { wallId: string }) {
               ) : (
                 <>
                   <p className="app-state__note">{t(`wall.guide.${guide(standing)}`)}</p>
+                  {/* in a step that arranges, „Ordnen“ is the zone's primary action: the way to the next step
+                      stands here */}
+                  {arranges && nextStep !== null && !paused && (
+                    <div className="app-state__key">
+                      <button className="sb-text-action" type="button" onClick={goNext}>
+                        <Icon name="arrow-right" />
+                        {t("wall.step.forward", { name: nameOf(nextStep) })}
+                      </button>
+                    </div>
+                  )}
                   {state.arrangeRun !== null ? (
                     // The wall is arranged: it is the result now (`result`, docs/ANSICHTEN.md), and what one does
                     // with a result is to keep it. For everybody, right under what to do now; the zone keeps the
@@ -948,9 +1015,9 @@ function OnWall({ wallId }: { wallId: string }) {
             value={mode}
             onChange={choose}
           />
-          {/* groups come with the open wall: while the notes are hidden there are none (PLAN.md 2.1); and none is
+          {/* groups come in a step that sorts: while the notes are hidden there are none (PLAN.md 2.1); and none is
               made while the moderation waits for a proposal or looks at one */}
-          {!writing && !paused && (
+          {step.can.group && !paused && (
             <button className="sb-text-action app-tool" type="button" onClick={() => shownAs.current?.group()}>
               <Icon name="plus" />
               <span>{t("group.new")}</span>
@@ -962,6 +1029,14 @@ function OnWall({ wallId }: { wallId: string }) {
       <div className="app-wall">
         {wall && (mode === "list" ? <WallList {...wall} /> : <Surface {...wall} />)}
         <section className="app-wall__people" aria-labelledby="app-h-people">
+          {/* the method the wall runs, with its short description: never its name alone (PLAN-METHODEN.md 2). It
+              stands at the head of the people's column, where it takes none of the surface's height: beside the
+              surface on a wide window, under it on a phone */}
+          {method !== null && (
+            <p className="app-wall__method" data-testid="method">
+              {t("wall.step.method", { name: method.name, short: method.short })}
+            </p>
+          )}
           <details className="app-people" open={listed} onToggle={(event) => setListed(event.currentTarget.open)}>
             <summary className="app-people__head">
               <h2 className="sb-list-header" id="app-h-people">
@@ -983,7 +1058,7 @@ function OnWall({ wallId }: { wallId: string }) {
       {/* revealing asks first: it cannot be taken back, and afterwards everyone sees every note */}
       <Dialog
         id="app-dlg-reveal"
-        open={asking === "reveal" && writing}
+        open={asking === "reveal" && writing && nextReveals}
         title={t("wall.revealTitle")}
         text={[
           total === 0 ? t("wall.revealTextNone") : t("wall.revealText", { count: total }),
@@ -992,7 +1067,7 @@ function OnWall({ wallId }: { wallId: string }) {
         ].join(" ")}
         onClose={(value) => {
           setAsking(null);
-          if (value === "confirm") reveal();
+          if (value === "confirm" && nextStep !== null) goStep(nextStep);
         }}
       >
         <button className="sb-secondary-action" value="cancel" data-sb-dialog-cancel>

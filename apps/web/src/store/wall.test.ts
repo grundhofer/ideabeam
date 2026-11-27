@@ -6,6 +6,7 @@ import { NO_CLOCK, PROTOCOL_VERSION, shown, type Participant, type ServerEvent }
 import { FakeWebSocket, fakeSockets, nextSocket } from "../test-socket";
 import { useWall } from "./wall";
 import { useWalls } from "./walls";
+import { OPEN_SYNC, WRITING_SYNC } from "../test-steps";
 
 const WALL = "ab".repeat(32);
 const TOKEN = "cd".repeat(16);
@@ -25,8 +26,8 @@ const sync = (participants: Participant[], protocolVersion = PROTOCOL_VERSION): 
   participants,
   you: { participantId: ME },
   seq: 0,
-  // a wall after revealing, as stage 2 knew it
-  phase: "open",
+  // a wall whose notes are there for everyone: a „Freie Wand“
+  ...OPEN_SYNC,
   hidden: 0,
   clock: NO_CLOCK,
   notes: [],
@@ -323,7 +324,7 @@ const SERVER_NOW = 1_795_300_000_000;
 const MINUTE = 60_000;
 /** A wall whose notes are hidden: this browser's own notes, and how many the others have written. */
 const hiddenSync = (participants: Participant[], more: Partial<Extract<ServerEvent, { type: "sync" }>> = {}) =>
-  ({ ...sync(participants), phase: "writing", hidden: 3, ...more }) as ServerEvent;
+  ({ ...sync(participants), ...WRITING_SYNC, hidden: 3, ...more }) as ServerEvent;
 const flow = (socket: FakeWebSocket) => socket.sent.filter((frame) => frame.type.startsWith("admin."));
 
 test("the distance to the worker's clock is kept from every frame that carries its time, and the browser counts from it", async () => {
@@ -354,22 +355,22 @@ test("the distance to the worker's clock is kept from every frame that carries i
   expect(useWall.getState()).toMatchObject({ skew: 0, now: SERVER_NOW + 100_000 });
 });
 
-test("revealing goes to the wall and shows when the wall says so: the others' notes, then the phase", async () => {
+test("revealing goes to the wall and shows when the wall says so: the others' notes, then the step", async () => {
   const socket = await enter();
   const mine = { id: NOTE, mine: true, text: "Meiner", x: 0, y: 0, groupId: null, createdAt: 5, updatedAt: 5 };
   socket.tell(hiddenSync([person(ME, "Anna", "admin")], { notes: [mine], seq: 4 }));
-  expect(useWall.getState().state).toMatchObject({ phase: "writing", hidden: 3 });
+  expect(useWall.getState().state).toMatchObject({ step: 0, hidden: 3 });
 
-  useWall.getState().reveal();
-  expect(flow(socket)).toMatchObject([{ type: "admin.phase.set", phase: "open" }]);
+  useWall.getState().goStep(1);
+  expect(flow(socket)).toMatchObject([{ type: "admin.step.go", from: 0, to: 1 }]);
   // nothing shows before the wall has said so
-  expect(useWall.getState().state.phase).toBe("writing");
+  expect(useWall.getState().state.step).toBe(0);
   const theirs = { ...mine, id: "f".repeat(32), mine: false, text: "Von Ben", createdAt: 6, updatedAt: 6 };
   socket.tell({ type: "notes.revealed", seq: 5, notes: [theirs] });
-  socket.tell({ type: "phase.changed", seq: 6, phase: "open" });
+  socket.tell({ type: "step.changed", seq: 6, step: 1, reach: 1 });
   const opId = "opId" in flow(socket)[0]! ? (flow(socket)[0] as { opId: string }).opId : "";
   socket.tell({ type: "ack", opId, seq: 6 });
-  expect(useWall.getState().state).toMatchObject({ phase: "open", hidden: 0, gap: false });
+  expect(useWall.getState().state).toMatchObject({ step: 1, reach: 1, hidden: 0, gap: false });
   expect(texts()).toEqual(["Meiner", "Von Ben"]);
   expect(useWall.getState().rejected).toBeNull();
 });
@@ -390,7 +391,7 @@ test("a control of the clock names the revision of the clock it was made for", a
     { type: "admin.clock.extend", rev: 1 },
     { type: "admin.clock.clear", rev: 1 },
   ]);
-  for (const frame of flow(socket)) expect(frame).not.toHaveProperty("phase");
+  for (const frame of flow(socket)) expect(frame).not.toHaveProperty("step");
 });
 
 test("a control the wall got twice is answered STALE: the clock this browser has is right, and nothing is said", async () => {
@@ -437,9 +438,9 @@ test("a step of the flow dropped for the rate limit is said and never sent again
   vi.useFakeTimers();
   const socket = await enter();
   socket.tell(hiddenSync([person(ME, "Anna", "admin")]));
-  useWall.getState().reveal();
+  useWall.getState().goStep(1);
   socket.tell({ type: "error", code: "RATE_LIMIT" });
-  expect(useWall.getState().rejected).toEqual({ code: "RATE_LIMIT", command: "admin.phase.set" });
+  expect(useWall.getState().rejected).toEqual({ code: "RATE_LIMIT", command: "admin.step.go" });
   // a reveal that went out by itself on a later connection would surprise everyone
   socket.drop();
   const next = await reconnected();

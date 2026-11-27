@@ -111,7 +111,7 @@ test("while the notes are hidden nothing of A's notes is in B's WebSocket frames
     "Du moderierst: Alle schreiben für sich, niemand liest mit. Wenn alle fertig sind, zeigt „Aufdecken“ allen jeden Zettel.",
   ]);
   await expect(primary(ben.page)).toHaveText("Neuer Zettel");
-  await expect(primary(page)).toHaveText("Aufdecken");
+  await expect(primary(page)).toHaveText("Weiter: Aufdecken");
   await expect(ben.page.getByRole("button", { name: "Aufdecken" })).toHaveCount(0);
   // groups come with the open wall
   await expect(page.getByRole("button", { name: "Neue Gruppe" })).toHaveCount(0);
@@ -153,12 +153,14 @@ test("while the notes are hidden nothing of A's notes is in B's WebSocket frames
   expect(occupancy.map((frame) => frame.hidden)).toEqual([2, 2, 2, 3, 2]);
   // the snapshots: a number in place of the others' notes
   expect(parsed(ben.frames).find((frame) => frame.type === "sync")).toMatchObject({
-    phase: "writing",
+    step: 0,
+    reach: 0,
     hidden: 1,
     notes: [],
   });
   expect(parsed(cem.frames).find((frame) => frame.type === "sync")).toMatchObject({
-    phase: "writing",
+    step: 0,
+    reach: 0,
     hidden: 3,
     notes: [],
   });
@@ -206,9 +208,9 @@ test("while the notes are hidden nothing of A's notes is in B's WebSocket frames
   await expect(guide(page)).toHaveText([
     "Du moderierst: Alle schreiben weiter. Was zusammengehört, kommt mit „Neue Gruppe“ in einen Rahmen.",
   ]);
-  // the frames of revealing: the notes Ben did not have, none of them his, still without their writer; then the phase
+  // the frames of revealing: the notes Ben did not have, none of them his, still without their writer; then the step
   const after = ben.frames.slice(before);
-  expect(typesOf(after)).toEqual(["notes.revealed", "phase.changed"]);
+  expect(typesOf(after)).toEqual(["notes.revealed", "step.changed"]);
   const [revealed] = parsed(after) as unknown as [{ notes: Array<{ mine: boolean; text: string }> }];
   expect(revealed.notes.map((one) => one.mine)).toEqual([false, false]);
   expect(revealed.notes.every((one) => one.text.startsWith(SECRET))).toBe(true);
@@ -285,9 +287,9 @@ test("a reconnect in the middle of the writing reveals nothing and loses nothing
   }
   // the snapshot of the second connection: Ben's own note, and a number for Anna's
   const [again] = parsed(connections[1]!).filter((frame) => frame.type === "sync") as unknown as [
-    { phase: string; hidden: number; notes: Array<{ mine: boolean; text: string }> },
+    { step: number; hidden: number; notes: Array<{ mine: boolean; text: string }> },
   ];
-  expect(again).toMatchObject({ phase: "writing", hidden: 3 });
+  expect(again).toMatchObject({ step: 0, reach: 0, hidden: 3 });
   expect(again.notes.every((one) => one.mine && one.text.startsWith("Bens"))).toBe(true);
 
   // a reload in the middle of the writing is a fresh join: the same person, the same notes, nothing more

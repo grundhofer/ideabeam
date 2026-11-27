@@ -13,6 +13,7 @@ import {
   type ArrangeLanguage,
   type ArrangeResponse,
   type CreateWallResponse,
+  type MethodId,
   type WallInfo,
 } from "@ideabeam/shared";
 
@@ -24,14 +25,15 @@ export type Made =
   | { ok: false; why: "limited" | "failed" }
   | { ok: false; why: "spent"; resetsAt: number };
 
-/** `hidden`: the wall starts with hidden writing; everyone writes for themselves until the moderation reveals
- *  (PLAN.md 2.1). Without it every note is there for everyone at once. */
-export async function createWall(question: string, hidden: boolean): Promise<Made> {
+/** `method`: the method the wall runs (PLAN-METHODEN.md, packages/shared methods/catalogue.ts): „Still sammeln“
+ *  starts with hidden writing, everyone writes for themselves until the moderation reveals; on a „Freie Wand“ every
+ *  note is there for everyone at once. */
+export async function createWall(question: string, method: MethodId): Promise<Made> {
   try {
     const response = await fetch("/api/walls", {
       method: "POST",
       headers: { "content-type": "application/json" },
-      body: JSON.stringify({ question, hidden }),
+      body: JSON.stringify({ question, agenda: { items: [{ methodId: method }] } }),
     });
     if (response.status === 429) {
       // two brakes answer 429: the one per address, and the day's budget, which says when it goes on

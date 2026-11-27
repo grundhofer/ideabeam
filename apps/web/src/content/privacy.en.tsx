@@ -113,10 +113,11 @@ export function PrivacyEn() {
       <ul>
         <li>
           <strong>The wall:</strong> its question (at most 140 characters), the time it was created, the day of its
-          automatic deletion, a random facilitator key, whether notes are written hidden or have been revealed, the
-          clock of the writing phase (when it runs out or, while paused, how much time is left, and how often it was
-          set) and, for the wall’s brake (below), a day in UTC with the number of the first change on that day. These
-          details say nothing about persons.
+          automatic deletion, a random facilitator key, the chosen method with its steps (a copy from the app’s
+          catalogue, stored when the wall is created), which step the wall is in and how far it has got (from which
+          follows whether notes are written hidden or have been revealed), the clock of the step (when it runs out or,
+          while paused, how much time is left, and how often it was set) and, for the wall’s brake (below), a day in UTC
+          with the number of the first change on that day. These details say nothing about persons.
         </li>
         <li>
           <strong>Per person:</strong> the display name (a first name or a pseudonym is enough, at most 40 characters),

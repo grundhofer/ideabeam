@@ -4,7 +4,8 @@
 import { describe, expect, it } from "vitest";
 import {
   decide,
-  decidePhase,
+  decideStep,
+  initialFlow,
   MAX_GROUPS,
   MAX_NOTES,
   mayDeleteNote,
@@ -15,10 +16,11 @@ import {
   type ContentCommand,
   type Decision,
   type Group,
-  type Phase,
   type StoredNote,
   type WallReader,
+  type StepContext,
 } from "../src/index.js";
+import { HIDDEN_AGENDA, OPEN, WRITING } from "./steps.js";
 
 const NOW = 1_795_300_000_000;
 const id = (letter: string) => letter.repeat(32);
@@ -62,8 +64,8 @@ const wall = (notes: StoredNote[] = [], groups: Group[] = []): Stored => ({ note
 /** The wall as the rules ask about it for `by`: every note says whether it is theirs, and not whose it is. */
 const viewOf = (content: Stored, by: Actor): WallReader =>
   readerOf({ notes: content.notes.map((stored) => noteFor(stored, by.id)), groups: content.groups });
-const ask = (content: Stored, command: ContentCommand, by: Actor, phase: Phase = "open"): Decision =>
-  decide(viewOf(content, by), command, by, NOW, phase);
+const ask = (content: Stored, command: ContentCommand, by: Actor, ctx: StepContext = OPEN): Decision =>
+  decide(viewOf(content, by), command, by, NOW, ctx);
 
 const REFUSED = (code: string) => ({ kind: "refused", code });
 const UNCHANGED = { kind: "unchanged" };
@@ -138,12 +140,12 @@ describe("note.create", () => {
 
   it(`is refused when the wall holds ${MAX_NOTES} notes, and taken with one fewer`, () => {
     const full: WallReader = { ...viewOf(wall(), ben), noteCount: () => MAX_NOTES };
-    expect(decide(full, create, ben, NOW, "open")).toEqual(REFUSED("LIMIT"));
+    expect(decide(full, create, ben, NOW, OPEN)).toEqual(REFUSED("LIMIT"));
     const almost: WallReader = { ...viewOf(wall(), ben), noteCount: () => MAX_NOTES - 1 };
-    expect(decide(almost, create, ben, NOW, "open").kind).toBe("changed");
+    expect(decide(almost, create, ben, NOW, OPEN).kind).toBe("changed");
     // the note that is there already is no new one: a full wall still answers its own author's retry
     const retried: WallReader = { ...viewOf(wall([note("1", ben)]), ben), noteCount: () => MAX_NOTES };
-    expect(decide(retried, create, ben, NOW, "open")).toEqual(UNCHANGED);
+    expect(decide(retried, create, ben, NOW, OPEN)).toEqual(UNCHANGED);
   });
 });
 
@@ -300,7 +302,7 @@ describe("notes.move", () => {
         return groupId === g.id ? g : null;
       },
     };
-    decide(reader, move(notes.map((n, i) => [String(i + 1), i, i, g.id])), ben, NOW, "open");
+    decide(reader, move(notes.map((n, i) => [String(i + 1), i, i, g.id])), ben, NOW, OPEN);
     expect(asked).toBe(1);
   });
 });
@@ -460,7 +462,7 @@ describe("group.delete", () => {
 });
 
 describe("while the notes are hidden", () => {
-  const hidden = (content: Stored, command: ContentCommand, by: Actor) => ask(content, command, by, "writing");
+  const hidden = (content: Stored, command: ContentCommand, by: Actor) => ask(content, command, by, WRITING);
   const move = (letter: string, groupId: string | null = null): ContentCommand => ({
     type: "notes.move",
     opId: OP,
@@ -522,13 +524,13 @@ describe("while the notes are hidden", () => {
     expect(hidden(wall([note("1", ben)]), create, ben)).toEqual(UNCHANGED);
   });
 
-  it("there are no groups yet: making, changing or deleting one is refused, and says that it is the phase", () => {
+  it("there are no groups yet: making, changing or deleting one is refused, and says that it is the step", () => {
     const content = wall([], [group("g")]);
     const commands: ContentCommand[] = [
       { type: "group.create", opId: OP, groupId: id("h"), title: "", x: 0, y: 0, w: 200, h: 200 },
       { type: "group.update", opId: OP, groupId: id("g"), x: 5 },
       { type: "group.delete", opId: OP, groupId: id("g") },
-      // also what would change nothing: the answer is about the phase, not about the group
+      // also what would change nothing: the answer is about the step, not about the group
       { type: "group.create", opId: OP, groupId: id("g"), title: "", x: 0, y: 0, w: 200, h: 200 },
       { type: "group.delete", opId: OP, groupId: id("h") },
     ];
@@ -540,21 +542,28 @@ describe("while the notes are hidden", () => {
   it("the wall's limit counts every note, hidden or not", () => {
     const full: WallReader = { ...viewOf(wall(), ben), noteCount: () => MAX_NOTES };
     const create: ContentCommand = { type: "note.create", opId: OP, noteId: id("1"), text: "Mine", x: 0, y: 0 };
-    expect(decide(full, create, ben, NOW, "writing")).toEqual(REFUSED("LIMIT"));
+    expect(decide(full, create, ben, NOW, WRITING)).toEqual(REFUSED("LIMIT"));
   });
 });
 
 describe("revealing", () => {
-  const reveal = { type: "admin.phase.set", opId: OP, phase: "open" } as const;
+  // revealing is the step move from the writing step to the one that shows the notes (domain/flow.ts)
+  const reveal = { type: "admin.step.go", opId: OP, from: 0, to: 1 } as const;
+  const writing = initialFlow();
+  const open = { ...initialFlow(), step: 1, reach: 1 };
 
   it("is the moderation's alone", () => {
-    expect(decidePhase("writing", reveal, anna)).toEqual({ kind: "changed", phase: "open" });
-    expect(decidePhase("writing", reveal, ben)).toEqual(REFUSED("NOT_ADMIN"));
-    expect(decidePhase("open", reveal, ben)).toEqual(REFUSED("NOT_ADMIN"));
+    expect(decideStep(writing, HIDDEN_AGENDA, reveal, anna)).toMatchObject({
+      kind: "changed",
+      flow: { step: 1, reach: 1 },
+      widens: true,
+    });
+    expect(decideStep(writing, HIDDEN_AGENDA, reveal, ben)).toEqual(REFUSED("NOT_ADMIN"));
+    expect(decideStep(open, HIDDEN_AGENDA, reveal, ben)).toEqual(REFUSED("NOT_ADMIN"));
   });
 
   it("sent again it changes nothing: the wall is revealed", () => {
-    expect(decidePhase("open", reveal, anna)).toEqual(UNCHANGED);
+    expect(decideStep(open, HIDDEN_AGENDA, reveal, anna)).toEqual(UNCHANGED);
   });
 });
 
@@ -604,7 +613,7 @@ describe("what the rules ask about the wall", () => {
   for (const [command, expected] of cases) {
     it(`${command.type}: ${expected.join(", ")}`, () => {
       const { reader, asked } = counting(content);
-      decide(reader, command, ben, NOW, "open");
+      decide(reader, command, ben, NOW, OPEN);
       expect(asked).toEqual(expected);
     });
   }

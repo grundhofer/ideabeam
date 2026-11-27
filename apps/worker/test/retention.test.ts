@@ -6,7 +6,7 @@ import { describe, expect, it } from "vitest";
 import { WALL_ID_PATTERN } from "@ideabeam/shared";
 import { RETENTION_MS } from "../src/wall-room.js";
 import { newWall, wallStub } from "../src/wall-stub.js";
-import { answer, ask, createWall, join, resync, settle } from "./helpers.js";
+import { answer, ask, createWall, FREE, join, resync, settle } from "./helpers.js";
 
 const DAY = 24 * 60 * 60 * 1000;
 
@@ -115,7 +115,7 @@ describe("a wall that an older build made", () => {
     return runInDurableObject(stubOf(wallId), (_instance, state) => {
       state.storage.sql.exec("DROP TABLE notes; DROP TABLE groups; DROP TABLE layout;");
       state.storage.sql.exec("UPDATE meta SET value = '1' WHERE key = 'schemaVersion'");
-      state.storage.sql.exec("DELETE FROM meta WHERE key IN ('flow', 'day')");
+      state.storage.sql.exec("DELETE FROM meta WHERE key IN ('flow', 'day', 'agenda')");
     });
   }
 
@@ -123,7 +123,7 @@ describe("a wall that an older build made", () => {
   function asStageTwo(wallId: string): Promise<void> {
     return runInDurableObject(stubOf(wallId), (_instance, state) => {
       state.storage.sql.exec("UPDATE meta SET value = '2' WHERE key = 'schemaVersion'");
-      state.storage.sql.exec("DELETE FROM meta WHERE key IN ('flow', 'day')");
+      state.storage.sql.exec("DELETE FROM meta WHERE key IN ('flow', 'day', 'agenda')");
     });
   }
 
@@ -148,10 +148,10 @@ describe("a wall that an older build made", () => {
     // the page that asks a newcomer for their name is the first to reach it
     expect((await SELF.fetch(`https://example.com/api/walls/${wallId}`)).status).toBe(200);
     expect(await tables(wallId)).toEqual(ALL_TABLES);
-    expect(await schemaVersion(wallId)).toBe("3");
+    expect(await schemaVersion(wallId)).toBe("4");
 
     const anna = await join(wallId, "Anna");
-    expect(anna.sync).toMatchObject({ seq: 0, phase: "open", hidden: 0, notes: [], groups: [] });
+    expect(anna.sync).toMatchObject({ seq: 0, ...FREE, hidden: 0, notes: [], groups: [] });
     expect(await ask(anna.socket, { type: "note.create", noteId: "1".repeat(32), text: "A note", x: 0, y: 0 })).toBe(
       "ack",
     );
@@ -178,7 +178,7 @@ describe("a wall that an older build made", () => {
     );
     expect((await SELF.fetch(`https://example.com/api/walls/${wallId}`)).status).toBe(200);
     expect((await resync(anna.socket)).notes).toHaveLength(1);
-    expect(await schemaVersion(wallId)).toBe("3");
+    expect(await schemaVersion(wallId)).toBe("4");
   });
 
   it("of stage 2 keeps working and becomes a revealed wall: its notes stay visible to everyone, without a name", async () => {
@@ -207,10 +207,10 @@ describe("a wall that an older build made", () => {
     ]);
 
     const back = await join(wallId, "Ben", { sessionKey: ben.sessionKey });
-    expect(await schemaVersion(wallId)).toBe("3");
+    expect(await schemaVersion(wallId)).toBe("4");
     expect(back.sync).toMatchObject({
       seq: 4,
-      phase: "open",
+      ...FREE,
       hidden: 0,
       clock: { rev: 0, endsAt: null, leftMs: null },
       notes: [
@@ -225,9 +225,10 @@ describe("a wall that an older build made", () => {
       seq: 5,
     });
     expect(await ask(back.socket, { type: "group.update", groupId, title: "Still kept" })).toBe("ack");
-    // revealed means revealed: the moderation's command finds its work done, and no clock is set on such a wall
+    // revealed means revealed: it is a „Freie Wand“ at its one step, a move to it finds its work done, and no clock
+    // is set on such a wall
     const admin = await join(wallId, "Anna", { sessionKey: anna.sessionKey });
-    expect(await answer(admin.socket, { type: "admin.phase.set", phase: "open" })).toMatchObject({
+    expect(await answer(admin.socket, { type: "admin.step.go", from: 0, to: 0 })).toMatchObject({
       type: "ack",
       seq: 6,
     });

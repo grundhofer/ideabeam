@@ -142,6 +142,17 @@ run the rest; their result is the run itself. Keep this file current.
   link (`tests/export.spec.ts`), and they are not those of the moderation link; whether a camera reads it from a
   projector across a room, and at what size, was not tried. Its size in the dialog (at most 28 rem, at most half the
   window's height, 448 px at 1440 × 900) was looked at in Chromium only.
+- The methods (stage M1, PLAN-METHODEN.md): the choice on `/neu` and its „Mehr dazu“, the step header, „Weiter“
+  and „Zurück“ are tested in jsdom (`src/pages/NewWall.test.tsx`, `src/pages/Wall.test.tsx`) and through the
+  Worker's frames (`apps/worker/test/steps.test.ts`, `migration.test.ts`); in a browser only as far as the screens
+  `neu` and `neu-offen` (with „Mehr dazu“ open) and the existing walls show them. No end-to-end test goes back with
+  „Zurück“ in a browser, and nobody has looked at the new header and the choice at 2000 px, light and dark, or at
+  200 % in English. The keyboard reaches the choice (option fields and „Mehr dazu“ are native controls), but no
+  test walks it. The words of „Freie Wand“ are this stage's own, not the catalogue's, and the evidence sentences of
+  both methods were not checked again at their sources. „Still sammeln, bündeln, verdeckt wählen“ names a vote and a
+  ranking that come only with M2: until then its name and short description promise more than a wall does.
+  A wall of schema 3 (before the methods) was played only in workerd's test pool, by rewriting a wall of this build
+  into the old shape (`asSchemaThree`), never with a wall a deployed v0.1 made.
 
 ## Waivers
 

@@ -8,8 +8,8 @@ import {
   type ContentEvent,
   type Group,
   type NoteMove,
-  type Phase,
 } from "../protocol.js";
+import type { StepContext } from "./flow.js";
 import type { Actor, Decision, WallReader } from "./rules.js";
 
 // Arranging, as the wall sees it (PLAN.md 3.4, 4.3). Who worked the arrangement out, the wall does not know and
@@ -70,10 +70,10 @@ export function decideArrangeApply(
   wall: WallReader,
   command: ApplyCommand,
   by: Pick<Actor, "role">,
-  phase: Phase,
+  ctx: StepContext,
 ): Decision {
   if (by.role !== "admin") return { kind: "refused", code: "NOT_ADMIN" };
-  if (phase !== "open") return { kind: "refused", code: "PHASE" };
+  if (!ctx.can.arrange) return { kind: "refused", code: "PHASE" };
   if (wall.arranged()?.runId === command.opId) return UNCHANGED;
 
   const groups = wall.groups();
@@ -148,10 +148,10 @@ export function decideArrangeUndo(
   wall: WallReader,
   command: UndoCommand,
   by: Pick<Actor, "role">,
-  phase: Phase,
+  ctx: StepContext,
 ): Decision {
   if (by.role !== "admin") return { kind: "refused", code: "NOT_ADMIN" };
-  if (phase !== "open") return { kind: "refused", code: "PHASE" };
+  if (!ctx.can.arrange) return { kind: "refused", code: "PHASE" };
   const last = wall.arranged();
   if (last === null) return UNCHANGED;
   if (last.runId !== command.runId) return { kind: "refused", code: "STALE" };

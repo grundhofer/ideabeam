@@ -20,7 +20,10 @@ import {
   type Participant,
   type ServerEvent,
   type WallState,
+  NO_STEP,
+  stepContextOf,
 } from "../src/index.js";
+import { OPEN_SYNC, WRITING_SYNC } from "./steps.js";
 
 const NOW = 1_795_300_000_000;
 const id = (letter: string) => letter.repeat(32);
@@ -64,7 +67,7 @@ const sync: Sync = {
   participants: [anna],
   you: { participantId: anna.id },
   seq: 0,
-  phase: "open",
+  ...OPEN_SYNC,
   hidden: 0,
   clock: NO_CLOCK,
   notes: [],
@@ -314,27 +317,29 @@ describe("the number of a stored change", () => {
 });
 
 describe("while the notes are hidden", () => {
-  /** A wall in `writing` this browser is on as Ben: his own notes, and a number for the others'. */
+  /** A wall in its hidden writing step this browser is on as Ben: his own notes, and a number for the others'. */
   const writing = (notes: Note[], hidden: number, seq = 10): WallState =>
     applyServerEvent(initialWallState, {
       ...sync,
       participants: [anna, ben],
       you: { participantId: ben.id },
       seq,
-      phase: "writing",
+      ...WRITING_SYNC,
       hidden,
       notes,
     });
 
-  it("a sync says the phase and how many notes of the others it leaves out", () => {
+  it("a sync says the step and how many notes of the others it leaves out", () => {
     const state = writing([note("1", ben)], 4);
-    expect(state.phase).toBe("writing");
+    expect(state).toMatchObject({ step: 0, reach: 0 });
+    expect(stepContextOf(state).sight).toBe("hidden");
     expect(state.hidden).toBe(4);
     expect(state.notes).toEqual([note("1", ben)]);
   });
 
-  it("knows no phase before the first sync, and takes nothing to be visible", () => {
-    expect(initialWallState).toMatchObject({ phase: "writing", hidden: 0, clock: NO_CLOCK });
+  it("knows no step before the first sync, and takes nothing to be visible", () => {
+    expect(initialWallState).toMatchObject({ agenda: null, step: 0, reach: 0, hidden: 0, clock: NO_CLOCK });
+    expect(stepContextOf(initialWallState)).toEqual(NO_STEP);
   });
 
   it("somebody else's change comes as a number: the count moves, the notes do not, and no step is missed", () => {
@@ -363,7 +368,7 @@ describe("while the notes are hidden", () => {
     expect(state.hidden).toBe(4);
   });
 
-  it("revealing brings the notes this browser did not have, each at its place among its own, and then the phase", () => {
+  it("revealing brings the notes this browser did not have, each at its place among its own, and then the step", () => {
     const own = [note("3", ben, { createdAt: NOW + 20 }), note("5", ben, { createdAt: NOW + 40 })];
     const others = [
       note("2", anna, { createdAt: NOW + 10 }),
@@ -374,10 +379,11 @@ describe("while the notes are hidden", () => {
     expect(revealed.notes.map((n) => n.id)).toEqual([id("2"), id("3"), id("4"), id("5"), id("6")]);
     expect(revealed.notes.map((n) => n.mine)).toEqual([false, true, false, true, false]);
     expect(revealed.hidden).toBe(0);
-    // between the two frames the wall is still in `writing`
-    expect(revealed).toMatchObject({ phase: "writing", seq: 11, gap: false });
-    const open = apply([{ type: "phase.changed", seq: 12, phase: "open" }], revealed);
-    expect(open).toMatchObject({ phase: "open", hidden: 0, seq: 12, gap: false });
+    // between the two frames the wall is still in its writing step
+    expect(revealed).toMatchObject({ step: 0, seq: 11, gap: false });
+    const open = apply([{ type: "step.changed", seq: 12, step: 1, reach: 1 }], revealed);
+    expect(open).toMatchObject({ step: 1, reach: 1, hidden: 0, seq: 12, gap: false });
+    expect(stepContextOf(open).sight).toBe("all");
     expect(open.notes).toBe(revealed.notes);
   });
 
@@ -385,11 +391,11 @@ describe("while the notes are hidden", () => {
     const state = apply(
       [
         { type: "notes.revealed", seq: 11, notes: [] },
-        { type: "phase.changed", seq: 12, phase: "open" },
+        { type: "step.changed", seq: 12, step: 1, reach: 1 },
       ],
       writing([note("1", ben)], 0),
     );
-    expect(state).toMatchObject({ phase: "open", hidden: 0, seq: 12, gap: false });
+    expect(state).toMatchObject({ step: 1, hidden: 0, seq: 12, gap: false });
     expect(state.notes).toEqual([note("1", ben)]);
   });
 
@@ -432,15 +438,15 @@ describe("the clock of the writing", () => {
     expect(after).toMatchObject({ seq: 1, gap: false });
   });
 
-  it("ends with the writing: revealing stops it and leaves its revision", () => {
+  it("ends with the step: revealing stops it and leaves its revision", () => {
     const state = apply([
-      { ...sync, phase: "writing", clock: running },
-      { type: "phase.changed", seq: 1, phase: "open" },
+      { ...sync, ...WRITING_SYNC, clock: running },
+      { type: "step.changed", seq: 1, step: 1, reach: 1 },
     ]);
     expect(state.clock).toEqual({ rev: 1, endsAt: null, leftMs: null });
     const paused = apply([
-      { ...sync, phase: "writing", clock: { rev: 4, endsAt: null, leftMs: 1000 } },
-      { type: "phase.changed", seq: 1, phase: "open" },
+      { ...sync, ...WRITING_SYNC, clock: { rev: 4, endsAt: null, leftMs: 1000 } },
+      { type: "step.changed", seq: 1, step: 1, reach: 1 },
     ]);
     expect(paused.clock).toEqual({ rev: 4, endsAt: null, leftMs: null });
   });

@@ -11,26 +11,28 @@ import {
   type Note,
   type NoteMove,
   type Participant,
-  type Phase,
-  type PhaseCommand,
   type RejectCode,
 } from "../protocol.js";
 import { decideArrangeApply, decideArrangeUndo, type ArrangeRecord } from "./arrange.js";
+import type { StepContext } from "./flow.js";
 import { maySeeNote } from "./visibility.js";
 
 // What a command does to a wall: the one place that decides it, for the worker that stores the answer and for the
 // browser that shows it before the worker has answered (domain/wall.ts). Whether a frame is a command at all, with
 // a text of the right length and a place on the surface, the schemas of protocol.ts have decided before.
 //
-// Who may do what, in which phase (PLAN.md 2.1, 3.4).
+// Who may do what, in which step (PLAN.md 2.1, 3.4; PLAN-METHODEN.md 4). The step the wall is in says what may be
+// done (`ctx.can`, domain/agenda.ts, `capabilities`); the furthest step reached says what is seen of the others'
+// notes (`ctx.sight`). What a step does not allow is refused with `PHASE`.
 //
-// `open`: everyone on the wall writes notes, moves any note, and makes, renames, moves, resizes and deletes groups.
-// A note's text is its writer's alone; deleting a note is its writer's or an admin's. Applying an arrangement and
-// taking it back are the moderation's (domain/arrange.ts).
+// Once the notes are shown: everyone on the wall writes notes, moves any note, and, in a step that sorts, makes,
+// renames, moves, resizes and deletes groups. A note's text is its writer's alone; deleting a note is its writer's
+// or an admin's. Applying an arrangement and taking it back are the moderation's (domain/arrange.ts).
 //
-// `writing`: everyone writes, and a person's notes are theirs alone. Nobody reads, changes, moves or deletes a note
-// of somebody else, the moderation included: to a command, such a note is not on the wall (domain/visibility.ts),
-// so the answer never says that it is. There are no groups yet: a command about one is refused with `PHASE`.
+// While they are hidden: everyone writes, and a person's notes are theirs alone. Nobody reads, changes, moves or
+// deletes a note of somebody else, the moderation included: to a command, such a note is not on the wall
+// (domain/visibility.ts), so the answer never says that it is. A hidden step does not sort: a command about a group
+// is refused with `PHASE`.
 //
 // Whose a note is, the rules ask as `mine`: the browser knows no more than that about a note, and the worker
 // answers it for whoever sent the command.
@@ -87,14 +89,15 @@ export function mayDeleteNote(note: Pick<Note, "mine">, by: Pick<Actor, "role">)
   return note.mine || by.role === "admin";
 }
 
-/** What the command of `by` makes of the wall in the phase it is in. `now` is the clock of whoever asks: the
+/** What the command of `by` makes of the wall in the step it is in. `now` is the clock of whoever asks: the
  *  worker's when it stores, the browser's for what it shows meanwhile. */
-export function decide(wall: WallReader, command: ContentCommand, by: Actor, now: number, phase: Phase): Decision {
+export function decide(wall: WallReader, command: ContentCommand, by: Actor, now: number, ctx: StepContext): Decision {
   // A note the sender may not read is not on the wall for them: no answer tells them otherwise.
   const seen = <T extends Pick<Note, "mine">>(note: T | null): T | null =>
-    note !== null && maySeeNote(phase, note) ? note : null;
+    note !== null && maySeeNote(ctx.sight, note) ? note : null;
   switch (command.type) {
     case "note.create": {
+      if (!ctx.can.write) return refused("PHASE");
       const existing = wall.note(command.noteId);
       // The same note again (the answer to the first frame was lost): it is there. Somebody else's id is no retry,
       // hidden or not: an id is 128 random bits and never told while its note is hidden, so nobody can ask for one.
@@ -116,6 +119,7 @@ export function decide(wall: WallReader, command: ContentCommand, by: Actor, now
       });
     }
     case "note.update": {
+      if (!ctx.can.write) return refused("PHASE");
       const existing = seen(wall.note(command.noteId));
       if (existing === null) return refused("NOT_FOUND");
       if (!mayEditNote(existing)) return refused("NOT_AUTHOR");
@@ -130,6 +134,7 @@ export function decide(wall: WallReader, command: ContentCommand, by: Actor, now
       return changed({ type: "note.deleted", noteId: command.noteId });
     }
     case "notes.move": {
+      if (!ctx.can.move) return refused("PHASE");
       // A selection is dragged while somebody else deletes one of its notes, or the group it is dropped into: the
       // rest of the movement still happens. A note that is gone is left out, a group that is gone is no group.
       // While the notes are hidden a person moves their own only: the others' are not there for them.
@@ -153,7 +158,7 @@ export function decide(wall: WallReader, command: ContentCommand, by: Actor, now
       return moves.length === 0 ? UNCHANGED : changed({ type: "notes.moved", moves });
     }
     case "group.create": {
-      if (phase === "writing") return refused("PHASE");
+      if (!ctx.can.group) return refused("PHASE");
       // A group has no author: whoever names an id that exists means that group, and it is there.
       if (wall.group(command.groupId) !== null) return UNCHANGED;
       const ords = wall.groupOrds();
@@ -175,7 +180,7 @@ export function decide(wall: WallReader, command: ContentCommand, by: Actor, now
       });
     }
     case "group.update": {
-      if (phase === "writing") return refused("PHASE");
+      if (!ctx.can.group) return refused("PHASE");
       const existing = wall.group(command.groupId);
       if (existing === null) return refused("NOT_FOUND");
       const group: Group = {
@@ -197,26 +202,12 @@ export function decide(wall: WallReader, command: ContentCommand, by: Actor, now
       return changed({ type: "group.updated", group });
     }
     case "group.delete":
-      if (phase === "writing") return refused("PHASE");
+      if (!ctx.can.group) return refused("PHASE");
       if (wall.group(command.groupId) === null) return UNCHANGED;
       return changed({ type: "group.deleted", groupId: command.groupId });
     case "admin.arrange.apply":
-      return decideArrangeApply(wall, command, by, phase);
+      return decideArrangeApply(wall, command, by, ctx);
     case "admin.arrange.undo":
-      return decideArrangeUndo(wall, command, by, phase);
+      return decideArrangeUndo(wall, command, by, ctx);
   }
-}
-
-export type PhaseDecision =
-  | { kind: "refused"; code: RejectCode }
-  /** The wall is in that phase already: the command sent a second time. */
-  | { kind: "unchanged" }
-  | { kind: "changed"; phase: Phase };
-
-/** What the moderation's `admin.phase.set` makes of the wall's phase. Revealing is the moderation's alone, and one
- *  way: `open` is the one phase a command can ask for (protocol.ts), so a wall never goes back to `writing`. */
-export function decidePhase(phase: Phase, command: PhaseCommand, by: Pick<Actor, "role">): PhaseDecision {
-  if (by.role !== "admin") return { kind: "refused", code: "NOT_ADMIN" };
-  if (phase === command.phase) return { kind: "unchanged" };
-  return { kind: "changed", phase: command.phase };
 }

@@ -83,3 +83,37 @@ test("the Worker and the app's files hold zod's mini build and nothing of its cl
     expect(naming(/["'`]ZodType["'`]/), folder).toEqual([]);
   }
 });
+
+test("the words of the methods load with `/neu` and the wall, never at the app's start, and the Worker has them", () => {
+  // They stand in the shared package (packages/shared, methods/texts.ts): the Worker writes the export, which names
+  // the wall's method with its short description, and the app shows the same words on `/neu` and on the wall. The
+  // start loads none of them: PLAN-METHODEN.md, section 6 („nachgeladen, damit der Start nicht schwerer wird“).
+  const dist = new URL("../dist/", import.meta.url).pathname;
+  const words = [
+    "Alle schreiben Ideen verdeckt, die Ideen werden gebündelt",
+    "Everyone writes notes that everyone sees",
+  ];
+  const holding = (folder: string, files: string[]) =>
+    files.filter((file) => words.some((part) => readFileSync(path.join(dist, folder, file), "utf8").includes(part)));
+  const worker = readdirSync(path.join(dist, "ideabeam")).filter((file) => file.endsWith(".js"));
+  expect(holding("ideabeam", worker)).not.toEqual([]);
+
+  const assets = path.join(dist, "client/assets");
+  const scripts = readdirSync(assets).filter((file) => file.endsWith(".js"));
+  expect(holding("client/assets", scripts)).not.toEqual([]);
+  // the files the start loads: the entry and every file it names in a plain `import … from` or `export … from`, as
+  // tests/arrange.spec.ts reads them. A file asked for with `import(…)` (a view) is fetched when that view opens
+  const page = readFileSync(path.join(dist, "client/index.html"), "utf8");
+  const start = [...page.matchAll(/(?:src|href)="\/assets\/([\w.-]+\.js)"/g)].map(([, name]) => name ?? "");
+  expect(start.length).toBeGreaterThan(1);
+  const loaded = new Set<string>();
+  for (let file = start.pop(); file !== undefined; file = start.pop()) {
+    if (loaded.has(file)) continue;
+    loaded.add(file);
+    const code = readFileSync(path.join(assets, file), "utf8");
+    for (const [, name] of code.matchAll(/\b(?:import|export)\b[^"'`()]*?["'`]\.\/([\w.-]+\.js)["'`]/g)) {
+      if (name !== undefined) start.push(name);
+    }
+  }
+  expect(holding("client/assets", [...loaded])).toEqual([]);
+});

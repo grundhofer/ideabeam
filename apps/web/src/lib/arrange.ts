@@ -9,9 +9,11 @@
 // meanwhile stays where it lies, and what „Anwenden“ sends is what the preview showed.
 import { layoutProposal, type Arrangement } from "@ideabeam/arrange";
 import {
+  agendaOf,
   applyChange,
   decideArrangeApply,
   readerOf,
+  stepContext,
   type ContentCommand,
   type Proposal,
   type WallContent,
@@ -19,6 +21,10 @@ import {
 } from "@ideabeam/shared";
 import { boxOf } from "./surface/notes";
 import { around, type Box } from "./surface/view";
+
+/** A step in which the moderation arranges: the one step of „Freie Wand“, where everything is allowed. A preview is
+ *  asked for only in such a step (pages/Wall.tsx). */
+const ARRANGING = stepContext(agendaOf("free"), { step: 0, reach: 0 });
 
 /** How many of a wall's notes the AI may arrange: those that lie in no locked group, which is a group a person made
  *  by hand or renamed. The Worker counts the same way when it reads the notes for a run. */
@@ -102,7 +108,7 @@ export function previewOf(content: WallContent, proposal: Proposal, groupIds: re
     source: "service",
     ...arrangement,
   };
-  const decision = decideArrangeApply(readerOf(content), command, { role: "admin" }, "open");
+  const decision = decideArrangeApply(readerOf(content), command, { role: "admin" }, ARRANGING);
   const texts = new Map(content.notes.map((note) => [note.id, note.text]));
   const loose = arrangement.moves.filter((move) => move.groupId === null);
   return {

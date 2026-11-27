@@ -10,7 +10,7 @@
 import { evictAllDurableObjects, runDurableObjectAlarm, runInDurableObject } from "cloudflare:test";
 import { describe, expect, it } from "vitest";
 import { clockState, minutesLeft, type Clock, type ServerEvent } from "@ideabeam/shared";
-import { answer, ask, createHiddenWall, createWall, join, resync, settle, stubOf } from "./helpers.js";
+import { answer, ask, createHiddenWall, createWall, join, resync, REVEAL, settle, stubOf, WRITING } from "./helpers.js";
 
 const MIN = 60_000;
 
@@ -156,7 +156,7 @@ describe("the clock of the writing", () => {
 
     // every browser works out by itself that the time is up, from the clock it has
     const sync = await resync(ben.socket);
-    expect(sync).toMatchObject({ phase: "writing", seq: 1, clock: up.clock });
+    expect(sync).toMatchObject({ ...WRITING, seq: 1, clock: up.clock });
     expect(clockState(sync.clock, sync.serverNow)).toBe("over");
     expect(minutesLeft(sync.clock, sync.serverNow)).toBe(0);
     // hidden stays hidden until the moderation reveals; five minutes more count from now
@@ -172,7 +172,7 @@ describe("the clock of the writing", () => {
   it("ends with the writing: revealing stops it, and a revealed wall takes no control", async () => {
     const { wallId, anna, ben } = await wall();
     expect(await ask(anna.socket, { type: "admin.clock.start", rev: 0, minutes: 10 })).toBe("ack");
-    expect(await answer(anna.socket, { type: "admin.phase.set", phase: "open" })).toMatchObject({
+    expect(await answer(anna.socket, REVEAL)).toMatchObject({
       type: "ack",
       seq: 3,
     });

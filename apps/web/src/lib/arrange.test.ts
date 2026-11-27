@@ -4,10 +4,12 @@
 import { expect, test } from "vitest";
 import { FRAME_HEAD, FRAME_PAD, NOTE_GAP } from "@ideabeam/arrange";
 import {
+  agendaOf,
   applyChange,
   decide,
   initialWallState,
   readerOf,
+  stepContext,
   type ContentCommand,
   type Group,
   type Note,
@@ -66,7 +68,7 @@ const PROPOSAL: Proposal = {
 
 /** What the wall itself makes of the command the browser would send: the rules of the shared package. */
 function applied(content: WallContent, command: ContentCommand): WallContent {
-  const decision = decide(readerOf(content), command, ME, 0, "open");
+  const decision = decide(readerOf(content), command, ME, 0, stepContext(agendaOf("free"), { step: 0, reach: 0 }));
   if (decision.kind !== "changed") throw new Error(`the wall would not take it: ${decision.kind}`);
   return applyChange(content, decision.change);
 }

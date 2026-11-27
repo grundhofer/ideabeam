@@ -497,7 +497,7 @@ test("the keyboard reaches the wall's actions and writes a note without the page
   await expect(page.getByRole("button", { name: "Neuer Zettel", exact: true })).toBeFocused();
   expect(await scrolled()).toBe(0);
   await page.keyboard.press("Tab");
-  await expect(page.getByRole("button", { name: "Aufdecken", exact: true })).toBeFocused();
+  await expect(page.getByRole("button", { name: "Weiter: Aufdecken", exact: true })).toBeFocused();
   expect(await scrolled()).toBe(0);
   // „Neuer Zettel“ opens the field in the surface's own view: the page does not move for it, nor while it is written
   await page.keyboard.press("Shift+Tab");

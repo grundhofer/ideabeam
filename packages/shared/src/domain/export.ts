@@ -1,7 +1,10 @@
 // SPDX-FileCopyrightText: 2026 Sebastian Grundhöfer
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import type { ArrangeLanguage, Group, Phase } from "../protocol.js";
+import { methodTexts } from "../methods/texts.js";
+import type { ArrangeLanguage, Group } from "../protocol.js";
+import type { NoteLevel } from "./agenda.js";
+import type { MethodId } from "./method.js";
 import { notesFor, type StoredNote } from "./visibility.js";
 
 // The export of a wall as Markdown (PLAN.md 2.1, „Export: Markdown: Gruppen als Überschriften“; 3.2, `GET
@@ -23,6 +26,8 @@ import { notesFor, type StoredNote } from "./visibility.js";
 //    with a backslash, and a line break becomes a space, so a note stays one list item. A bare address in a note
 //    (`https://…`) may still be shown as a link by a viewer that links addresses by itself (GitHub's flavour); its
 //    text is then its target, so nothing is hidden behind other words.
+//  - **The method above the results** (PLAN-METHODEN.md 2): its name and its short description, in a line of their
+//    own under the date, so a reader knows how the notes came about.
 //  - **The fixed words in the language of whoever asks** (`de` or `en`, as „Ordnen“ takes it: a wall has no
 //    language of its own). They stand in the table below and nowhere else; the Worker writes the file, so they
 //    cannot come from the app's string tables.
@@ -30,7 +35,10 @@ import { notesFor, type StoredNote } from "./visibility.js";
 /** What one export is made from: the wall as it is stored, who asks, when, and in which language. */
 export interface ExportInput {
   question: string;
-  phase: Phase;
+  /** The method the wall runs: its name and short description stand above the results. */
+  methodId: MethodId;
+  /** What is seen of the others' notes (domain/agenda.ts, `noteLevel`). */
+  sight: NoteLevel;
   /** Every note of the wall, with its writer: what of it goes into the file is decided here, by `notesFor`. */
   notes: readonly StoredNote[];
   groups: readonly Group[];
@@ -104,7 +112,7 @@ export function escapeMarkdown(text: string): string {
 /** The wall as one person may see it, as a Markdown document. */
 export function wallMarkdown(input: ExportInput): string {
   const words = WORDS[input.language];
-  const view = notesFor(input.notes, input.phase, input.viewer);
+  const view = notesFor(input.notes, input.sight, input.viewer);
   const groups = [...input.groups].sort((a, b) => a.ord - b.ord || (a.id < b.id ? -1 : a.id > b.id ? 1 : 0));
   const notes = [...view.notes].sort((a, b) => a.createdAt - b.createdAt || (a.id < b.id ? -1 : a.id > b.id ? 1 : 0));
   const known = new Set(groups.map((group) => group.id));
@@ -115,12 +123,15 @@ export function wallMarkdown(input: ExportInput): string {
     if (note.groupId === null || !known.has(note.groupId)) loose.push(note.text);
     else inGroup.set(note.groupId, [...(inGroup.get(note.groupId) ?? []), note.text]);
   }
-  const writing = input.phase === "writing";
+  const writing = input.sight !== "all";
+  const method = methodTexts(input.language, input.methodId);
 
   const lines: string[] = [
     `# ${escapeMarkdown(input.question)}`,
     "",
     `_${words.stand(exportDate(input.at, input.language))}_`,
+    "",
+    `**${escapeMarkdown(method.name)}:** ${escapeMarkdown(method.short)}`,
     "",
   ];
   if (writing && view.hidden > 0) lines.push(`_${words.hidden(view.hidden)}_`, "");

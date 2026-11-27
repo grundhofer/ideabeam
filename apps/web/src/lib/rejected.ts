@@ -19,6 +19,7 @@ export type RejectKey =
   | "phaseClock"
   | "phaseArrange"
   | "staleClock"
+  | "staleStep"
   | "staleUndo"
   | "daySpent"
   | "notAdmin"
@@ -75,15 +76,17 @@ export function rejectKey(rejected: Rejected): RejectKey {
     case "INVALID":
       return "invalid";
     case "PHASE":
-      // The phase does not take it: a group or an arrangement while the notes are hidden (the wall offers neither
-      // then), or a control of the clock that crossed somebody else's revealing.
+      // The step does not take it: a group or an arrangement while the notes are hidden (the wall offers neither
+      // then), or a control of the clock that crossed somebody else's step move.
       if (command?.startsWith("group.")) return "phaseGroups";
       if (applying || undoing) return "phaseArrange";
       return command?.startsWith("admin.clock.") ? "phaseClock" : "invalid";
     case "STALE":
-      // An arrangement that is no longer the wall's last one cannot be taken back. Else: a control of the clock that
-      // was made for a clock another control has changed meanwhile.
-      return undoing ? "staleUndo" : "staleClock";
+      // An arrangement that is no longer the wall's last one cannot be taken back. A step move made for a step the
+      // wall has left meanwhile (another tab of the moderation moved first). Else: a control of the clock that was
+      // made for a clock another control has changed meanwhile.
+      if (undoing) return "staleUndo";
+      return command === "admin.step.go" ? "staleStep" : "staleClock";
     case "DAY_SPENT":
       // the wall's brake: its day's changes are written; the sentence names the time it goes on (`resetsAt`)
       return "daySpent";

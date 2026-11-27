@@ -18,6 +18,7 @@ import { useWall } from "../store/wall";
 import { useWalls } from "../store/walls";
 import { renderApp } from "../test-app";
 import { fakeSockets, nextSocket } from "../test-socket";
+import { OPEN_SYNC, REVEALED_SYNC, WRITING_SYNC } from "../test-steps";
 
 const WALL = "ab".repeat(32);
 const TOKEN = "cd".repeat(16);
@@ -33,8 +34,8 @@ const sync = (participants: Participant[], notes: Note[] = [], groups: Group[] =
   participants,
   you: { participantId: ME },
   seq: notes.length,
-  // a wall after revealing, as stage 2 knew it
-  phase: "open",
+  // a wall whose notes are there for everyone: a „Freie Wand“
+  ...OPEN_SYNC,
   hidden: 0,
   clock: NO_CLOCK,
   notes,
@@ -830,7 +831,7 @@ const MINUTE = 60_000;
 type Sync = Extract<ServerEvent, { type: "sync" }>;
 /** A wall whose notes are hidden: this browser's own notes, and how many the others have written. */
 const hiddenSync = (participants: Participant[], notes: Note[], hidden: number, more: Partial<Sync> = {}) =>
-  ({ ...sync(participants, notes), phase: "writing", hidden, seq: notes.length + hidden, ...more }) as ServerEvent;
+  ({ ...sync(participants, notes), ...WRITING_SYNC, hidden, seq: notes.length + hidden, ...more }) as ServerEvent;
 const ANNA_AND_BEN = (role: Participant["role"]): Participant[] => [
   { id: ME, name: "Anna", role, online: true },
   { id: BEN, name: "Ben", role: role === "admin" ? "member" : "admin", online: true },
@@ -845,7 +846,7 @@ test("while the notes are hidden a person sees their own, learns how many the ot
   found();
   const socket = await join();
   socket.tell(hiddenSync(ANNA_AND_BEN("member"), [note(1, "Mehr Pausen")], 3));
-  // the state names the phase and counts every note, one's own and the others'
+  // the state names the step and counts every note, one's own and the others'
   expect((await screen.findByText("Verdecktes Schreiben: 4 Zettel. 2 Personen sind da.")).getAttribute("role")).toBe(
     "status",
   );
@@ -860,7 +861,7 @@ test("while the notes are hidden a person sees their own, learns how many the ot
   expect(screen.queryByRole("button", { name: "Neue Gruppe" })).toBeNull();
   // everybody else's primary action stays „Neuer Zettel“; revealing and the clock are the moderation's
   expect(screen.getByRole("button", { name: "Neuer Zettel" }).className).toBe("sb-primary-action");
-  expect(screen.queryByRole("button", { name: "Aufdecken" })).toBeNull();
+  expect(screen.queryByRole("button", { name: "Weiter: Aufdecken" })).toBeNull();
   expect(screen.queryByRole("group", { name: "Uhr" })).toBeNull();
   // the line under the action says who sees a note now
   expect(
@@ -896,7 +897,7 @@ test("an empty hidden wall says how it fills, and that the others see a note onl
   ).toBeTruthy();
 });
 
-test("the moderation of a hidden wall: „Aufdecken“ is the primary action, „Neuer Zettel“ the second; revealing is said once", async () => {
+test("the moderation of a hidden wall: „Weiter: Aufdecken“ is the primary action, „Neuer Zettel“ the second; revealing is said once", async () => {
   found();
   useWalls.getState().keepToken(WALL, TOKEN);
   const socket = await join();
@@ -906,7 +907,7 @@ test("the moderation of a hidden wall: „Aufdecken“ is the primary action, �
   expect(guides()).toEqual([
     "Du moderierst: Alle schreiben für sich, niemand liest mit. Wenn alle fertig sind, zeigt „Aufdecken“ allen jeden Zettel.",
   ]);
-  expect(screen.getByRole("button", { name: "Aufdecken" }).className).toBe("sb-primary-action");
+  expect(screen.getByRole("button", { name: "Weiter: Aufdecken" }).className).toBe("sb-primary-action");
   expect(screen.getByRole("button", { name: "Neuer Zettel" }).className).toBe("sb-secondary-action");
   expect(document.querySelectorAll(".sb-primary-action")).toHaveLength(1);
   expect(screen.queryByRole("button", { name: "Ordnen" })).toBeNull();
@@ -915,15 +916,15 @@ test("the moderation of a hidden wall: „Aufdecken“ is the primary action, �
   fireEvent.keyDown(screen.getByRole("textbox", { name: "Text des Zettels" }), { key: "Escape" });
 
   // the question before revealing is a dialog (tests/hidden.spec.ts); here its answer goes out, and the wall's
-  // word comes back: the others' notes, then the phase
-  act(() => useWall.getState().reveal());
-  expect(flow(socket)).toMatchObject([{ type: "admin.phase.set", phase: "open" }]);
+  // word comes back: the others' notes, then the step
+  act(() => useWall.getState().goStep(1));
+  expect(flow(socket)).toMatchObject([{ type: "admin.step.go", from: 0, to: 1 }]);
   socket.tell({
     type: "notes.revealed",
     seq: 5,
     notes: [note(2, "Weniger Termine", BEN), note(3, "Fokuszeit", BEN), note(4, "Der Build dauert zu lange", BEN)],
   });
-  socket.tell({ type: "phase.changed", seq: 6, phase: "open" });
+  socket.tell({ type: "step.changed", seq: 6, step: 1, reach: 1 });
   await waitFor(() => expect(notesShown()).toHaveLength(4));
   // one sentence for all of them, said and not shown; it says no note's text
   const said = screen.getByText("Aufgedeckt: 4 Zettel sind jetzt für alle zu sehen.");
@@ -940,11 +941,75 @@ test("the moderation of a hidden wall: „Aufdecken“ is the primary action, �
   expect(screen.getByRole("button", { name: "Ordnen" }).className).toBe("sb-primary-action");
   expect(screen.getByRole("button", { name: "Neuer Zettel" }).className).toBe("sb-secondary-action");
   expect(document.querySelectorAll(".sb-primary-action")).toHaveLength(1);
-  expect(screen.queryByRole("button", { name: "Aufdecken" })).toBeNull();
+  expect(screen.queryByRole("button", { name: "Weiter: Aufdecken" })).toBeNull();
   expect(screen.queryByRole("group", { name: "Uhr" })).toBeNull();
   expect(
     screen.getByText("Ein neuer Zettel geht an den Server von IdeaBeam in der EU. Alle auf der Wand sehen ihn."),
   ).toBeTruthy();
+});
+
+test("the state names the step, what comes after it and the method with its short description", async () => {
+  found();
+  const socket = await join();
+  socket.tell(hiddenSync(ANNA_AND_BEN("member"), [], 2));
+  const state = await screen.findByRole("region", { name: "Stand der Wand" });
+  expect(within(state).getByText("Schritt 1 von 4: Ideen schreiben · danach Aufdecken")).toBeTruthy();
+  // never the method's name alone (PLAN-METHODEN.md 2)
+  expect(screen.getByTestId("method").textContent).toBe(
+    "Still sammeln, bündeln, verdeckt wählen: Alle schreiben Ideen verdeckt, die Ideen werden gebündelt, dann wählt jede Person verdeckt; heraus kommt eine Rangfolge.",
+  );
+  // the wall moves on: said once, and the state follows
+  socket.tell({ type: "notes.revealed", seq: 3, notes: [] });
+  socket.tell({ type: "step.changed", seq: 4, step: 1, reach: 1 });
+  await screen.findByText("Schritt 2 von 4: Aufdecken · danach Bündeln");
+  socket.tell({ type: "step.changed", seq: 5, step: 3, reach: 3 });
+  await screen.findByText("Schritt 4 von 4: Ergebnis besprechen · der letzte Schritt");
+  expect(screen.getByText("Schritt 4 von 4: Ergebnis besprechen.").classList.contains("sb-visually-hidden")).toBe(true);
+  // what to do now is the step's: talking the result through
+  expect(guides()).toEqual(["Besprecht die Gruppen gemeinsam: Was fällt auf, was fehlt, was folgt daraus?"]);
+  // moving between the steps is the moderation's
+  expect(inMore("Zurück: Bündeln")).toBeNull();
+  expect(screen.queryByRole("button", { name: /^Weiter/ })).toBeNull();
+});
+
+test("a „Freie Wand“ counts no steps, and names its method with its short description", async () => {
+  found();
+  const socket = await join();
+  socket.tell(sync(ANNA_AND_BEN("member")));
+  await screen.findByTestId("method");
+  expect(screen.getByTestId("method").textContent).toBe(
+    "Freie Wand: Alle schreiben Zettel, die sofort für alle sichtbar sind, und ordnen sie gemeinsam, ohne festen Ablauf.",
+  );
+  expect(document.querySelector(".app-state__step")).toBeNull();
+  expect(screen.queryByText(/ · danach /)).toBeNull();
+});
+
+test("the moderation moves on with „Weiter“ and back with „Zurück“ under „Mehr“; neither asks where nothing is revealed", async () => {
+  found();
+  useWalls.getState().keepToken(WALL, TOKEN);
+  const socket = await join();
+  socket.tell({ ...(sync(ANNA_AND_BEN("admin")) as Sync), ...REVEALED_SYNC, seq: 0 });
+  await screen.findByText("Schritt 2 von 4: Aufdecken · danach Bündeln");
+  // the step arranges: „Ordnen“ is the zone's primary action, the way on stands in the state, as a text action
+  expect(screen.getByRole("button", { name: "Ordnen" }).className).toBe("sb-primary-action");
+  const onward = screen.getByRole("button", { name: "Weiter: Bündeln" });
+  expect(onward.className).toBe("sb-text-action");
+  fireEvent.click(onward);
+  expect(flow(socket)).toMatchObject([{ type: "admin.step.go", from: 1, to: 2 }]);
+  expect(document.querySelector("#app-dlg-reveal[open]")).toBeNull();
+  // back, from „Mehr“
+  expect(inMore("Zurück: Ideen schreiben")).toBeTruthy();
+  fireEvent.click(inMore("Zurück: Ideen schreiben")!);
+  expect(flow(socket).at(-1)).toMatchObject({ type: "admin.step.go", from: 1, to: 0 });
+  // in the writing step again, after revealing: the notes stay seen, „Weiter: Aufdecken“ is the primary action and
+  // asks nothing, since nothing is hidden any more
+  socket.tell({ type: "step.changed", seq: 1, step: 0, reach: 1 });
+  const next = await screen.findByRole("button", { name: "Weiter: Aufdecken" });
+  expect(next.className).toBe("sb-primary-action");
+  expect(hiddenLine()).toBeUndefined();
+  fireEvent.click(next);
+  expect(flow(socket).at(-1)).toMatchObject({ type: "admin.step.go", from: 0, to: 1 });
+  expect(document.querySelector("#app-dlg-reveal[open]")).toBeNull();
 });
 
 test("the clock: the moderation sets it, everybody reads the minutes at the wall's top and in the tab's title", async () => {
@@ -1034,7 +1099,7 @@ test("the clock: the moderation sets it, everybody reads the minutes at the wall
     "5\u00a0Minuten mehr",
     "Uhr ausschalten",
   ]);
-  expect(screen.getByRole("button", { name: "Aufdecken" }).className).toBe("sb-primary-action");
+  expect(screen.getByRole("button", { name: "Weiter: Aufdecken" }).className).toBe("sb-primary-action");
   expect(screen.getByRole<HTMLButtonElement>("button", { name: "Neuer Zettel" }).disabled).toBe(false);
 });
 

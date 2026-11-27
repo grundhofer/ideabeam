@@ -8,7 +8,8 @@
 // counter a0796b5, and stage 4b (the moderation's own key: what its browser sends to the one provider it chose, what
 // stays in the tab, the three providers' own statements), section 3.5, state 60284aa, and stage 5, step A („Als
 // Markdown sichern“ through the Worker with the session key, sections 2.1, 3.1, 4 and 7; the QR code drawn in the
-// browser, section 3.6), state d3cc22a, read again end to end against the code on 2026-11-25. Arranging in the
+// browser, section 3.6), state d3cc22a, read again end to end against the code on 2026-11-25. Stage M1 of the methods
+// (PLAN-METHODEN.md): the wall's method with its steps and the step it stands in, section 3.1. Arranging in the
 // browser (4c) is not built: section 3.4 names it as a plan. Who is responsible for a run with a key of one's own
 // (section 3.5, „Wer verantwortlich ist“, and section 6) is the operator's understanding and an open point for a legal
 // review. It is a draft until the operator has read it (operator.ts, NOTICE_REVIEWED), and no lawyer has reviewed it.
@@ -125,10 +126,12 @@ export function PrivacyDe() {
       <ul>
         <li>
           <strong>Die Wand:</strong> ihre Frage (höchstens 140 Zeichen), der Zeitpunkt des Anlegens, der Tag ihrer
-          automatischen Löschung, ein zufälliger Moderationsschlüssel, ob verdeckt geschrieben wird oder die Zettel
-          aufgedeckt sind, die Uhr der Schreibphase (wann sie abläuft oder wie viel Zeit angehalten noch bleibt, und wie
-          oft sie gestellt wurde) und für die Bremse der Wand (unten) ein Tag nach UTC mit der Nummer der ersten
-          Änderung an diesem Tag. Diese Angaben sagen nichts über Personen.
+          automatischen Löschung, ein zufälliger Moderationsschlüssel, die gewählte Methode mit ihren Schritten (eine
+          Kopie aus dem Katalog der Anwendung, beim Anlegen gespeichert), in welchem Schritt die Wand steht und wie weit
+          sie schon war (daraus folgt, ob verdeckt geschrieben wird oder die Zettel aufgedeckt sind), die Uhr des
+          Schritts (wann sie abläuft oder wie viel Zeit angehalten noch bleibt, und wie oft sie gestellt wurde) und für
+          die Bremse der Wand (unten) ein Tag nach UTC mit der Nummer der ersten Änderung an diesem Tag. Diese Angaben
+          sagen nichts über Personen.
         </li>
         <li>
           <strong>Je Person:</strong> der Anzeigename (ein Vorname oder ein Pseudonym genügt, höchstens 40 Zeichen), ob

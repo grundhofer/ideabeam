@@ -267,7 +267,7 @@ try {
   say(`Both wrote hidden (${annaNotes.length} and ${benNotes.length} notes); neither page shows the other's text.`);
 
   // 4. Anna reveals
-  await zone(anna.page).getByRole("button", { name: "Aufdecken", exact: true }).click();
+  await zone(anna.page).getByRole("button", { name: "Weiter: Aufdecken", exact: true }).click();
   await anna.page.locator("#app-dlg-reveal").getByRole("button", { name: "Aufdecken" }).click();
   const all = [...annaNotes, ...benNotes];
   for (const one of [anna.page, ben.page])

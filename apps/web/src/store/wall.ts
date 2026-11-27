@@ -11,9 +11,9 @@ import {
   PROTOCOL_VERSION,
   type ClockCommand,
   type ContentCommand,
-  type PhaseCommand,
   type RejectCode,
   type ServerEvent,
+  type StepCommand,
   type WallState,
 } from "@ideabeam/shared";
 import type { ProviderFailure, ProviderId } from "@ideabeam/arrange";
@@ -26,8 +26,9 @@ import { useWalls } from "./walls";
 /** Why the wall did not let this browser on. */
 export type Refusal = "NAME_TAKEN" | "WALL_FULL";
 
-/** The moderation's commands of the wall's flow: revealing, and the controls of the writing's clock. */
-type FlowCommand = PhaseCommand | ClockCommand;
+/** The moderation's commands of the wall's flow: a step move (revealing among them), and the controls of the
+ *  writing's clock. */
+type FlowCommand = StepCommand | ClockCommand;
 
 /** A change of this browser that the wall did not take, and so is taken back: the reason, and the kind of command
  *  it was (null: neither a change of the wall's content nor a step of its flow). Beside the wall's own reasons:
@@ -113,9 +114,10 @@ type Live = {
   /** A change to the wall's content, at once: it shows from now on (`shown(state)`) and is on its way to the wall,
    *  which answers under its `opId`. A reject takes it back and says why (`rejected`). */
   send(command: ContentCommand): void;
-  /** The moderation's: reveals the notes, for good. Nothing shows before the wall has said so, to everyone at
+  /** The moderation's: moves the wall to another step of its agenda, from the one this browser knows it in (a move
+   *  that shows the hidden notes is revealing, for good). Nothing shows before the wall has said so, to everyone at
    *  once. */
-  reveal(): void;
+  goStep(to: number): void;
   /** The moderation's: a control of the writing's clock, made for the clock as this browser knows it. Nothing shows
    *  before the wall has said so. */
   setClock(control: ClockControl): void;
@@ -354,8 +356,8 @@ export const useWall = create<Live>()((set, get) => {
       set((live) => ({ state: applyCommand(live.state, command, Date.now()), rejected: null }));
       socket.send(command);
     },
-    reveal() {
-      ask({ type: "admin.phase.set", opId: generateHexId(), phase: "open" });
+    goStep(to) {
+      ask({ type: "admin.step.go", opId: generateHexId(), from: get().state.step, to });
     },
     setClock(control) {
       const opId = generateHexId();

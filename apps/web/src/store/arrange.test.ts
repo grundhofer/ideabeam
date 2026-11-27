@@ -17,6 +17,7 @@ import { fakeSockets, nextSocket, type FakeWebSocket } from "../test-socket";
 import { ARRANGE_WAIT_MS, useArrange } from "./arrange";
 import { useWall } from "./wall";
 import { useWalls } from "./walls";
+import { OPEN_SYNC } from "../test-steps";
 
 const WALL = "ab".repeat(32);
 const TOKEN = "cd".repeat(16);
@@ -65,7 +66,7 @@ const sync = (notes: Note[] = NOTES, seq = notes.length): ServerEvent => ({
   participants: [ANNA],
   you: { participantId: ME },
   seq,
-  phase: "open",
+  ...OPEN_SYNC,
   hidden: 0,
   clock: NO_CLOCK,
   notes,

@@ -2,6 +2,8 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import * as z from "zod/mini";
+import { agendaRequestSchema, resolvedAgendaSchema } from "./domain/agenda.js";
+import { MAX_STEPS } from "./domain/method.js";
 import { hexIdSchema, wallIdSchema } from "./ids.js";
 import { sessionKeySchema } from "./session-key.js";
 
@@ -21,13 +23,14 @@ z.config({ jitless: true });
 
 // The frames browser and worker exchange: small JSON text frames, parsed on both ends with the schemas below, so
 // neither side ever acts on a shape it did not expect. Stage 1 holds the wall and who is on it, stage 2 the notes,
-// the groups and where the notes lie, stage 3 the phases (hidden writing, revealing), the clock of the writing and
-// the brake of a wall's day, stage 4 arranging: the moderation applies a proposal and takes it back.
+// the groups and where the notes lie, stage 3 hidden writing, revealing, the clock of the writing and the brake of a
+// wall's day, stage 4 arranging: the moderation applies a proposal and takes it back. Stage M1 of the methods
+// (PLAN-METHODEN.md 5) turned the two phases into the steps of a wall's agenda: `admin.step.go`, `step.changed`.
 
 // The version of these frames. A deploy disconnects every socket, and a tab that reconnects still runs the old
 // script: the worker names its version in every `sync`, and a browser that reads another one asks for a reload
 // instead of guessing. Raised with every change a running tab cannot read (PLAN.md 3.4).
-export const PROTOCOL_VERSION = 6;
+export const PROTOCOL_VERSION = 7;
 
 // The admin's capability, minted with the wall and kept in the creating browser: 128 bits of hex. Anything else
 // cannot be one and is refused before it is compared.
@@ -83,12 +86,10 @@ export const participantSchema = z.object({
 });
 export type Participant = z.infer<typeof participantSchema>;
 
-// The phase a wall is in (PLAN.md 2.1). `writing`: everybody writes, and nobody reads what the others wrote; the
-// worker leaves their notes out of everything it sends (domain/visibility.ts). `open`: everything is there for
-// everyone. A wall starts in `writing`, or in `open` when it was made without hidden writing; the moderation
-// reveals, and revealing is never taken back.
-export const phaseSchema = z.enum(["writing", "open"]);
-export type Phase = z.infer<typeof phaseSchema>;
+// Where a wall stands (PLAN-METHODEN.md 4): in a step of its agenda (domain/agenda.ts, domain/flow.ts). What may be
+// done follows from the step it is in; what is seen of the others' notes from the furthest step it has reached, so
+// going back never hides. In a hidden step everybody writes, and nobody reads what the others wrote: the worker
+// leaves their notes out of everything it sends (domain/visibility.ts).
 
 /** The shortest and the longest time the moderation can set the writing's clock to, in minutes. */
 export const CLOCK_MIN_MINUTES = 1;
@@ -299,9 +300,14 @@ export const wallInfoSchema = z.object({
 });
 export type WallInfo = z.infer<typeof wallInfoSchema>;
 
-// `hidden`: whether the wall starts with hidden writing (the phase `writing`). Left out, it does: a wall that shows
-// every note at once is asked for.
-export const createWallRequestSchema = z.object({ question: questionSchema, hidden: z._default(z.boolean(), true) });
+// `agenda`: the method the wall runs (domain/agenda.ts). Left out, `hidden` says it, as it did before there were
+// methods: hidden writing (left out, too) is „Still sammeln, bündeln, verdeckt wählen“, a wall that shows every note
+// at once („hidden: false“) is „Freie Wand“. With an agenda, `hidden` is not read.
+export const createWallRequestSchema = z.object({
+  question: questionSchema,
+  hidden: z._default(z.boolean(), true),
+  agenda: z.optional(agendaRequestSchema),
+});
 export const createWallResponseSchema = z.object({ wallId: wallIdSchema, adminToken: adminTokenSchema });
 export type CreateWallResponse = z.infer<typeof createWallResponseSchema>;
 /** The answer of `POST /api/walls` (status 429) when the day's walls are spent (domain/budget.ts): the product
@@ -381,9 +387,16 @@ export const clientCommandSchema = z.discriminatedUnion("type", [
   // The frame goes, its notes stay where they lie, without a group.
   z.object({ type: z.literal("group.delete"), opId: hexIdSchema, groupId: hexIdSchema }),
 
-  // The moderation's: the writing is over, everybody gets the notes they did not have. `open` is the one phase to
-  // ask for: revealing is one way.
-  z.object({ type: z.literal("admin.phase.set"), opId: hexIdSchema, phase: z.literal("open") }),
+  // The moderation's: to another step of the agenda, forward, back or past one (domain/flow.ts). `from` is the step
+  // the command was made in: sent a second time it finds its work done, made for a step the wall has left it is
+  // refused (`STALE`). A move to a step that shows the hidden notes is revealing: everybody gets the notes they did
+  // not have. Going back never hides them again.
+  z.object({
+    type: z.literal("admin.step.go"),
+    opId: hexIdSchema,
+    from: z.int().check(z.minimum(0), z.maximum(MAX_STEPS - 1)),
+    to: z.int().check(z.minimum(0), z.maximum(MAX_STEPS - 1)),
+  }),
   // The moderation's controls of the writing's clock. Each names the revision of the clock it was made for
   // (`rev`): one that arrives a second time, or after somebody else's control, is refused (`STALE`) and does not
   // act again. `start` sets the time and lets it run, also over a clock that runs already.
@@ -437,8 +450,8 @@ export type ContentCommand = Extract<
   }
 >;
 
-/** The moderation's command that reveals the notes. */
-export type PhaseCommand = Extract<ClientCommand, { type: "admin.phase.set" }>;
+/** The moderation's command that moves the wall to another step. */
+export type StepCommand = Extract<ClientCommand, { type: "admin.step.go" }>;
 
 /** The moderation's controls of the clock. */
 export type ClockCommand = Extract<
@@ -457,10 +470,10 @@ export type ClockCommand = Extract<
  *  - `CONFLICT`: the id of the new note is another person's note already. An arrangement touches what is a
  *    person's: a note that lies in a locked group, or a group id that is taken.
  *  - `LIMIT`: the wall holds as many notes, or groups, as it may.
- *  - `PHASE`: the phase the wall is in does not take this: a group or an arrangement while the notes are hidden,
- *    the clock once they are revealed.
+ *  - `PHASE`: the step the wall is in does not take this (the name is the one of the phases before): a group or
+ *    an arrangement while the notes are hidden, the clock outside a step of writing.
  *  - `STALE`: a control of the clock that was made for another revision of it: taken already, or overtaken. An
- *    undo of an arrangement that is not the wall's last one.
+ *    undo of an arrangement that is not the wall's last one. A step move made for a step the wall has left.
  *  - `DAY_SPENT`: the wall has written what one wall may write on a UTC day (domain/budget.ts). The frame says
  *    when it takes changes again (`resetsAt`). */
 export const rejectCodeSchema = z.enum([
@@ -506,12 +519,16 @@ export const serverEventSchema = z.discriminatedUnion("type", [
     you: z.object({ participantId: hexIdSchema }),
     /** The number of the last stored change that is in this snapshot. */
     seq: z.int(),
-    phase: phaseSchema,
+    /** The wall's agenda: its methods and their steps (domain/agenda.ts). */
+    agenda: resolvedAgendaSchema,
+    /** The step the wall is in, and the furthest one it has reached (domain/flow.ts). */
+    step: z.int().check(z.minimum(0)),
+    reach: z.int().check(z.minimum(0)),
     /** How many notes the wall holds that are not in this snapshot: the other people's, while the notes are hidden.
      *  A number and nothing else. 0 once the wall is revealed. */
     hidden: z.int().check(z.minimum(0)),
     clock: clockSchema,
-    /** In the order they were made. In `writing`: this person's own only. */
+    /** In the order they were made. While the notes are hidden: this person's own only. */
     notes: z.array(noteSchema),
     /** In the order they were made. */
     groups: z.array(groupSchema),
@@ -594,8 +611,14 @@ export const serverEventSchema = z.discriminatedUnion("type", [
   // Revealing, first frame: the notes this browser did not have, in the order they were made. Each browser gets
   // its own.
   z.object({ type: z.literal("notes.revealed"), seq: z.int(), notes: z.array(noteSchema) }),
-  // Revealing, second frame, with the next number: the wall is in another phase from now on.
-  z.object({ type: z.literal("phase.changed"), seq: z.int(), phase: phaseSchema }),
+  // The wall is in another step from now on, and has reached `reach`. A move that reveals sends `notes.revealed`
+  // first, and this with the next number. The clock of the step stops with every move (domain/flow.ts).
+  z.object({
+    type: z.literal("step.changed"),
+    seq: z.int(),
+    step: z.int().check(z.minimum(0)),
+    reach: z.int().check(z.minimum(0)),
+  }),
   // A control of the clock was taken. `serverNow` is the worker's clock when it was: the browser keeps the distance
   // to its own and counts from the clock's end.
   z.object({ type: z.literal("clock.changed"), seq: z.int(), clock: clockSchema, serverNow: z.number() }),

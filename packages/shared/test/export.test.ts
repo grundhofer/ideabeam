@@ -42,9 +42,14 @@ const group = (letter: string, title: string, ord: number): Group => ({
   ord,
 });
 
+/** The method of the wall, its name and short description, above the results (PLAN-METHODEN.md 2). */
+const METHOD_LINE =
+  "**Still sammeln, bündeln, verdeckt wählen:** Alle schreiben Ideen verdeckt, die Ideen werden gebündelt, dann wählt jede Person verdeckt; heraus kommt eine Rangfolge.";
+
 const input = (over: Partial<ExportInput>): ExportInput => ({
   question: "Was hilft uns?",
-  phase: "open",
+  methodId: "still-sammeln",
+  sight: "all",
   notes: [],
   groups: [],
   viewer: ANNA,
@@ -69,6 +74,8 @@ describe("the export of a revealed wall", () => {
         "# Was hilft uns?",
         "",
         "_IdeaBeam · Stand: 25.11.2026_",
+        "",
+        METHOD_LINE,
         "",
         "## Zeit",
         "",
@@ -113,7 +120,7 @@ describe("the export of a revealed wall", () => {
 
   it("says so when the wall is empty", () => {
     expect(wallMarkdown(input({}))).toBe(
-      "# Was hilft uns?\n\n_IdeaBeam · Stand: 25.11.2026_\n\n_Noch keine Zettel._\n",
+      `# Was hilft uns?\n\n_IdeaBeam · Stand: 25.11.2026_\n\n${METHOD_LINE}\n\n_Noch keine Zettel._\n`,
     );
   });
 });
@@ -126,12 +133,14 @@ describe("the export while the notes are hidden", () => {
   ];
 
   it("holds the person's own notes and nothing of the others' but their number", () => {
-    const text = wallMarkdown(input({ phase: "writing", notes }));
+    const text = wallMarkdown(input({ sight: "hidden", notes }));
     expect(text).toBe(
       [
         "# Was hilft uns?",
         "",
         "_IdeaBeam · Stand: 25.11.2026_",
+        "",
+        METHOD_LINE,
         "",
         "_Die Zettel sind noch verdeckt: Hier stehen nur deine. 1 Zettel der anderen fehlt._",
         "",
@@ -146,14 +155,14 @@ describe("the export while the notes are hidden", () => {
   });
 
   it("counts the others' notes in both languages", () => {
-    const ben = wallMarkdown(input({ phase: "writing", notes, viewer: BEN, language: "en" }));
+    const ben = wallMarkdown(input({ sight: "hidden", notes, viewer: BEN, language: "en" }));
     expect(ben).toContain("_The notes are still hidden: only yours are here. 2 notes by the others are left out._");
     expect(ben).toContain("## Your notes\n\n- Bens geheimer\n");
     expect(ben).not.toContain("Annas");
   });
 
   it("says when the person has written nothing yet", () => {
-    const text = wallMarkdown(input({ phase: "writing", notes, viewer: id("c") }));
+    const text = wallMarkdown(input({ sight: "hidden", notes, viewer: id("c") }));
     expect(text).toContain("3 Zettel der anderen fehlen.");
     expect(text).toContain("_Noch keine Zettel von dir._");
     expect(text).not.toContain("Annas");
@@ -225,5 +234,19 @@ describe("the date and the file's name", () => {
     const long = exportFileName("a".repeat(200), AT);
     expect(long).toBe(`${"a".repeat(60)}-2026-11-25.md`);
     expect(exportFileName("Was hilft uns? ".repeat(10), AT)).toMatch(/^[A-Za-z0-9-]+\.md$/);
+  });
+});
+
+describe("the method above the results", () => {
+  it("names the wall's method with its short description, in the language of whoever asks", () => {
+    expect(wallMarkdown(input({ methodId: "free" }))).toContain(
+      "**Freie Wand:** Alle schreiben Zettel, die sofort für alle sichtbar sind, und ordnen sie gemeinsam, ohne festen Ablauf.\n",
+    );
+    const english = wallMarkdown(input({ methodId: "still-sammeln", language: "en" }));
+    expect(english).toContain(
+      "**Write alone, group, vote in secret:** Everyone writes ideas in private, the ideas are grouped, then everyone votes in secret; you get a ranking.\n",
+    );
+    // under the date, above every heading of the results
+    expect(english.indexOf("**Write alone")).toBeGreaterThan(english.indexOf("As of"));
   });
 });

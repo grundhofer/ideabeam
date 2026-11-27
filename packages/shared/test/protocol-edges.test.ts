@@ -32,6 +32,7 @@ import {
   type Group,
   type Note,
 } from "../src/index.js";
+import { OPEN_SYNC } from "./steps.js";
 
 // The edges of the schemas that protocol.test.ts does not name: what a schema makes of a value (a trim, a default,
 // a key it does not know) and where exactly it stops taking one. They hold whatever the schemas are written with.
@@ -72,7 +73,7 @@ const sync = {
   participants: [participant],
   you: { participantId: ID },
   seq: 0,
-  phase: "open",
+  ...OPEN_SYNC,
   hidden: 0,
   clock: { rev: 0, endsAt: null, leftMs: null },
   notes: [note],
@@ -262,7 +263,7 @@ describe("lists", () => {
 
 describe("words and switches", () => {
   it("a word comes from its set, and yes or no is said as true or false", () => {
-    expect(event({ type: "phase.changed", seq: 1, phase: "closed" })).toBeNull();
+    expect(event({ type: "step.changed", seq: 1, step: "closed", reach: 0 })).toBeNull();
     expect(groupSchema.safeParse(group).success).toBe(true);
     expect(groupSchema.safeParse({ ...group, titleSource: "ai" }).success).toBe(false);
     expect(groupSchema.safeParse({ ...group, locked: 1 }).success).toBe(false);

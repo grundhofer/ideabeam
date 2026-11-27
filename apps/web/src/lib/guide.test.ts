@@ -176,10 +176,23 @@ test("the state sentence knows groups: how many notes, and how many of them lie 
   expect(summary({ notes: 0, groups: 3, grouped: 0 })).toBe("noNotesGroups");
 });
 
-test("while the notes are hidden the state sentence names the phase and counts every note, also the others'", () => {
+test("while the notes are hidden the state sentence says so and counts every note, also the others'", () => {
   expect(summary({ notes: 0, hidden: true })).toBe("hiddenNone");
   expect(summary({ notes: 7, hidden: true })).toBe("hiddenNotes");
   expect(i18n.t("wall.hiddenNone")).toBe("Verdecktes Schreiben: noch keine Zettel.");
   expect(i18n.t("wall.hiddenNotes", { count: 7 })).toBe("Verdecktes Schreiben: 7\u00a0Zettel.");
   expect(i18n.t("wall.hiddenNotes", { count: 1, lng: "en" })).toBe("Hidden writing: 1 note.");
+});
+
+test("in a step to talk the result through, what to do now is the talking, once somebody else is there", () => {
+  const talking = { notes: 12, people: 3, groups: 3, grouped: 12, step: "discuss" as const };
+  expect(guide({ ...talking, admin: true })).toBe("adminDiscuss");
+  expect(guide({ ...talking, admin: false })).toBe("memberDiscuss");
+  // alone, the link comes first, in every step
+  expect(guide({ ...talking, admin: true, people: 1 })).toBe("adminAloneNotes");
+  // a step of sorting is as a revealed wall was
+  expect(guide({ ...talking, admin: false, step: "cluster" })).toBe("memberSorted");
+  expect(i18n.t("wall.guide.memberDiscuss")).toBe(
+    "Besprecht die Gruppen gemeinsam: Was fällt auf, was fehlt, was folgt daraus?",
+  );
 });

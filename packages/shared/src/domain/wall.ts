@@ -10,12 +10,13 @@ import type {
   Note,
   NoteMove,
   Participant,
-  Phase,
   ServerEvent,
   WallInfo,
 } from "../protocol.js";
+import type { ResolvedAgenda } from "./agenda.js";
 import { numbersOf } from "./arrange.js";
 import { NO_CLOCK, stoppedClock } from "./clock.js";
+import { NO_STEP, stepContext, type StepContext } from "./flow.js";
 import { decide, type WallReader } from "./rules.js";
 
 /** What a wall holds: its notes with their places, and its groups. Both in the order they were made. */
@@ -43,12 +44,16 @@ export interface WallState extends WallContent {
   protocolVersion: number | null;
   /** The wall was deleted while this browser was on it. Nothing after it changes that. */
   deleted: boolean;
-  /** The phase the wall is in (protocol.ts). In `writing`, `notes` holds this browser's own notes and no others. */
-  phase: Phase;
-  /** How many notes the wall holds that this browser has not got: the other people's, while the wall is in
-   *  `writing`. 0 once it is revealed. */
+  /** The wall's agenda (domain/agenda.ts), or null until the first `sync`. */
+  agenda: ResolvedAgenda | null;
+  /** The step the wall is in, and the furthest one it has reached (domain/flow.ts). While the notes are hidden
+   *  (`stepContextOf`), `notes` holds this browser's own notes and no others. */
+  step: number;
+  reach: number;
+  /** How many notes the wall holds that this browser has not got: the other people's, while the notes are hidden.
+   *  0 once they are revealed. */
   hidden: number;
-  /** The clock of the writing. What is left of it: domain/clock.ts, with the worker's time. */
+  /** The clock of the step. What is left of it: domain/clock.ts, with the worker's time. */
   clock: Clock;
   /** The run that arranged the wall last, while the moderation can take it back (`admin.arrange.undo` names it), or
    *  null: there is nothing to take back. */
@@ -70,8 +75,10 @@ export const initialWallState: WallState = {
   you: null,
   protocolVersion: null,
   deleted: false,
-  // until the first `sync` says what is so: nothing is taken to be visible
-  phase: "writing",
+  // until the first `sync` says what is so: nothing is taken to be visible, nothing to be allowed
+  agenda: null,
+  step: 0,
+  reach: 0,
   hidden: 0,
   clock: NO_CLOCK,
   arrangeRun: null,
@@ -94,7 +101,9 @@ export function applyServerEvent(state: WallState, event: ServerEvent): WallStat
         you: event.you.participantId,
         protocolVersion: event.protocolVersion,
         deleted: false,
-        phase: event.phase,
+        agenda: event.agenda,
+        step: event.step,
+        reach: event.reach,
         hidden: event.hidden,
         clock: event.clock,
         arrangeRun: event.arrangeRun,
@@ -164,12 +173,13 @@ export function applyServerEvent(state: WallState, event: ServerEvent): WallStat
         hidden: 0,
         ...numbered(state, event.seq),
       };
-    case "phase.changed":
+    case "step.changed":
       return {
         ...state,
-        phase: event.phase,
-        // the writing is over, and with it its time: the worker stores the same (domain/clock.ts)
-        clock: event.phase === "open" ? stoppedClock(state.clock) : state.clock,
+        step: event.step,
+        reach: Math.max(event.reach, event.step),
+        // the step is over, and with it its time: the worker stores the same (domain/flow.ts)
+        clock: stoppedClock(state.clock),
         ...numbered(state, event.seq),
       };
     case "clock.changed":
@@ -222,7 +232,7 @@ export function shown(state: WallState): WallContent {
   const me = self(state);
   if (me !== null) {
     for (const { command, at } of state.pending) {
-      const decision = decide(readerOf(content, state.arrangeRun), command, me, at, state.phase);
+      const decision = decide(readerOf(content, state.arrangeRun), command, me, at, stepContextOf(state));
       if (decision.kind === "changed") content = applyChange(content, decision.change);
     }
   }
@@ -312,6 +322,12 @@ export function readerOf(content: WallContent, arrangeRun: string | null = null)
     members: (groupId) => content.notes.filter((n) => n.groupId === groupId).map((n) => n.id),
     arranged: () => (arrangeRun === null ? null : { runId: arrangeRun }),
   };
+}
+
+/** What the step the wall is in allows, and what is seen of the others' notes, as this browser knows it. Before the
+ *  first `sync`: nothing (`NO_STEP`). One answer per state, as `shown()` gives. */
+export function stepContextOf(state: Pick<WallState, "agenda" | "step" | "reach">): StepContext {
+  return state.agenda === null ? NO_STEP : stepContext(state.agenda, state);
 }
 
 /** The person this browser is, once the wall is known. */
