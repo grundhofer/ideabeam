@@ -23,6 +23,9 @@ export type RejectKey =
   | "staleUndo"
   | "phaseBallot"
   | "staleBallot"
+  | "phaseTeams"
+  | "staleTeams"
+  | "invalidTeams"
   | "daySpent"
   | "notAdmin"
   | "rateLimit"
@@ -76,7 +79,8 @@ export function rejectKey(rejected: Rejected): RejectKey {
       // twice, as above
       return applying ? "applyChanged" : "conflict";
     case "INVALID":
-      return "invalid";
+      // teams that are not the same people (the moderation's view was behind)
+      return command === "admin.teams.set" ? "invalidTeams" : "invalid";
     case "PHASE":
       // The step does not take it: a group or an arrangement while the notes are hidden (the wall offers neither
       // then), or a control of the clock that crossed somebody else's step move.
@@ -84,6 +88,8 @@ export function rejectKey(rejected: Rejected): RejectKey {
       // a ballot after the moderation counted, or counting that crossed a step move
       if (command === "ballot.cast" || command === "admin.step.count") return "phaseBallot";
       if (applying || undoing) return "phaseArrange";
+      // the teams crossed a step move: the wall is in a step without teams by now
+      if (command === "admin.teams.set") return "phaseTeams";
       return command?.startsWith("admin.clock.") ? "phaseClock" : "invalid";
     case "STALE":
       // An arrangement that is no longer the wall's last one cannot be taken back. A step move made for a step the
@@ -92,6 +98,8 @@ export function rejectKey(rejected: Rejected): RejectKey {
       if (undoing) return "staleUndo";
       // a ballot made in a step the wall has left meanwhile
       if (command === "ballot.cast") return "staleBallot";
+      // teams made for teams that changed meanwhile (somebody came late, another tab of the moderation swapped)
+      if (command === "admin.teams.set") return "staleTeams";
       if (command === "admin.step.count") return "staleStep";
       return command === "admin.step.go" ? "staleStep" : "staleClock";
     case "DAY_SPENT":

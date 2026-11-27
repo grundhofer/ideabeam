@@ -19,7 +19,7 @@
 // The session's 45 minutes pass in seconds, so the test refills each socket's frame budget as the minutes would
 // have.
 
-import { env, runInDurableObject } from "cloudflare:test";
+import { env, runDurableObjectAlarm, runInDurableObject } from "cloudflare:test";
 import { describe, expect, it } from "vitest";
 import {
   generateHexId,
@@ -751,5 +751,138 @@ describe("what estimating in two rounds costs", { timeout: 60_000 }, () => {
     expect(rows.steps).toBe(4);
     expect(rows.reasons).toBe(PEOPLE.length);
     expect(total).toBeLessThanOrEqual(ROUNDS_ROWS);
+  });
+});
+
+// Pairs and small groups (stage M4 of the methods, PLAN-METHODEN.md 5): „1-2-4-Alle“ with 8 people from the clock of
+// its first step to its presenting. The moderation starts the clock; everybody writes a note alone; the time runs out
+// and the alarm moves the wall into the pairs, which it forms (the teams' row beside the flow); everybody writes a
+// note in the pair; the moderation swaps two people; the time runs out and the alarm merges the pairs into fours;
+// everybody writes a note; the time runs out and the alarm moves the wall into the presenting. Counted are the rows of
+// the method after everybody has joined, the alarms that are set among them (a set alarm is a row written). The
+// acceptance of M4: at most 60 rows.
+describe("what 1-2-4-Alle costs", { timeout: 60_000 }, () => {
+  /** The acceptance of M4: rows written by one run of 1-2-4-Alle with 8 people. */
+  const RUN_ROWS = 60;
+
+  it(`one run with ${PEOPLE.length} people writes at most ${RUN_ROWS} rows`, async () => {
+    const { wallId, stub } = newWall(env);
+    const adminToken = "f".repeat(32);
+    await runInDurableObject(stub, (instance) =>
+      instance.initialize({
+        wallId,
+        question: "How do we onboard faster?",
+        adminToken,
+        hidden: true,
+        agenda: { items: [{ methodId: "eins-zwei-vier" }] },
+      }),
+    );
+    const sockets: TestSocket[] = [];
+    for (const name of PEOPLE) {
+      const socket = await connect(wallId);
+      socket.send({
+        type: "join",
+        name,
+        sessionKey: generateSessionKey(),
+        ...(name === "Anna" ? { adminToken } : {}),
+      });
+      await socket.waitFor((event) => event.type === "sync");
+      sockets.push(socket);
+    }
+    const said = async (socket: TestSocket, command: Record<string, unknown>) => {
+      const opId = generateHexId();
+      socket.send({ ...command, opId });
+      const answer = await socket.waitFor(
+        (event) => (event.type === "ack" || event.type === "reject") && event.opId === opId,
+      );
+      expect(answer.type, JSON.stringify(answer)).toBe("ack");
+    };
+    const moderation = sockets[0] as TestSocket;
+    /** The time of the step runs out: its clock ends in the past, and the alarm rings. */
+    const timeIsUp = async (step: number) => {
+      await runInDurableObject(stub, (instance) => {
+        // read and written past the counting: the test's own doing, not the wall's
+        const sql = (instance as unknown as { sql: SqlStorage }).sql;
+        const flow = JSON.parse(String(sql.exec("SELECT value FROM meta WHERE key = 'flow'").one().value)) as {
+          clock: { endsAt: number | null };
+        };
+        flow.clock.endsAt = Date.now() - 1000;
+        const was = into;
+        into = "test";
+        sql.exec("UPDATE meta SET value = ? WHERE key = 'flow'", JSON.stringify(flow));
+        into = was;
+      });
+      expect(await runDurableObjectAlarm(stub)).toBe(true);
+      await moderation.waitFor((event) => event.type === "step.changed" && event.step === step);
+    };
+    const notes = async (stage: string) => {
+      for (const [n, socket] of sockets.entries()) {
+        await said(socket, {
+          type: "note.create",
+          noteId: generateHexId(),
+          text: `${stage} ${n}`,
+          x: n * 260,
+          y: 1300,
+        });
+      }
+    };
+
+    // from here on every row is counted
+    const rows = { clock: 0, notes: 0, steps: 0, swap: 0, test: 0 };
+    let into: keyof typeof rows = "clock";
+    await runInDurableObject(stub, (instance, state) => {
+      counted(instance, (_read, written) => {
+        rows[into] += written;
+      });
+      const setAlarm = state.storage.setAlarm.bind(state.storage);
+      state.storage.setAlarm = (...args: Parameters<typeof setAlarm>) => {
+        rows[into] += 1; // an alarm that is set is a row written
+        return setAlarm(...args);
+      };
+    });
+    await said(moderation, { type: "admin.clock.start", rev: 0, minutes: 1 });
+    into = "notes";
+    await notes("alone");
+    into = "steps";
+    await timeIsUp(1);
+    into = "notes";
+    await notes("pair");
+    into = "swap";
+    const sync = (await (async () => {
+      moderation.send({ type: "resync" });
+      return moderation.waitForNext((event) => event.type === "sync");
+    })()) as Sync;
+    const teams = sync.teams?.members as string[][];
+    const [a, b] = [teams[0]?.[0] as string, teams[1]?.[0] as string];
+    await said(moderation, {
+      type: "admin.teams.set",
+      rev: sync.teams?.rev,
+      teams: teams.map((team) => team.map((id) => (id === a ? b : id === b ? a : id))),
+    });
+    into = "steps";
+    await timeIsUp(2);
+    into = "notes";
+    await notes("four");
+    into = "steps";
+    await timeIsUp(3);
+    expect(await runInDurableObject(stub, isCounted), "the wall's object was replaced on the way").toBe(true);
+
+    const total = rows.clock + rows.notes + rows.steps + rows.swap;
+    // eslint-disable-next-line no-console -- the one test whose job is to say what it measured
+    console.log(
+      [
+        `1-2-4-Alle with ${PEOPLE.length} people (${3 * PEOPLE.length} notes, 1 swap, 3 steps by the alarm):`,
+        `  clock ${rows.clock}, notes ${rows.notes}, steps ${rows.steps}, swap ${rows.swap}: ${total} rows written`,
+      ].join("\n"),
+    );
+    // the clock and its alarm; a row a note and the mark of the wall's day once; into the pairs and into the fours
+    // the flow, the teams, the alarm and the layout row (the notes moved into their writers' teams' areas: into the
+    // pairs those written alone, into the fours those of the person who was swapped and the test's notes written
+    // outside their area); into the presenting the flow and the alarm back on the wall's last day
+    expect(rows.clock).toBe(2);
+    expect(rows.notes).toBe(3 * PEOPLE.length + 1);
+    expect(rows.steps).toBe(4 + 4 + 2);
+    expect(rows.swap).toBe(1);
+    expect(total).toBeLessThanOrEqual(RUN_ROWS);
   });
 });

@@ -2,6 +2,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import type { Evidence, MethodId, Purpose, StepMode, StepVisibility } from "../domain/method.js";
+import { CATALOGUE } from "./catalogue.js";
 
 // The words of the methods, in German and English (docs/methoden-katalog.md). They stand here, in the shared
 // package, and not in the app's string tables: the Worker writes the export, which names the wall's method with its
@@ -18,7 +19,15 @@ import type { Evidence, MethodId, Purpose, StepMode, StepVisibility } from "../d
 // (stage M3): the catalogue's texts, but for two things. Its short description says „gemeinsam“ where the
 // catalogue says „in Kleingruppen“, since the discussion is a step for everyone until stage M4 brings small groups;
 // and it has no „auch bekannt als“: nobody searched the register for „Mini-Delphi“, and the catalogue's rule leaves
-// such a line out until somebody has.
+// such a line out until somebody has. „1-2-4-Alle“ (stage M4): the catalogue's texts, its steps without „Frage
+// stellen“ (part of the writing). Its „auch bekannt als“ is left out too: the name it is known by is its own, and the
+// attribution names Liberating Structures. These texts are an adaptation of a Liberating Structure and stand under
+// CC BY-SA 4.0 (docs/methoden-katalog.md, „Liberating Structures“); the attribution's words (`attribution` below) follow the
+// footer template of liberatingstructures.com/cc-license, read on 2026-11-27.
+
+/** Where the attribution of a Liberating Structure leads: the source, and the licence. */
+export const LIBERATING_STRUCTURES_URL = "https://www.liberatingstructures.com";
+export const CC_BY_SA_URL = "https://creativecommons.org/licenses/by-sa/4.0/";
 
 export type MethodLanguage = "de" | "en";
 
@@ -47,6 +56,9 @@ export interface CatalogueTexts {
   modes: Readonly<Record<StepMode, string>>;
   visibility: Readonly<Record<StepVisibility, string>>;
   methods: Readonly<Record<MethodId, MethodTexts>>;
+  /** The attribution a method's licence asks for (`Method.attribution`): one sentence, and that the method's own
+   *  texts stand under the same licence. */
+  attribution: Readonly<Record<"liberatingStructures", { credit: string; licence: string }>>;
 }
 
 export const METHOD_TEXTS: Readonly<Record<MethodLanguage, CatalogueTexts>> = {
@@ -113,6 +125,20 @@ export const METHOD_TEXTS: Readonly<Record<MethodLanguage, CatalogueTexts>> = {
           discuss: { name: "Ergebnis besprechen" },
         },
       },
+      "eins-zwei-vier": {
+        name: "1-2-4-Alle",
+        short: "Erst allein, dann zu zweit, dann zu viert denken; jede Vierergruppe bringt ihre stärkste Idee ein.",
+        when: "Wenn alle in kurzer Zeit zu Wort kommen sollen, auch in großen Runden.",
+        result: "Je Vierergruppe eine Kernidee, dazu alle Zettel aus den Phasen davor.",
+        evidence:
+          "Die Methode selbst ist nicht getestet. Ihr Prinzip schon: In Experimenten wurden Gruppen besser, wenn jede Person zuerst allein schrieb oder antwortete und kleine Gruppen danach darüber sprachen.",
+        steps: {
+          alone: { name: "Allein nachdenken und notieren" },
+          pairs: { name: "Zu zweit austauschen" },
+          fours: { name: "Zu viert: das Wichtigste herausarbeiten" },
+          present: { name: "Jede Vierergruppe stellt eine Kernidee vor" },
+        },
+      },
       schaetzen: {
         name: "Schätzen – Diskutieren – Schätzen",
         short:
@@ -141,6 +167,13 @@ export const METHOD_TEXTS: Readonly<Record<MethodLanguage, CatalogueTexts>> = {
         steps: {
           wall: { name: "Schreiben und ordnen" },
         },
+      },
+    },
+    attribution: {
+      liberatingStructures: {
+        credit:
+          "Enthält Inhalte von www.liberatingstructures.com von Keith McCandless, Henri Lipmanowicz und Nancy White (Liberating Structures Fieldbook, 2026), lizenziert unter CC BY-SA 4.0.",
+        licence: "Unser Text zu dieser Methode steht unter derselben Lizenz.",
       },
     },
   },
@@ -207,6 +240,20 @@ export const METHOD_TEXTS: Readonly<Record<MethodLanguage, CatalogueTexts>> = {
           discuss: { name: "Discuss the result" },
         },
       },
+      "eins-zwei-vier": {
+        name: "1-2-4-All",
+        short: "Think alone, then in pairs, then in fours; each group of four brings its strongest idea.",
+        when: "When everyone should contribute in little time, also in large groups.",
+        result: "One core idea per group of four, plus all notes from the earlier phases.",
+        evidence:
+          "The method itself has not been tested. Its principle has: in experiments, groups did better when everyone first wrote or answered alone and small groups talked it over afterwards.",
+        steps: {
+          alone: { name: "Think and write alone" },
+          pairs: { name: "Share in pairs" },
+          fours: { name: "In fours: find what matters most" },
+          present: { name: "Each group of four presents one core idea" },
+        },
+      },
       schaetzen: {
         name: "Estimate – discuss – estimate",
         short:
@@ -236,12 +283,28 @@ export const METHOD_TEXTS: Readonly<Record<MethodLanguage, CatalogueTexts>> = {
         },
       },
     },
+    attribution: {
+      liberatingStructures: {
+        credit:
+          "Includes content from www.liberatingstructures.com by Keith McCandless, Henri Lipmanowicz and Nancy White (Liberating Structures Fieldbook, 2026), licensed under CC BY-SA 4.0.",
+        licence: "Our text on this method is under the same licence.",
+      },
+    },
   },
 };
 
 /** The words of a method in a language. */
 export function methodTexts(language: MethodLanguage, methodId: MethodId): MethodTexts {
   return METHOD_TEXTS[language].methods[methodId];
+}
+
+/** The attribution a method needs, or null: its licence asks for none. */
+export function methodAttribution(
+  language: MethodLanguage,
+  methodId: MethodId,
+): { credit: string; licence: string } | null {
+  const kind = CATALOGUE[methodId].attribution;
+  return kind === undefined ? null : METHOD_TEXTS[language].attribution[kind];
 }
 
 /** The name of a step in a language: the method's own word for it. */

@@ -147,6 +147,11 @@ export type WallProps = {
   /** Names the arrangement the wall shows: whenever it reads otherwise (an arrangement was applied or taken back, a
    *  preview opened or closed), the notes glide to their places instead of jumping. The surface alone moves. */
   motion?: string;
+  /** The teams' areas (stage M4), once the wall has teams: each team's box on the surface, its number and its
+   *  label, and whether it is this person's team. null: no teams. */
+  areas?: Array<{ n: number; box: Box; head: Box; own: boolean; label: string }> | null;
+  /** In a step of teams: the person's own team's area, where a new note goes. null: anywhere. */
+  ownArea?: Box | null;
 };
 
 // The count of characters shows once the text comes near the limit: before, it would only be noise.
@@ -496,6 +501,8 @@ export const Surface = memo(function Surface({
   say,
   paused = false,
   motion,
+  areas = null,
+  ownArea = null,
 }: WallProps) {
   const { t } = useTranslation();
   const frame = useRef<HTMLDivElement>(null);
@@ -684,8 +691,10 @@ export const Surface = memo(function Surface({
   };
   const middle = (): Point => ({ x: metric.current.size.w / 2, y: metric.current.size.h / 2 });
 
-  // „Alles zeigen“ shows the notes and the frames: an empty group is part of the wall too
-  const fitAll = () => show(fit(everything(notes, groups), metric.current.size));
+  // „Alles zeigen“ shows the notes and the frames: an empty group is part of the wall too, and so is the head of a
+  // team's area (its number), not its empty rest, which would shrink the notes past reading
+  const fitAll = () =>
+    show(fit(everything(notes, [...groups, ...(areas ?? []).map((area) => area.head)]), metric.current.size));
   const zoomBy = (factor: number) => show(zoomAt(view.current, middle(), view.current.zoom * factor));
 
   // The first look: everything, before the first paint. From then on the view is the person's own.
@@ -961,7 +970,11 @@ export const Surface = memo(function Surface({
     // A place that was pointed at is taken as it is, also inside a frame: the note then belongs to that group. A
     // place the surface chooses lies outside every frame, where a note has no group.
     const taken = at === undefined ? [...notes.map(boxOf), ...groups] : notes.map(boxOf);
-    const spot = freeSpot(empty, taken, visible(next, size), toWorld(next, point));
+    // in a step of teams a note the surface places goes into the team's area (stage M4)
+    const spot =
+      at === undefined && ownArea !== null
+        ? freeSpot(empty, taken, ownArea, { x: ownArea.x + 16 + empty.w / 2, y: ownArea.y + 48 + empty.h / 2 })
+        : freeSpot(empty, taken, visible(next, size), toWorld(next, point));
     show(reveal(next, size, { ...spot, ...empty }));
     draft.current = "";
     drop();
@@ -1780,6 +1793,24 @@ export const Surface = memo(function Surface({
               data-gliding={glide.on ? "" : undefined}
               style={glide.on ? { ["--app-glide" as string]: `${GLIDE_MS}ms` } : undefined}
             >
+              {/* the teams' areas, under everything: where each team writes (stage M4). Drawn, not taken hold of:
+                  the list says the same with a heading per team */}
+              {areas?.map((area) => (
+                <div
+                  key={area.n}
+                  className="app-area"
+                  data-own={area.own ? "" : undefined}
+                  aria-hidden="true"
+                  style={{
+                    left: rem(area.box.x),
+                    top: rem(area.box.y),
+                    inlineSize: rem(area.box.w),
+                    blockSize: rem(area.box.h),
+                  }}
+                >
+                  <p className="app-area__head">{area.label}</p>
+                </div>
+              ))}
               {/* the frames first: a note always lies above the frame it lies in */}
               {groups.map((group) => {
                 const carriedNow = lifted !== null && lifted.what === "group" && lifted.id === group.id ? lifted : null;

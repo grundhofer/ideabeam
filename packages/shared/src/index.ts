@@ -15,6 +15,7 @@ export * from "./domain/method.js";
 export * from "./domain/names.js";
 export * from "./domain/note-size.js";
 export * from "./domain/rules.js";
+export * from "./domain/teams.js";
 export * from "./domain/visibility.js";
 export * from "./domain/vote.js";
 export * from "./domain/wall.js";

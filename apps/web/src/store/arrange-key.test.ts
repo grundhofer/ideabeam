@@ -79,6 +79,8 @@ const sync = (notes: Note[] = NOTES, groups: Group[] = []): ServerEvent => ({
   ballot: null,
   voted: 0,
   results: [],
+  teams: null,
+  manual: [],
 });
 
 const json = (status: number, body: unknown) =>

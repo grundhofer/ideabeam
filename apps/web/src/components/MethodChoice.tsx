@@ -4,14 +4,26 @@
 // short description, which a screen reader reads with the name (`aria-describedby`); a line of facts: the time, the
 // group size and the evidence level as a word in an outlined tag (never colour alone); and „Mehr dazu“, a key of its
 // own outside the label, so pressing it chooses nothing. „Mehr dazu“ opens under the row: when it fits, its steps
-// with their form, visibility and minutes, what supports it with what the level means, and the name it is known by.
+// with their form, visibility and minutes, what supports it with what the level means, the name it is known by, and
+// the attribution its licence asks for (Liberating Structures, CC BY-SA 4.0: „1-2-4-Alle“), with links to the source
+// and the licence.
 // The rule of PLAN-METHODEN.md 2: a method never stands here as a bare name (NewWall.test.tsx holds it).
 //
 // The words of the methods come from the shared package (packages/shared, methods/texts.ts), the words around them
 // from the string tables.
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
-import { CATALOGUE, METHOD_ORDER, METHOD_TEXTS, PURPOSES, type MethodId, type MethodLanguage } from "@ideabeam/shared";
+import {
+  CATALOGUE,
+  CC_BY_SA_URL,
+  LIBERATING_STRUCTURES_URL,
+  METHOD_ORDER,
+  METHOD_TEXTS,
+  methodAttribution,
+  PURPOSES,
+  type MethodId,
+  type MethodLanguage,
+} from "@ideabeam/shared";
 import { Icon } from "../sebaro/react/Icon";
 
 type Props = {
@@ -45,6 +57,7 @@ export function MethodChoice({ lang, value, onChange }: Props) {
               const texts = words.methods[method];
               const facts = CATALOGUE[method];
               const more = open === method;
+              const attribution = methodAttribution(lang, method);
               return (
                 <li key={method} className="app-method" data-method={method}>
                   <label className="sb-radio app-method__choice">
@@ -117,6 +130,18 @@ export function MethodChoice({ lang, value, onChange }: Props) {
                       <>
                         <h3 className="app-method__heading">{t("new.aka")}</h3>
                         <p>{texts.aka}</p>
+                      </>
+                    )}
+                    {attribution !== null && (
+                      <>
+                        <h3 className="app-method__heading">{t("new.attribution")}</h3>
+                        <p>
+                          {attribution.credit} {attribution.licence}
+                        </p>
+                        <p>
+                          <a href={LIBERATING_STRUCTURES_URL}>{t("new.source")}</a> ·{" "}
+                          <a href={CC_BY_SA_URL}>{t("new.licence")}</a>
+                        </p>
                       </>
                     )}
                   </div>

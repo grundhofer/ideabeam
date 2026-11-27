@@ -29,6 +29,9 @@ import { maySeeNote } from "./visibility.js";
 // renames, moves, resizes and deletes groups. A note's text is its writer's alone; deleting a note is its writer's
 // or an admin's. Applying an arrangement and taking it back are the moderation's (domain/arrange.ts).
 //
+// In a step of teams (stage M4) a person's team's notes are there for them as on a revealed wall (`shared`): they
+// move them, and change and delete their own; everybody else's are not on the wall for them, as while hidden.
+//
 // While they are hidden: everyone writes, and a person's notes are theirs alone. Nobody reads, changes, moves or
 // deletes a note of somebody else, the moderation included: to a command, such a note is not on the wall
 // (domain/visibility.ts), so the answer never says that it is. A hidden step does not sort: a command about a group
@@ -47,10 +50,11 @@ export type Placement = Pick<Note, "x" | "y" | "groupId">;
  *  worker answers each question with a look into its storage, and reads nothing the command does not need. `mine`
  *  is asked for whoever sent the command. */
 export interface WallReader {
-  /** A note's text and whether it is the sender's, or null: the wall holds no such note. */
-  note(id: string): Pick<Note, "mine" | "text"> | null;
+  /** A note's text and whether it is the sender's, or null: the wall holds no such note. `shared`: in a step of
+   *  teams, the note's writer shares a team with the sender that lets them read it (domain/teams.ts). */
+  note(id: string): (Pick<Note, "mine" | "text"> & { shared?: boolean }) | null;
   /** Where a note lies and whether it is the sender's, or null: the wall holds no such note. */
-  placement(id: string): (Placement & Pick<Note, "mine">) | null;
+  placement(id: string): (Placement & Pick<Note, "mine"> & { shared?: boolean }) | null;
   group(id: string): Group | null;
   /** How many notes the wall holds. */
   noteCount(): number;
@@ -93,7 +97,7 @@ export function mayDeleteNote(note: Pick<Note, "mine">, by: Pick<Actor, "role">)
  *  worker's when it stores, the browser's for what it shows meanwhile. */
 export function decide(wall: WallReader, command: ContentCommand, by: Actor, now: number, ctx: StepContext): Decision {
   // A note the sender may not read is not on the wall for them: no answer tells them otherwise.
-  const seen = <T extends Pick<Note, "mine">>(note: T | null): T | null =>
+  const seen = <T extends Pick<Note, "mine"> & { shared?: boolean }>(note: T | null): T | null =>
     note !== null && maySeeNote(ctx.sight, note) ? note : null;
   switch (command.type) {
     case "note.create": {

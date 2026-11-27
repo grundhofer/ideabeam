@@ -169,6 +169,18 @@ export function PrivacyDe() {
           Kennungen. Die kurze Begründung neben einer Schätzung ist ein Zettel wie jeder andere (oben): verdeckt, bis
           der nächste Schritt sie für alle zeigt, ohne Namen.
         </li>
+        <li>
+          <strong>Teams:</strong> in einer Methode mit Paaren oder Kleingruppen (etwa „1-2-4-Alle“) die Teams: welche
+          Kennungen von Personen in welchem Team sind, für welchen Schritt sie gebildet wurden, eine Zufallszahl, mit
+          der die Anwendung sie gebildet hat, und die Teams davor mit dem Zeitpunkt, zu dem sie abgelöst wurden (nach
+          einem Zusammenlegen oder einem Tausch durch die Moderation). Die Anwendung bildet die Teams zufällig aus
+          allen, die beim Beginn des Schritts verbunden sind; wer später kommt, kommt ins kleinste Team.{" "}
+          <strong>Die Zuordnung zu den Teams bleibt gespeichert, solange die Wand besteht</strong> (Abschnitt 3.3), auch
+          nach dem Schritt mit den Teams. In einem Schritt mit Teams sieht jede Person die Zettel ihres Teams, ohne
+          Namen; die Moderation sieht, wer in welchem Team ist, alle anderen nur ihr eigenes Team mit den Namen darin.
+          In einem Paar ist leicht zu erraten, wer welchen Zettel schrieb. Die Datei von „Als Markdown sichern“ nennt
+          nur, wie viele Teams es gab, nie wer darin war.
+        </li>
       </ul>
       <p>
         Zu jedem Zettel, zu jeder Gruppe und zur Lage der Zettel hält die Wand außerdem die laufende Nummer der letzten
@@ -181,7 +193,8 @@ export function PrivacyDe() {
         den Browser dieser Person. Alle anderen, auch die Moderation, bekommen von fremden Zetteln nur eine Zahl: wie
         viele es sind. Das Aufdecken ist Sache der Moderation, fragt vorher und lässt sich nicht zurücknehmen; danach
         sehen alle alle Zettel. Die Uhr der Schreibphase stellt nur die Moderation; alle sehen die Restzeit. Läuft sie
-        ab, geschieht nichts von selbst.
+        ab, geschieht nichts von selbst, außer in kurzen, getakteten Schritten wie denen von „1-2-4-Alle“: Dort geht die
+        Wand nach Ablauf der Uhr selbst zum nächsten Schritt, was die Moderation je Schritt abschalten kann.
       </p>
       <p>
         <strong>Verdeckt wählen.</strong> Gewählt wird im eigenen Browser; erst „Abgeben“ sendet den Stimmzettel an den
@@ -251,8 +264,9 @@ export function PrivacyDe() {
           Beitritt zählt auch das Wiederkommen und jede automatische Neuverbindung. Die Frist rückt höchstens einmal am
           Tag weiter; die Löschung liegt deshalb 29 bis 30 Tage nach dem letzten Beitritt. Tritt niemand bei, löscht
           sich die Wand 30 Tage nach dem Anlegen. Die Anwendung löscht dabei den gesamten Speicher der Wand, mit allen
-          Zetteln, Gruppen, Stimmzetteln und Ergebnissen. Bis dahin bleiben die Stimmzettel je Person gespeichert. Der
-          Link führt danach zu „Unbekannte Wand“, wie bei einer Wand, die es nie gab.
+          Zetteln, Gruppen, Stimmzetteln, Teams und Ergebnissen. Bis dahin bleiben die Stimmzettel je Person und die
+          Zuordnung zu den Teams gespeichert. Der Link führt danach zu „Unbekannte Wand“, wie bei einer Wand, die es nie
+          gab.
         </li>
         <li>
           Die Moderation kann die Wand <strong>jederzeit löschen</strong> („Wand löschen“): sofort und vollständig, mit

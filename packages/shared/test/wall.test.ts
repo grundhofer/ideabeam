@@ -77,6 +77,8 @@ const sync: Sync = {
   ballot: null,
   voted: 0,
   results: [],
+  teams: null,
+  manual: [],
 };
 
 /** A wall this browser is on as Ben, with what it holds and the number it stands at. */

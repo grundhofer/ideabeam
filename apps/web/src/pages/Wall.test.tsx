@@ -46,6 +46,8 @@ const sync = (participants: Participant[], notes: Note[] = [], groups: Group[] =
   ballot: null,
   voted: 0,
   results: [],
+  teams: null,
+  manual: [],
 });
 
 /** A note on the wall, the n-th one made. */

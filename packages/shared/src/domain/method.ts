@@ -11,11 +11,12 @@ import { voteConfigSchema } from "./vote.js";
 //
 // Stage M1 built the engine and two methods with it: „Still sammeln, bündeln, verdeckt wählen“ and „Freie Wand“;
 // stage M2 gave the first its vote (domain/vote.ts); stage M3 brought estimating in rounds and the method
-// „Schätzen – Diskutieren – Schätzen“. The enums already name what the later stages bring (votes, pairs, small groups), so
-// that a wall's stored copy of its agenda keeps one shape from now on.
+// „Schätzen – Diskutieren – Schätzen“; stage M4 pairs and small groups (`team`, domain/teams.ts), steps that move on by
+// themselves when their time is up (`advance: "auto"`) and the method „1-2-4-Alle“. The enums already name what the
+// later stages bring, so that a wall's stored copy of its agenda keeps one shape from now on.
 
 /** The ids of the methods in the catalogue. A method is never renamed: a wall stores the id. */
-export const METHOD_IDS = ["still-sammeln", "schaetzen", "free"] as const;
+export const METHOD_IDS = ["still-sammeln", "eins-zwei-vier", "schaetzen", "free"] as const;
 export const methodIdSchema = z.enum(METHOD_IDS);
 export type MethodId = z.infer<typeof methodIdSchema>;
 
@@ -83,6 +84,19 @@ export const MAX_STEPS = 60;
 
 const stepKeySchema = z.string().check(z.regex(/^[a-z][a-zA-Z0-9]{0,31}$/));
 
+/** The largest team a step forms. */
+export const TEAM_MAX_SIZE = 7;
+
+/** How a step in pairs or small groups gets its teams (stage M4, domain/teams.ts): `size` is the size it aims at
+ *  (a count that does not divide makes some teams one larger, never a team of 1); `form` says where they come
+ *  from: `random`, the app forms them anew from the people present, at random; `merge`, the teams of the step
+ *  before are put together two by two (pairs become fours). */
+export const teamSettingsSchema = z.object({
+  size: z.int().check(z.minimum(2), z.maximum(TEAM_MAX_SIZE)),
+  form: z.enum(["random", "merge"]),
+});
+export type TeamSettings = z.infer<typeof teamSettingsSchema>;
+
 /** One step of a method, as the catalogue has it and a wall stores it. */
 export const stepSchema = z.object({
   /** The step's text key within its method: its words are `<methodId>.<key>` (methods/texts.ts). */
@@ -92,8 +106,10 @@ export const stepSchema = z.object({
   visibility: stepVisibilitySchema,
   /** The suggested time, or null: the step has none. */
   durationSec: z.nullable(z.int().check(z.minimum(0), z.maximum(STEP_MAX_SECONDS))),
-  /** Who moves on: the moderation presses „Weiter“ (the owner's decision 2). `auto` comes with the short, timed
-   *  methods (M4); no step of M1 has it. */
+  /** Who moves on: the moderation presses „Weiter“ (the owner's decision 2). `auto`, only in short, timed methods
+   *  (stage M4, „1-2-4-Alle“): when the step's clock runs out, the wall moves to the next step by itself, through the
+   *  object's one alarm (domain/flow.ts, `nextAlarm`); entering such a step forward starts its clock from
+   *  `durationSec`, and the moderation can pause the clock or switch the step's moving on off (`manual`). */
   advance: z.enum(["moderation", "auto"]),
   output: outputKindSchema,
   /** How a step of type `vote`, `rank` or `score` is voted (domain/vote.ts): a step votes if and only if it has one
@@ -102,6 +118,9 @@ export const stepSchema = z.object({
   /** The step takes notes of this kind beside its vote (`capabilities`, domain/agenda.ts): the reasons beside the
    *  first estimate. Left out: notes only where the step's type is about notes. */
   noteKind: z.optional(noteKindSchema),
+  /** A step in pairs or small groups: how its teams are formed (domain/teams.ts). Its notes are seen by the
+   *  writer's team (`visibility: "team"`). */
+  team: z.optional(teamSettingsSchema),
 });
 export type Step = z.infer<typeof stepSchema>;
 
@@ -117,6 +136,7 @@ export interface Method {
   /** How many people it is made for, from and to. */
   groupSize: readonly [min: number, max: number];
   evidence: Evidence;
-  /** A licence that asks for a visible attribution (PLAN-METHODEN.md 7, question 6). None in M1. */
+  /** A licence that asks for a visible attribution (PLAN-METHODEN.md 7, question 6): „1-2-4-Alle“ (stage M4). The
+   *  words of the attribution stand in methods/texts.ts (`ATTRIBUTION`). */
   attribution?: "liberatingStructures";
 }

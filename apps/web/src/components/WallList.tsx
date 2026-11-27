@@ -6,6 +6,10 @@
 // While the notes are hidden the list holds a person's own notes, under „Deine Zettel“, and says in one line how many
 // the others have written (HiddenNotes.tsx).
 //
+// Once the wall has teams (stage M4), the notes without a group that lie in a team's area stand under that team's
+// heading („Team 3“, the person's own „Team 3 · dein Team“), before the others; in a step of teams a note written here
+// goes into the person's own team's area. No heading names who is in a team: the step's head says that to the team.
+//
 // While the moderation waits for a proposal of the AI or looks at one (`paused`), the list shows and changes nothing:
 // its rows and headings have no menus. A proposal's groups stand in it as its headings, like any group.
 //
@@ -25,7 +29,7 @@ import {
   type Note,
 } from "@ideabeam/shared";
 import { changing, looseFrame, looseSpot, movedToAnywhere } from "../lib/surface/groups";
-import { sizeOf } from "../lib/surface/notes";
+import { boxOf, freeSpot, sizeOf } from "../lib/surface/notes";
 import { Field } from "../sebaro/react/Field";
 import { Icon } from "../sebaro/react/Icon";
 import { MenuButton, type MenuEntry } from "../sebaro/react/Menu";
@@ -205,6 +209,8 @@ export const WallList = memo(function WallList({
   onDismiss,
   say,
   paused = false,
+  areas = null,
+  ownArea = null,
 }: WallProps) {
   const { t } = useTranslation();
   const root = useRef<HTMLElement>(null);
@@ -268,12 +274,31 @@ export const WallList = memo(function WallList({
     }
     return { inGroup: sorted, loose: rest };
   }, [notes, groups]);
+  // the notes without a group that lie in a team's area, by team; the rest stay under the heading of their own
+  const { inArea, outside } = useMemo(() => {
+    const byArea = new Map<number, Note[]>();
+    const rest: Note[] = [];
+    for (const note of loose) {
+      const area = areas?.find(
+        ({ box }) => note.x >= box.x && note.x < box.x + box.w && note.y >= box.y && note.y < box.y + box.h,
+      );
+      if (area === undefined) rest.push(note);
+      else byArea.set(area.n, [...(byArea.get(area.n) ?? []), note]);
+    }
+    return { inArea: byArea, outside: rest };
+  }, [loose, areas]);
 
   // every row's menu has a number of its own, in the order the rows stand in
   const order = useMemo(
     () =>
-      new Map([...groups.flatMap((group) => inGroup.get(group.id) ?? []), ...loose].map((note, n) => [note.id, n + 1])),
-    [groups, inGroup, loose],
+      new Map(
+        [
+          ...groups.flatMap((group) => inGroup.get(group.id) ?? []),
+          ...(areas ?? []).flatMap((area) => inArea.get(area.n) ?? []),
+          ...outside,
+        ].map((note, n) => [note.id, n + 1]),
+      ),
+    [groups, inGroup, areas, inArea, outside],
   );
 
   useImperativeHandle(ref, () => ({
@@ -308,7 +333,14 @@ export const WallList = memo(function WallList({
     }
     if (text === "") return backToOpener();
     const noteId = generateHexId();
-    const spot = looseSpot(sizeOf(text), notes, groups);
+    // in a step of teams: in the person's own team's area
+    const spot =
+      ownArea === null
+        ? looseSpot(sizeOf(text), notes, groups)
+        : freeSpot(sizeOf(text), notes.map(boxOf), ownArea, {
+            x: ownArea.x + 16 + sizeOf(text).w / 2,
+            y: ownArea.y + 48 + sizeOf(text).h / 2,
+          });
     send({ type: "note.create", opId: generateHexId(), noteId, text, x: spot.x, y: spot.y });
     focusNext.current = rowMenu(noteId);
   };
@@ -491,17 +523,40 @@ export const WallList = memo(function WallList({
           <TitleEditor before="" onDone={(written) => saveGroup(null, written)} />
         </section>
       )}
-      {(loose.length > 0 || writingNew) && (
+      {areas?.map((area) => {
+        const rows = inArea.get(area.n) ?? [];
+        if (rows.length === 0) return null;
+        const heading = `app-list-team-${area.n}`;
+        return (
+          <section key={area.n} aria-labelledby={heading}>
+            <div className="app-list__head">
+              <h2 className="sb-list-header" id={heading} tabIndex={-1}>
+                {area.label} <span className="sb-list-header__count">{rows.length}</span>
+              </h2>
+            </div>
+            <ul className="sb-list" aria-labelledby={heading}>
+              {rows.map(noteRow)}
+            </ul>
+          </section>
+        );
+      })}
+      {(outside.length > 0 || writingNew) && (
         <section aria-labelledby={headingId(null)}>
           <div className="app-list__head">
             {/* on a wall without groups these are simply its notes; while the notes are hidden, one's own */}
             <h2 className="sb-list-header" id={headingId(null)} tabIndex={-1}>
-              {groups.length > 0 ? t("list.ungrouped") : hidden === null ? t("list.notes") : t("list.own")}{" "}
-              <span className="sb-list-header__count">{loose.length}</span>
+              {groups.length > 0
+                ? t("list.ungrouped")
+                : hidden === null
+                  ? t("list.notes")
+                  : areas !== null
+                    ? t("list.ownTeam")
+                    : t("list.own")}{" "}
+              <span className="sb-list-header__count">{outside.length}</span>
             </h2>
           </div>
           <ul className="sb-list" aria-labelledby={headingId(null)}>
-            {loose.map(noteRow)}
+            {outside.map(noteRow)}
             {writingNew && (
               <li className="sb-list-row app-list__row">
                 <NoteEditor before="" onDone={(text) => saveNote(null, text)} />

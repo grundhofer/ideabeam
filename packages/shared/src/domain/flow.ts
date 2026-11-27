@@ -1,7 +1,7 @@
 // SPDX-FileCopyrightText: 2026 Sebastian Grundhöfer
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import type { Clock, RejectCode, StepCommand } from "../protocol.js";
+import type { AutoCommand, Clock, RejectCode, StepCommand } from "../protocol.js";
 import { agendaOf, capabilities, noteLevel, type Capabilities, type NoteLevel, type ResolvedAgenda } from "./agenda.js";
 import { NO_CLOCK, stoppedClock } from "./clock.js";
 import type { Actor } from "./rules.js";
@@ -32,6 +32,9 @@ export interface Flow {
    *  the wall has moved on: going back and forth neither freezes the options again nor opens a counted vote. Left
    *  out while there is none. No ballot stands here: they have a table of their own. */
   votes?: VoteRound[];
+  /** The steps that move on by themselves (`advance: "auto"`) whose moving on the moderation has switched off
+   *  (stage M4): there the wall waits for „Weiter“ when the time is up. Left out while there is none. */
+  manual?: number[];
 }
 
 /** The row as the builds before methods wrote it (schema 3): the phase and the clock. */
@@ -65,6 +68,7 @@ export function readStoredFlow(stored: unknown, agenda: ResolvedAgenda | null): 
       clock: value.clock ?? NO_CLOCK,
       seq: value.seq ?? 0,
       ...(Array.isArray(value.votes) && value.votes.length > 0 ? { votes: value.votes } : {}),
+      ...(Array.isArray(value.manual) && value.manual.length > 0 ? { manual: value.manual } : {}),
     };
     return { flow, legacy: agenda === null ? agendaOf("still-sammeln") : null };
   }
@@ -120,7 +124,8 @@ export type StepDecision =
   | { kind: "changed"; flow: Pick<Flow, "step" | "reach" | "clock">; widens: boolean; opens: boolean };
 
 /** What the moderation's `admin.step.go` makes of a wall's flow (docs/architektur-methoden.md 4): forward, back or
- *  past a step, the moderation's alone. `from` names the step the command was made in: sent a second time, it finds
+ *  past a step, the moderation's alone. Forward into a step that moves on by itself (stage M4), the step's clock
+ *  starts with its time at `now`; every other move stops the clock. `from` names the step the command was made in: sent a second time, it finds
  *  the wall in its `to` and changes nothing; made for a step the wall has left meanwhile, it is refused (`STALE`).
  *  A step move stops the clock, as revealing did. Going back keeps `reach`: nothing is hidden again. */
 export function decideStep(
@@ -128,15 +133,21 @@ export function decideStep(
   agenda: Pick<ResolvedAgenda, "steps">,
   command: Pick<StepCommand, "from" | "to">,
   by: Pick<Actor, "role">,
+  now?: number,
 ): StepDecision {
   if (by.role !== "admin") return { kind: "refused", code: "NOT_ADMIN" };
   if (command.to >= agenda.steps.length) return { kind: "refused", code: "INVALID" };
   if (flow.step === command.to) return { kind: "unchanged" };
   if (flow.step !== command.from) return { kind: "refused", code: "STALE" };
   const reach = Math.max(flow.reach, command.to);
+  const into = agenda.steps[command.to];
+  const timed =
+    now !== undefined && command.to > flow.step && into?.advance === "auto" && into.durationSec !== null
+      ? { rev: flow.clock.rev + 1, endsAt: now + into.durationSec * 1000, leftMs: null }
+      : null;
   return {
     kind: "changed",
-    flow: { step: command.to, reach, clock: stoppedClock(flow.clock) },
+    flow: { step: command.to, reach, clock: timed ?? stoppedClock(flow.clock) },
     widens: noteLevel(agenda.steps, reach) !== noteLevel(agenda.steps, flow.reach),
     opens: agenda.steps[command.to]?.vote !== undefined && roundOf(flow.votes, command.to) === null,
   };
@@ -146,4 +157,61 @@ export function decideStep(
  *  cannot be undone. */
 export function stepWidens(agenda: Pick<ResolvedAgenda, "steps">, flow: Pick<Flow, "reach">, to: number): boolean {
   return noteLevel(agenda.steps, Math.max(flow.reach, to)) !== noteLevel(agenda.steps, flow.reach);
+}
+
+// ───────────────────────── moving on by itself ─────────────────────────
+
+/** When the step the wall is in moves on by itself, or null: it does not (it waits for „Weiter“, its clock is not
+ *  running, the moderation switched its moving on off, or it is the last step). The moment is the end of the
+ *  step's clock: pausing the clock stops it, „5 Minuten mehr“ moves it (stage M4). */
+export function autoAt(
+  agenda: Pick<ResolvedAgenda, "steps">,
+  flow: Pick<Flow, "step" | "clock" | "manual">,
+): number | null {
+  const step = agenda.steps[flow.step];
+  if (step === undefined || step.advance !== "auto" || flow.step + 1 >= agenda.steps.length) return null;
+  if ((flow.manual ?? []).includes(flow.step)) return null;
+  if (flow.clock.leftMs !== null || flow.clock.endsAt === null) return null;
+  return flow.clock.endsAt;
+}
+
+/** The moment the object's one alarm is to ring (docs/architektur-methoden.md 3.3): the day the wall deletes itself,
+ *  or before it the moment the step moves on by itself. */
+export function nextAlarm(
+  retentionAt: number,
+  agenda: Pick<ResolvedAgenda, "steps">,
+  flow: Pick<Flow, "step" | "clock" | "manual">,
+): number {
+  const at = autoAt(agenda, flow);
+  return at === null ? retentionAt : Math.min(retentionAt, at);
+}
+
+/** What the alarm makes of the flow at `now`: the move to the next step, as if the moderation had pressed „Weiter“,
+ *  or null: nothing is due. An alarm that rings late finds the step moved on already, or the time moved: it does
+ *  nothing; one that rings twice finds the next step, whose time has not run out. */
+export function decideAuto(flow: Flow, agenda: Pick<ResolvedAgenda, "steps">, now: number): StepDecision | null {
+  const at = autoAt(agenda, flow);
+  if (at === null || now < at) return null;
+  return decideStep(flow, agenda, { from: flow.step, to: flow.step + 1 }, { role: "admin" }, now);
+}
+
+/** What the moderation's `admin.step.auto` makes of the flow: a step that moves on by itself does so (`on`) or waits
+ *  for „Weiter“. The flow's new list of such steps, or a refusal, or null: it is so already. */
+export function decideAutoSwitch(
+  flow: Flow,
+  agenda: Pick<ResolvedAgenda, "steps">,
+  command: Pick<AutoCommand, "step" | "on">,
+  by: Pick<Actor, "role">,
+): { kind: "refused"; code: RejectCode } | { kind: "unchanged" } | { kind: "changed"; manual: number[] } {
+  if (by.role !== "admin") return { kind: "refused", code: "NOT_ADMIN" };
+  if (agenda.steps[command.step]?.advance !== "auto") return { kind: "refused", code: "INVALID" };
+  const manual = flow.manual ?? [];
+  const off = manual.includes(command.step);
+  if (off !== command.on) return { kind: "unchanged" };
+  return {
+    kind: "changed",
+    manual: command.on
+      ? manual.filter((step) => step !== command.step)
+      : [...manual, command.step].sort((a, b) => a - b),
+  };
 }

@@ -4,39 +4,51 @@
 import { DurableObject } from "cloudflare:workers";
 import {
   agendaFor,
+  changedTeams,
   countedRounds,
   decide,
+  decideAuto,
+  decideAutoSwitch,
   decideBallot,
   decideClock,
   decideCount,
   decideStep,
+  decideTeamsSet,
+  enterTeams,
   displayNameKey,
   eventFor,
   exportFileName,
   hiddenChange,
   initialFlow,
   joinNotice,
+  layoutIntoAreas,
   MAX_FRAME_BYTES,
   MAX_ONLINE,
   MAX_PARTICIPANTS,
+  maySeeStored,
   methodOfStep,
+  nextAlarm,
   notesFor,
   numbersOf,
   openRound,
+  placeLatecomer,
   planJoin,
   PROTOCOL_VERSION,
   readClientFrame,
   readStoredFlow,
   revealedFor,
   roundOf,
+  shareTeam,
   stepContext,
   tally,
+  teamViewFor,
   WALL_DAILY_ROWS,
   wallBrake,
   wallMarkdown,
   type AgendaRequest,
   type ArrangeLanguage,
   type ArrangeRecord,
+  type AutoCommand,
   type Ballot,
   type BallotCommand,
   type ClientCommand,
@@ -54,9 +66,13 @@ import {
   type RejectCode,
   type ResolvedAgenda,
   type ServerEvent,
+  type Sight,
   type StepCommand,
   type StepContext,
+  type StepDecision,
   type StoredNote,
+  type Teams,
+  type TeamsCommand,
   type TitleSource,
   type VoteOption,
   type VoteResult,
@@ -373,6 +389,8 @@ export class WallRoom extends DurableObject<Env> {
       groups: content.groups,
       // the counted votes' rankings, never a ballot
       results: this.readResults(flow.votes),
+      // who sees what in a step of teams, and how many teams there were: never who was in them
+      teams: this.readTeams(),
       viewer: String(row.id),
       at,
       language,
@@ -480,7 +498,13 @@ export class WallRoom extends DurableObject<Env> {
         this.handleContent(ws, participant, command);
         return;
       case "admin.step.go":
-        this.handleStep(ws, participant, command);
+        await this.handleStep(ws, participant, command);
+        return;
+      case "admin.step.auto":
+        await this.handleAuto(ws, participant, command);
+        return;
+      case "admin.teams.set":
+        this.handleTeams(ws, participant, command);
         return;
       case "ballot.cast":
         this.handleBallot(ws, participant, command);
@@ -493,7 +517,7 @@ export class WallRoom extends DurableObject<Env> {
       case "admin.clock.resume":
       case "admin.clock.extend":
       case "admin.clock.clear":
-        this.handleClock(ws, participant, command);
+        await this.handleClock(ws, participant, command);
         return;
     }
   }
@@ -590,9 +614,13 @@ export class WallRoom extends DurableObject<Env> {
     }
 
     ws.serializeAttachment({ ...readAttachment(ws), participantId: participant.id } satisfies SocketAttachment);
+    // In a step of teams, somebody who is in none joins the smallest (stage M4): before the snapshot, which then
+    // holds their team; the others hear of it after it.
+    const late = this.placeLatecomer(participant.id, now);
     this.sendSync(ws, participant.id);
     const notice = joinNotice({ before: existing, after: participant, wasOnline });
     if (notice !== null) this.broadcast(notice, ws);
+    if (late !== null) this.tellTeams(late.before, late.after, ws);
     await this.keepWall(now);
   }
 
@@ -670,8 +698,10 @@ export class WallRoom extends DurableObject<Env> {
     }
     // the next number; an arrangement takes as many as the rows it writes, and carries the last of them
     const event = { ...decision.change, seq: seq + numbersOf(decision.change) } as ContentEvent;
+    // in a step of teams: who may read the notes the change is about, read before a delete takes them away
+    const sees = ctx.sight === "team" ? this.seesFor(event, participant.id) : undefined;
     this.store(event, wall, participant.id, brake.fresh ? brake.mark : null, decision.record);
-    this.publish(event, participant.id, ctx);
+    this.publish(event, participant.id, ctx, sees);
     this.ack(ws, command.opId, event.seq);
   }
 
@@ -682,18 +712,38 @@ export class WallRoom extends DurableObject<Env> {
     let read: Positions | null = null;
     const positions = (): Positions => (read ??= this.readPositions().positions);
     let arranged: ArrangeRecord | null | undefined;
+    // in a step of teams: whether a note's writer shares a team with the sender (stage M4); the row is read once,
+    // and only where a note of somebody else is asked about
+    let teams: Teams | null | undefined;
+    const shared = (author: string, createdAt: number): boolean =>
+      author !== participantId && shareTeam((teams ??= this.readTeams()), author, participantId, createdAt);
     return {
       positions,
       note: (id) => {
-        const row = this.sql.exec("SELECT author_id, text FROM notes WHERE id = ?", id).toArray()[0];
-        return row === undefined ? null : { mine: String(row.author_id) === participantId, text: String(row.text) };
+        const row = this.sql.exec("SELECT author_id, text, created_at FROM notes WHERE id = ?", id).toArray()[0];
+        if (row === undefined) return null;
+        const author = String(row.author_id);
+        const createdAt = Number(row.created_at);
+        // asked by the rules in a step of teams alone: a getter, so no other step reads the teams' row
+        return {
+          mine: author === participantId,
+          text: String(row.text),
+          get shared() {
+            return shared(author, createdAt);
+          },
+        };
       },
       placement: (id) => {
-        const row = this.sql.exec("SELECT author_id, x0, y0 FROM notes WHERE id = ?", id).toArray()[0];
+        const row = this.sql.exec("SELECT author_id, x0, y0, created_at FROM notes WHERE id = ?", id).toArray()[0];
         if (row === undefined) return null;
+        const author = String(row.author_id);
+        const createdAt = Number(row.created_at);
         return {
           ...placementOf(Number(row.x0), Number(row.y0), positions()[id]),
-          mine: String(row.author_id) === participantId,
+          mine: author === participantId,
+          get shared() {
+            return shared(author, createdAt);
+          },
         };
       },
       group: (id) => {
@@ -894,7 +944,7 @@ export class WallRoom extends DurableObject<Env> {
          )`,
       )
       .one();
-    return Math.max(Number(row.seq ?? 0), this.readFlow().flow.seq, this.ballotSeq());
+    return Math.max(Number(row.seq ?? 0), this.readFlow().flow.seq, this.ballotSeq(), this.readTeams()?.seq ?? 0);
   }
 
   // ───────────────────────── the step, the clock, the brake ─────────────────────────
@@ -911,37 +961,100 @@ export class WallRoom extends DurableObject<Env> {
    *  Into a step that votes (stage M2), the first time: its options are frozen into the same row (`openRound`,
    *  packages/shared/src/domain/vote.ts), and the step's frame carries its vote, how many have voted in it and each
    *  person's own ballot in it, so every browser gets a frame of its own there. */
-  private handleStep(ws: WebSocket, participant: Participant, command: StepCommand): void {
+  private async handleStep(ws: WebSocket, participant: Participant, command: StepCommand): Promise<void> {
+    const now = Date.now();
     const state = this.readFlow();
-    const decision = decideStep(state.flow, state.agenda, command, participant);
+    const decision = decideStep(state.flow, state.agenda, command, participant, now);
     if (decision.kind === "refused") {
       this.reject(ws, command.opId, decision.code);
       return;
     }
-    const seq = this.currentSeq();
     if (decision.kind === "unchanged") {
-      this.ack(ws, command.opId, seq);
+      this.ack(ws, command.opId, this.currentSeq());
       return;
     }
-    const changedSeq = decision.widens ? seq + 2 : seq + 1;
-    // Into a step that votes for the first time: what may be chosen is frozen now, in the same row (stage M2).
+    const changedSeq = await this.moveStep(state, decision, now);
+    this.ack(ws, command.opId, changedSeq);
+  }
+
+  /** Stores a step move and tells everyone: the moderation's (handleStep()) or the alarm's, when a step that moves on
+   *  by itself has run out of time (alarm()). Returns the number the step's frame carries.
+   *
+   *  Into a step of teams (stage M4, packages/shared/src/domain/teams.ts) the teams are formed from the people
+   *  present (the open sockets), with a seed from `crypto.getRandomValues`, or merged, or the step's teams of before
+   *  come back; they are written in the transaction of the flow, one row more. Teams that change widen what is seen:
+   *  every browser then gets the notes it may read from now on and could not before (`notes.revealed`, exactly the
+   *  difference, with how many stay hidden from it), and its step frame carries the teams as it is told them: the
+   *  moderation the map, everybody else their own team. A step that moves on by itself starts its clock, and the
+   *  alarm is set for its end (armAlarm()). */
+  private async moveStep(
+    state: FlowState,
+    decision: Extract<StepDecision, { kind: "changed" }>,
+    now: number,
+  ): Promise<number> {
+    const seq = this.currentSeq();
     const to = decision.flow.step;
+    const before = this.readTeams();
+    const formed = enterTeams(before, state.agenda.steps[to] ?? {}, to, [...this.onlineIds()], randomSeed(), now);
+    const widens = decision.widens || formed !== null;
+    const changedSeq = widens ? seq + 2 : seq + 1;
+    const teams = formed === null ? before : { ...formed, seq: changedSeq };
+    // Into a step that votes for the first time: what may be chosen is frozen now, in the same row (stage M2).
     const config = state.agenda.steps[to]?.vote;
-    const content = decision.widens || decision.opens ? this.readContent() : null;
+    const content = widens || decision.opens ? this.readContent() : null;
+    // Teams formed anew: every note written alone goes into its writer's team's area (`layoutIntoAreas`), one
+    // movement in the layout row, written with the flow. What the browsers get below lies where it lies now.
+    const moves = formed === null || content === null ? [] : layoutIntoAreas(content.notes, formed);
+    if (content !== null && moves.length > 0) {
+      const to = new Map(moves.map((move) => [move.noteId, move]));
+      content.notes = content.notes.map((note) => {
+        const move = to.get(note.id);
+        return move === undefined ? note : { ...note, x: move.x, y: move.y, groupId: null };
+      });
+    }
     let votes = state.flow.votes;
     if (decision.opens && config !== undefined && content !== null) {
       const sight = stepContext(state.agenda, decision.flow).sight;
       votes = [...(votes ?? []), openRound(to, config, content, sight === "all")];
     }
-    this.writeFlow(state, { v: 2, ...decision.flow, seq: changedSeq, ...(votes === undefined ? {} : { votes }) });
+    const flow: Flow = {
+      v: 2,
+      ...decision.flow,
+      seq: changedSeq,
+      ...(votes === undefined ? {} : { votes }),
+      ...(state.flow.manual === undefined ? {} : { manual: state.flow.manual }),
+    };
+    this.writeFlow(
+      state,
+      flow,
+      formed === null
+        ? undefined
+        : () => {
+            this.setMeta("teams", JSON.stringify(teams));
+            if (moves.length === 0) return;
+            const { positions } = this.readPositions();
+            for (const move of moves) positions[move.noteId] = [move.x, move.y, null];
+            this.writePositions(positions, changedSeq);
+          },
+    );
+    await this.armAlarm(state.agenda, flow);
     // A step that votes: every browser gets its vote, how many have voted in it, and its own ballot in it (one
     // voted there before the wall left the step). Nobody else's.
     const round = roundOf(votes, to);
     const ballots = round === null ? null : this.readBallots(to);
+    const admins = teams === null ? null : this.admins();
+    const started = decision.flow.clock.endsAt !== null;
+    // the movements of the notes a person may read after the move: their own, and their team's
+    const after: Sight = { level: stepContext(state.agenda, decision.flow).sight, teams };
+    const writers = new Map((content?.notes ?? []).map((note) => [note.id, note]));
+    const movedFor = (viewer: string) =>
+      moves.filter((move) => {
+        const note = writers.get(move.noteId);
+        return note !== undefined && maySeeStored(note, after.level, viewer, after.teams);
+      });
     const changedFor = new Map<string, string>();
     const changed = (viewer: string): string => {
-      const key = ballots === null || !ballots.has(viewer) ? "" : viewer;
-      let frame = changedFor.get(key);
+      let frame = changedFor.get(viewer);
       if (frame === undefined) {
         const event: ServerEvent = {
           type: "step.changed",
@@ -951,30 +1064,181 @@ export class WallRoom extends DurableObject<Env> {
           ...(round === null || ballots === null
             ? {}
             : { round, voted: ballots.size, ballot: ballots.get(viewer) ?? null }),
+          ...(teams === null || admins === null ? {} : { team: teamViewFor(teams, viewer, admins.has(viewer)) }),
+          ...(movedFor(viewer).length === 0 ? {} : { moves: movedFor(viewer) }),
+          ...(started ? { clock: decision.flow.clock, serverNow: now } : {}),
         };
         frame = JSON.stringify(event);
-        changedFor.set(key, frame);
+        changedFor.set(viewer, frame);
       }
       return frame;
     };
-    if (!decision.widens || content === null) {
+    if (!widens || content === null) {
       this.deliver(changedSeq, (viewer) => ({ frames: [changed(viewer)] }));
-      this.ack(ws, command.opId, changedSeq);
-      return;
+      return changedSeq;
     }
     const { notes } = content;
+    const was: Sight = { level: stepContext(state.agenda, state.flow).sight, teams: before };
+    const will: Sight = { level: stepContext(state.agenda, decision.flow).sight, teams };
     // one text per person, however many tabs they have open
-    const revealed = new Map<string, string>();
+    const revealed = new Map<string, { frame: string; hidden: number }>();
     this.deliver(changedSeq, (viewer) => {
-      let frame = revealed.get(viewer);
-      if (frame === undefined) {
-        const event: ServerEvent = { type: "notes.revealed", seq: seq + 1, notes: revealedFor(notes, viewer) };
-        frame = JSON.stringify(event);
-        revealed.set(viewer, frame);
+      let told = revealed.get(viewer);
+      if (told === undefined) {
+        const hidden = hiddenAt(notes, will, viewer);
+        const event: ServerEvent = {
+          type: "notes.revealed",
+          seq: seq + 1,
+          notes: revealedFor(notes, viewer, was, will),
+          ...(will.level === "all" ? {} : { hidden }),
+        };
+        told = { frame: JSON.stringify(event), hidden };
+        revealed.set(viewer, told);
       }
-      return { frames: [frame, changed(viewer)], hidden: 0 };
+      return { frames: [told.frame, changed(viewer)], hidden: told.hidden };
     });
-    this.ack(ws, command.opId, changedSeq);
+    return changedSeq;
+  }
+
+  /** The moderation swaps or moves people between the teams of the step (`admin.teams.set`, stage M4): the rules
+   *  decide (domain/teams.ts, `decideTeamsSet`), this stores the teams (one row) and tells everyone
+   *  (`team.changed`, tellTeams()). The grouping before is kept, so whoever moved keeps what they saw. Never refused
+   *  by the brake, like every move of the moderation's. */
+  private handleTeams(ws: WebSocket, participant: Participant, command: TeamsCommand): void {
+    const now = Date.now();
+    const { flow, agenda } = this.readFlow();
+    const current = this.readTeams();
+    const decision = decideTeamsSet(
+      current,
+      { at: flow.step, team: agenda.steps[flow.step]?.team !== undefined },
+      command,
+      participant,
+      now,
+    );
+    if (decision.kind === "refused") {
+      this.reject(ws, command.opId, decision.code);
+      return;
+    }
+    if (decision.kind === "unchanged" || current === null) {
+      this.ack(ws, command.opId, this.currentSeq());
+      return;
+    }
+    const seq = this.tellTeams(current, decision.teams);
+    this.ack(ws, command.opId, seq);
+  }
+
+  /** Somebody joined in a step of teams and is in none of its teams: they join the smallest (`placeLatecomer`), one
+   *  row written. The teams before and after, or null: nothing changed. The caller tells the others
+   *  (tellTeams()) once the person has their snapshot. */
+  private placeLatecomer(participantId: string, now: number): { before: Teams; after: Teams } | null {
+    const current = this.readTeams();
+    if (current === null) return null;
+    const { flow, agenda } = this.readFlow();
+    if (agenda.steps[flow.step]?.team === undefined || current.step !== flow.step) return null;
+    const placed = placeLatecomer(current.teams, participantId);
+    if (placed === null) return null;
+    const after = { ...changedTeams(current, placed, now), seq: this.currentSeq() + 1 };
+    this.setMeta("teams", JSON.stringify(after));
+    return { before: current, after };
+  }
+
+  /** Stores teams that changed within a step (unless they are stored: `after.seq` set by the caller) and tells every
+   *  browser, but `exclude`: its teams as it is told them, the notes it may read from now on and could not before,
+   *  and how many stay hidden from it (`team.changed`). Returns the change's number. */
+  private tellTeams(before: Teams, after: Teams, exclude?: WebSocket): number {
+    const seq = after.seq > before.seq ? after.seq : this.currentSeq() + 1;
+    const stored = { ...after, seq };
+    if (after.seq <= before.seq) this.setMeta("teams", JSON.stringify(stored));
+    const { notes } = this.readContent();
+    const level = this.stepNow().sight;
+    const admins = this.admins();
+    const told = new Map<string, { frame: string; hidden: number }>();
+    this.deliver(
+      seq,
+      (viewer) => {
+        let frame = told.get(viewer);
+        if (frame === undefined) {
+          const will: Sight = { level, teams: stored };
+          const hidden = hiddenAt(notes, will, viewer);
+          const event: ServerEvent = {
+            type: "team.changed",
+            seq,
+            team: teamViewFor(stored, viewer, admins.has(viewer)),
+            notes: revealedFor(notes, viewer, { level, teams: before }, will),
+            hidden,
+          };
+          frame = { frame: JSON.stringify(event), hidden };
+          told.set(viewer, frame);
+        }
+        return { frames: [frame.frame], hidden: frame.hidden };
+      },
+      exclude,
+    );
+    return seq;
+  }
+
+  /** The moderation switches a step's moving on by itself off or on (`admin.step.auto`, stage M4): one row, the
+   *  flow; the alarm follows (armAlarm()). Everyone hears the list of the steps where it is off. */
+  private async handleAuto(ws: WebSocket, participant: Participant, command: AutoCommand): Promise<void> {
+    const state = this.readFlow();
+    const decision = decideAutoSwitch(state.flow, state.agenda, command, participant);
+    if (decision.kind === "refused") {
+      this.reject(ws, command.opId, decision.code);
+      return;
+    }
+    if (decision.kind === "unchanged") {
+      this.ack(ws, command.opId, this.currentSeq());
+      return;
+    }
+    const seq = this.currentSeq() + 1;
+    const flow: Flow = { ...state.flow, seq, manual: decision.manual };
+    // no list where there is none: the row keeps the shape of a wall that never switched
+    if (decision.manual.length === 0) delete flow.manual;
+    this.writeFlow(state, flow);
+    await this.armAlarm(state.agenda, flow);
+    const frame = JSON.stringify({ type: "auto.changed", seq, manual: decision.manual } satisfies ServerEvent);
+    this.deliver(seq, () => ({ frames: [frame] }));
+    this.ack(ws, command.opId, seq);
+  }
+
+  /** The teams of the wall, or null: it has formed none (stage M4). One row read. */
+  private readTeams(): Teams | null {
+    const stored = this.getMeta("teams");
+    return stored === null ? null : (JSON.parse(stored) as Teams);
+  }
+
+  /** Who moderates: what a frame about the teams asks, since the moderation is told the whole map. */
+  private admins(): Set<string> {
+    return new Set(
+      this.sql
+        .exec("SELECT id FROM participants WHERE role = 'admin'")
+        .toArray()
+        .map((row) => String(row.id)),
+    );
+  }
+
+  /** In a step of teams: for each person, which of the notes a change is about they may read (eventFor()). Read
+   *  before the change is stored, so a note that is deleted is still there to ask about. */
+  private seesFor(event: ContentEvent, by: string): (viewer: string) => (noteId: string) => boolean {
+    const ids =
+      event.type === "note.created"
+        ? []
+        : event.type === "note.updated" || event.type === "note.deleted"
+          ? [event.noteId]
+          : event.type === "notes.moved"
+            ? event.moves.map((move) => move.noteId)
+            : [];
+    const writers = new Map<string, { authorId: string; createdAt: number }>();
+    if (event.type === "note.created") writers.set(event.note.id, { authorId: by, createdAt: event.note.createdAt });
+    for (const id of ids) {
+      const row = this.sql.exec("SELECT author_id, created_at FROM notes WHERE id = ?", id).toArray()[0];
+      if (row !== undefined) writers.set(id, { authorId: String(row.author_id), createdAt: Number(row.created_at) });
+    }
+    const teams = this.readTeams();
+    return (viewer) => (noteId) => {
+      const note = writers.get(noteId);
+      return note !== undefined && maySeeStored(note, "team", viewer, teams);
+    };
   }
 
   /** A ballot (`ballot.cast`, stage M2): the rules decide (packages/shared/src/domain/vote.ts), this stores it and
@@ -1104,9 +1368,11 @@ export class WallRoom extends DurableObject<Env> {
   }
 
   /** A control of the clock: the rules decide (packages/shared/src/domain/clock.ts), this stores the clock and
-   *  tells everyone, with the worker's time. One row written. Nothing is armed: when the time is up, nothing happens
-   *  here, and the object's one alarm stays the day the wall deletes itself. The brake never refuses a control. */
-  private handleClock(ws: WebSocket, participant: Participant, command: ClockCommand): void {
+   *  tells everyone, with the worker's time. One row written. In a step of writing nothing is armed: when the time is
+   *  up, nothing happens here, and the object's one alarm stays the day the wall deletes itself. In a step that
+   *  moves on by itself (stage M4) the alarm follows the clock's end (armAlarm()): one row more where it moves. The
+   *  brake never refuses a control. */
+  private async handleClock(ws: WebSocket, participant: Participant, command: ClockCommand): Promise<void> {
     const now = Date.now();
     const state = this.readFlow();
     const decision = decideClock(state.flow.clock, command, participant, stepContext(state.agenda, state.flow), now);
@@ -1115,7 +1381,9 @@ export class WallRoom extends DurableObject<Env> {
       return;
     }
     const seq = this.currentSeq() + 1;
-    this.writeFlow(state, { ...state.flow, clock: decision.clock, seq });
+    const flow = { ...state.flow, clock: decision.clock, seq };
+    this.writeFlow(state, flow);
+    await this.armAlarm(state.agenda, flow);
     const frame = JSON.stringify({
       type: "clock.changed",
       seq,
@@ -1168,22 +1436,46 @@ export class WallRoom extends DurableObject<Env> {
   /** How many notes the wall holds that are not this person's, as the storage has it. Reads every note: the way of
    *  a socket that carries no count, never the usual way of a command (publish()). */
   private hiddenFor(participantId: string): number {
-    return Number(this.sql.exec("SELECT COUNT(*) AS n FROM notes WHERE author_id != ?", participantId).one().n);
+    const sight = this.stepNow().sight;
+    if (sight !== "team") {
+      return Number(this.sql.exec("SELECT COUNT(*) AS n FROM notes WHERE author_id != ?", participantId).one().n);
+    }
+    // in a step of teams: those that are neither the person's nor their team's
+    return hiddenAt(this.readContent().notes, { level: sight, teams: this.readTeams() }, participantId);
   }
 
   // ───────────────────────── time ─────────────────────────
 
-  // The object has exactly ONE alarm slot, and it holds the day the wall deletes itself (PLAN.md 3.2).
+  // The object has exactly ONE alarm slot (PLAN.md 3.2). It holds the day the wall deletes itself, or, earlier, the
+  // moment a step that moves on by itself runs out of time (stage M4, docs/architektur-methoden.md 3.3): the
+  // earlier of the two (`nextAlarm`). Nothing is kept in memory: the alarm reads both deadlines from the storage,
+  // and an alarm that rings late or twice finds nothing due (`decideAuto`) and only arms the slot again.
   override async alarm(): Promise<void> {
     if (!this.exists()) return;
     this.migrate();
+    const now = Date.now();
     const retentionAt = Number(this.getMeta("retentionAt"));
-    if (Date.now() >= retentionAt - 250) {
+    if (now >= retentionAt - 250) {
       await this.destroy(); // terminal: the storage is empty afterwards
       return;
     }
-    // Woken early, or by an alarm set before the deadline moved: arm it again.
-    await this.ctx.storage.setAlarm(retentionAt);
+    const state = this.readFlow();
+    const decision = decideAuto(state.flow, state.agenda, now);
+    // the step's time is up: the wall moves on as if the moderation had pressed „Weiter“, and arms the next alarm
+    if (decision?.kind === "changed") {
+      await this.moveStep(state, decision, now);
+      return;
+    }
+    // Woken early, by an alarm set before a deadline moved, or for a step that has moved on: arm it again.
+    await this.armAlarm(state.agenda, state.flow, true);
+  }
+
+  /** Sets the one alarm to the earlier of the wall's two deadlines, where it is not set there already: a set alarm is
+   *  a row written. `rung`: called from the alarm itself, whose slot is empty now. */
+  private async armAlarm(agenda: ResolvedAgenda, flow: Flow, rung = false): Promise<void> {
+    const next = nextAlarm(Number(this.getMeta("retentionAt")), agenda, flow);
+    if (!rung && (await this.ctx.storage.getAlarm()) === next) return;
+    await this.ctx.storage.setAlarm(next);
   }
 
   /** Somebody joined: the wall is in use, so its last day moves out, at most once a day. */
@@ -1192,7 +1484,8 @@ export class WallRoom extends DurableObject<Env> {
     if (retentionAt - now >= RETENTION_MS - RETENTION_STEP_MS) return;
     const next = now + RETENTION_MS;
     this.setMeta("retentionAt", String(next));
-    await this.ctx.storage.setAlarm(next);
+    const { agenda, flow } = this.readFlow();
+    await this.ctx.storage.setAlarm(nextAlarm(next, agenda, flow));
   }
 
   /** Tells everyone, closes every socket and empties the storage: nothing of the wall is left, and the object
@@ -1270,7 +1563,8 @@ export class WallRoom extends DurableObject<Env> {
   private buildSync(participantId: string): Sync {
     const { flow, agenda } = this.readFlow();
     const content = this.readContent();
-    const view = notesFor(content.notes, stepContext(agenda, flow).sight, participantId);
+    const teams = this.readTeams();
+    const view = notesFor(content.notes, stepContext(agenda, flow).sight, participantId, teams);
     // a step that votes: one's own ballot in it and how many have voted, never anybody else's ballot; and the
     // results of what is counted
     const round = roundOf(flow.votes, flow.step);
@@ -1283,7 +1577,7 @@ export class WallRoom extends DurableObject<Env> {
       you: { participantId },
       // A snapshot reads every row anyway, so it knows the number as the storage has it and takes the larger of
       // the two: sockets and storage agree, and where they ever did not, the snapshot puts it right.
-      seq: Math.max(this.carriedSeq() ?? 0, content.seq, flow.seq, this.ballotSeq()),
+      seq: Math.max(this.carriedSeq() ?? 0, content.seq, flow.seq, this.ballotSeq(), teams?.seq ?? 0),
       agenda,
       step: flow.step,
       reach: flow.reach,
@@ -1296,6 +1590,9 @@ export class WallRoom extends DurableObject<Env> {
       ballot: round === null ? null : (this.readBallots(flow.step, participantId).get(participantId) ?? null),
       voted: round === null ? 0 : this.votedIn(flow.step),
       results: this.readResults(flow.votes),
+      // the teams as this person is told them: the moderation the map, everybody else their own team
+      teams: teams === null ? null : teamViewFor(teams, participantId, this.admins().has(participantId)),
+      manual: flow.manual ?? [],
     };
   }
 
@@ -1402,7 +1699,12 @@ export class WallRoom extends DurableObject<Env> {
    *  While the notes are hidden, everybody but `by` hears the change's number and how many notes are hidden from
    *  them now. That count is carried on the socket and moved on by the change, so telling it reads no row; a socket
    *  that carries none gets it from the storage. */
-  private publish(event: ContentEvent, by: string, ctx: StepContext): void {
+  private publish(
+    event: ContentEvent,
+    by: string,
+    ctx: StepContext,
+    sees?: (viewer: string) => (noteId: string) => boolean,
+  ): void {
     // one text per distinct frame: whoever made the change, everybody else, and each count
     const texts = new Map<string, string>();
     const text = (key: string, viewer: string, hidden: number): string => {
@@ -1417,6 +1719,11 @@ export class WallRoom extends DurableObject<Env> {
     this.deliver(event.seq, (viewer, attachment) => {
       if (viewer === by) return { frames: [text("by", viewer, 0)] };
       if (ctx.sight === "all") return { frames: [text("others", viewer, 0)] };
+      // in a step of teams: the change itself to whoever may read its notes, its number to everybody else
+      if (sees !== undefined) {
+        const told = eventFor(event, by, viewer, ctx.sight, 0, sees(viewer));
+        if (told.type !== "wall.occupancy") return { frames: [JSON.stringify(told)] };
+      }
       // never below none: a count is a frame every browser has to be able to read
       const hidden = attachment.hidden === undefined ? this.hiddenFor(viewer) : Math.max(0, attachment.hidden + moved);
       return { frames: [text(`hidden ${hidden}`, viewer, hidden)], hidden };
@@ -1429,8 +1736,10 @@ export class WallRoom extends DurableObject<Env> {
   private deliver(
     seq: number,
     frames: (participantId: string, attachment: SocketAttachment) => { frames: string[]; hidden?: number },
+    exclude?: WebSocket,
   ): void {
     for (const ws of this.ctx.getWebSockets()) {
+      if (ws === exclude) continue;
       const attachment = readAttachment(ws);
       const participantId = attachment?.participantId ?? null;
       if (attachment === null || participantId === null) continue;
@@ -1517,4 +1826,15 @@ function tooLarge(frame: string): boolean {
   if (frame.length > MAX_FRAME_BYTES) return true;
   if (frame.length * 3 <= MAX_FRAME_BYTES) return false;
   return new TextEncoder().encode(frame).byteLength > MAX_FRAME_BYTES;
+}
+
+/** A seed for forming teams at random (domain/teams.ts): 32 bits from the platform's random source, stored with the
+ *  teams. */
+function randomSeed(): number {
+  return crypto.getRandomValues(new Uint32Array(1))[0] ?? 0;
+}
+
+/** How many of the wall's notes a person may not read at `sight`. */
+function hiddenAt(notes: readonly StoredNote[], sight: Sight, viewer: string): number {
+  return notes.filter((note) => !maySeeStored(note, sight.level, viewer, sight.teams)).length;
 }

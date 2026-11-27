@@ -105,8 +105,8 @@ test("the method: „Still sammeln“ is chosen at first, „Freie Wand“ is th
   await screen.findByRole("heading", { level: 1, name: "Neue Wand" });
   const group = screen.getByRole("group", { name: "Methode" });
   const options = within(group).getAllByRole<HTMLInputElement>("radio");
-  expect(options.map((option) => option.value)).toEqual(["still-sammeln", "schaetzen", "free"]);
-  expect(options.map((option) => option.checked)).toEqual([true, false, false]);
+  expect(options.map((option) => option.value)).toEqual(["still-sammeln", "eins-zwei-vier", "schaetzen", "free"]);
+  expect(options.map((option) => option.checked)).toEqual([true, false, false, false]);
   // under headings by purpose
   expect(
     within(group)
@@ -121,6 +121,30 @@ test("the method: „Still sammeln“ is chosen at first, „Freie Wand“ is th
     question: "Was hält uns auf?",
     agenda: { items: [{ methodId: "free" }] },
   });
+});
+
+test("1-2-4-Alle names Liberating Structures in „Mehr dazu“, with the licence and links (stage M4)", async () => {
+  renderApp("/neu");
+  await screen.findByRole("heading", { level: 1, name: "Neue Wand" });
+  const row = screen.getByRole("radio", { name: "1-2-4-Alle" }).closest("li") as HTMLElement;
+  expect(within(row).getByText(/Erst allein, dann zu zweit, dann zu viert denken/)).toBeTruthy();
+  fireEvent.click(within(row).getByRole("button", { name: /Mehr dazu/ }));
+  expect(within(row).getByRole("heading", { name: "Namensnennung" })).toBeTruthy();
+  expect(within(row).getByText(/Keith McCandless, Henri Lipmanowicz und Nancy White/).textContent).toContain(
+    "CC BY-SA 4.0",
+  );
+  expect(
+    within(row)
+      .getByRole("link", { name: /liberatingstructures\.com/ })
+      .getAttribute("href"),
+  ).toBe("https://www.liberatingstructures.com");
+  expect(
+    within(row)
+      .getByRole("link", { name: /CC BY-SA 4\.0/ })
+      .getAttribute("href"),
+  ).toBe("https://creativecommons.org/licenses/by-sa/4.0/");
+  // its steps with their form and visibility
+  expect(within(row).getByText(/Zu zweit austauschen · zu zweit, Gruppe · 2/)).toBeTruthy();
 });
 
 test("a method that estimates asks for its unit, optional, and sends it with the method (stage M3)", async () => {

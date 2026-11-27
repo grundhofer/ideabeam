@@ -77,7 +77,8 @@ export function methodOfStep(agenda: ResolvedAgenda, step: number): MethodId {
  *  - `move`: move notes (while they are hidden, one's own only: domain/rules.ts).
  *  - `group`: make, rename, move and delete groups.
  *  - `arrange`: „Ordnen“: ask for a proposal, apply it, take it back.
- *  - `clock`: the moderation's clock. In M1 the clock of the writing, as before: in a hidden writing step.
+ *  - `clock`: the moderation's clock. In M1 the clock of the writing, as before: in a hidden writing step; since M4
+ *    also in every step that moves on by itself when its time is up (`advance: "auto"`), whose time it is.
  *  - `ballot`: vote (`ballot.cast`), and the moderation counts (`admin.step.count`): a step with a vote
  *    (domain/vote.ts). Nothing is written, moved or grouped in it: the options are frozen. A step that names a
  *    `noteKind` takes notes beside its vote all the same (the reasons beside the first estimate, stage M3): they
@@ -94,7 +95,9 @@ export interface Capabilities {
 const NOTE_STEPS = new Set<Step["type"]>(["impulse", "write", "reveal", "cluster", "discuss"]);
 const SORT_STEPS = new Set<Step["type"]>(["reveal", "cluster", "discuss"]);
 
-export function capabilities(step: Pick<Step, "type" | "visibility" | "vote" | "noteKind">): Capabilities {
+export function capabilities(
+  step: Pick<Step, "type" | "visibility" | "vote" | "noteKind"> & Partial<Pick<Step, "advance">>,
+): Capabilities {
   const notes = NOTE_STEPS.has(step.type) || step.noteKind !== undefined;
   // groups need the notes to be seen: while they are hidden, nobody sorts what nobody can read
   const sorts = SORT_STEPS.has(step.type) && levelOf(step.visibility) === "all";
@@ -103,7 +106,7 @@ export function capabilities(step: Pick<Step, "type" | "visibility" | "vote" | "
     move: notes,
     group: sorts,
     arrange: sorts,
-    clock: step.type === "write",
+    clock: step.type === "write" || step.advance === "auto",
     ballot: step.vote !== undefined,
   };
 }
@@ -162,7 +165,13 @@ export type AgendaProblem =
   | { kind: "voteShape"; step: number }
   /** a vote would offer notes nobody but their writers has seen: no step up to it shows them. An estimate offers
    *  nothing and may stand before any note is shown */
-  | { kind: "voteUnseen"; step: number };
+  | { kind: "voteUnseen"; step: number }
+  /** a step in teams that is not seen by its team, or works alone or with everybody; or one seen by its team that
+   *  forms no teams (stage M4) */
+  | { kind: "teamShape"; step: number }
+  /** a step that moves on by itself without a time to run out, or as the last step, after which there is nowhere to
+   *  move */
+  | { kind: "autoShape"; step: number };
 
 export function checkAgenda(agenda: Pick<ResolvedAgenda, "steps">): AgendaProblem[] {
   const problems: AgendaProblem[] = [];
@@ -185,6 +194,17 @@ export function checkAgenda(agenda: Pick<ResolvedAgenda, "steps">): AgendaProble
     }
     if (votes && step.vote?.kind !== "estimate" && noteLevel(agenda.steps, at) !== "all") {
       problems.push({ kind: "voteUnseen", step: at });
+    }
+    const teamed = step.team !== undefined;
+    if (
+      teamed !== (step.visibility === "team") ||
+      (teamed && step.mode !== "pair" && step.mode !== "group") ||
+      (teamed && step.team?.form === "merge" && !agenda.steps.slice(0, at).some((before) => before.team !== undefined))
+    ) {
+      problems.push({ kind: "teamShape", step: at });
+    }
+    if (step.advance === "auto" && (step.durationSec === null || at === agenda.steps.length - 1)) {
+      problems.push({ kind: "autoShape", step: at });
     }
   });
   return problems;

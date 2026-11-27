@@ -37,6 +37,8 @@ const sync = (participants: Participant[], protocolVersion = PROTOCOL_VERSION): 
   ballot: null,
   voted: 0,
   results: [],
+  teams: null,
+  manual: [],
 });
 
 /** Joins the wall and returns the socket once it is connected: the join has gone out. */

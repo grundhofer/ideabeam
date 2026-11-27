@@ -4,6 +4,7 @@
 import * as z from "zod/mini";
 import { agendaRequestSchema, resolvedAgendaSchema } from "./domain/agenda.js";
 import { MAX_STEPS } from "./domain/method.js";
+import { teamViewSchema } from "./domain/teams.js";
 import { ballotSchema, voteResultSchema, voteRoundSchema } from "./domain/vote.js";
 import { hexIdSchema, wallIdSchema } from "./ids.js";
 import { sessionKeySchema } from "./session-key.js";
@@ -28,12 +29,14 @@ z.config({ jitless: true });
 // wall's day, stage 4 arranging: the moderation applies a proposal and takes it back. Stage M1 of the methods
 // (PLAN-METHODEN.md 5) turned the two phases into the steps of a wall's agenda: `admin.step.go`, `step.changed`.
 // Stage M2 brought hidden voting (domain/vote.ts): `ballot.cast`, `admin.step.count`, and to the browsers
-// `ballot.stored` (the voter's own), `votes.count` (a number), `results.published` (once counted).
+// `ballot.stored` (the voter's own), `votes.count` (a number), `results.published` (once counted). Stage M4 brought
+// pairs and small groups (domain/teams.ts): `admin.teams.set`, `team.changed`, the team in `sync` and `step.changed`;
+// and steps that move on by themselves: `admin.step.auto`, `auto.changed`, the clock a step move starts.
 
 // The version of these frames. A deploy disconnects every socket, and a tab that reconnects still runs the old
 // script: the worker names its version in every `sync`, and a browser that reads another one asks for a reload
 // instead of guessing. Raised with every change a running tab cannot read (PLAN.md 3.4).
-export const PROTOCOL_VERSION = 8;
+export const PROTOCOL_VERSION = 9;
 
 // The admin's capability, minted with the wall and kept in the creating browser: 128 bits of hex. Anything else
 // cannot be one and is refused before it is compared.
@@ -426,6 +429,26 @@ export const clientCommandSchema = z.discriminatedUnion("type", [
     step: z.int().check(z.minimum(0), z.maximum(MAX_STEPS - 1)),
     ballot: ballotSchema,
   }),
+  // The moderation's, in a step of teams (stage M4, domain/teams.ts): the teams in force with people swapped or
+  // moved, whole. `rev` is the revision of the teams it was made for: one made for teams that changed meanwhile is
+  // refused (`STALE`), the same teams again change nothing. The same people, in as many teams, none empty
+  // (`checkTeams`), else `INVALID`; outside a step of teams `PHASE`.
+  z.object({
+    type: z.literal("admin.teams.set"),
+    opId: hexIdSchema,
+    rev: z.int().check(z.minimum(0)),
+    teams: z
+      .array(z.array(hexIdSchema).check(z.minLength(1), z.maxLength(MAX_ONLINE)))
+      .check(z.minLength(1), z.maxLength(MAX_ONLINE)),
+  }),
+  // The moderation's: a step that moves on by itself when its time is up does so (`on`), or waits for „Weiter“
+  // (stage M4, the owner's decision 2: moving on by itself, switchable per step). Absolute.
+  z.object({
+    type: z.literal("admin.step.auto"),
+    opId: hexIdSchema,
+    step: z.int().check(z.minimum(0), z.maximum(MAX_STEPS - 1)),
+    on: z.boolean(),
+  }),
   // The moderation's: counts the vote of the step the wall is in, and everybody gets the result at once. Once.
   z.object({
     type: z.literal("admin.step.count"),
@@ -472,6 +495,12 @@ export type ContentCommand = Extract<
 
 /** The moderation's command that moves the wall to another step. */
 export type StepCommand = Extract<ClientCommand, { type: "admin.step.go" }>;
+
+/** The moderation's teams. */
+export type TeamsCommand = Extract<ClientCommand, { type: "admin.teams.set" }>;
+
+/** The moderation's switch of a step's moving on by itself. */
+export type AutoCommand = Extract<ClientCommand, { type: "admin.step.auto" }>;
 
 /** A ballot, cast. */
 export type BallotCommand = Extract<ClientCommand, { type: "ballot.cast" }>;
@@ -573,6 +602,10 @@ export const serverEventSchema = z.discriminatedUnion("type", [
     voted: z.int().check(z.minimum(0)),
     /** The results of the counted votes. Nothing of a vote that is not counted. */
     results: z.array(voteResultSchema),
+    /** The teams as this person is told them (domain/teams.ts), or null: the wall has formed none. */
+    teams: z.nullable(teamViewSchema),
+    /** The steps that move on by themselves whose moving on the moderation has switched off. */
+    manual: z.array(z.int().check(z.minimum(0))),
   }),
   // The answer to a command that was taken. `seq` is the number its change got; a command that found its work
   // done changed nothing, and its answer names the number the wall stands at.
@@ -648,7 +681,14 @@ export const serverEventSchema = z.discriminatedUnion("type", [
   z.object({ type: z.literal("wall.occupancy"), seq: z.int(), hidden: z.int().check(z.minimum(0)) }),
   // Revealing, first frame: the notes this browser did not have, in the order they were made. Each browser gets
   // its own.
-  z.object({ type: z.literal("notes.revealed"), seq: z.int(), notes: z.array(noteSchema) }),
+  // `hidden`: how many notes are hidden from this browser after it (in a step of teams, those of the other teams);
+  // left out, none.
+  z.object({
+    type: z.literal("notes.revealed"),
+    seq: z.int(),
+    notes: z.array(noteSchema),
+    hidden: z.optional(z.int().check(z.minimum(0))),
+  }),
   // The wall is in another step from now on, and has reached `reach`. A move that reveals sends `notes.revealed`
   // first, and this with the next number. The clock of the step stops with every move (domain/flow.ts).
   // Into a step that votes it carries the step's vote (`round`: frozen options, budget, counted or not), how many
@@ -662,7 +702,27 @@ export const serverEventSchema = z.discriminatedUnion("type", [
     round: z.optional(voteRoundSchema),
     voted: z.optional(z.int().check(z.minimum(0))),
     ballot: z.optional(z.nullable(ballotSchema)),
+    /** The teams as this person is told them, where the wall has formed any: a step move may form or merge them. */
+    team: z.optional(teamViewSchema),
+    /** Where notes this browser may read went with the move: forming teams moves each person's notes into their
+     *  team's area (domain/teams.ts, `layoutIntoAreas`). Left out: none moved. */
+    moves: z.optional(z.array(noteMoveSchema)),
+    /** The step's clock, where the move started it (a step that moves on by itself); left out, it stopped. */
+    clock: z.optional(clockSchema),
+    serverNow: z.optional(z.number()),
   }),
+  // The teams changed within the step (stage M4): somebody came late and joined a team, or the moderation swapped
+  // people. Each browser gets its own: the teams as it is told them, the notes it may read from now on and could
+  // not before (exactly the difference), and how many are hidden from it now.
+  z.object({
+    type: z.literal("team.changed"),
+    seq: z.int(),
+    team: teamViewSchema,
+    notes: z.array(noteSchema),
+    hidden: z.int().check(z.minimum(0)),
+  }),
+  // The moderation switched a step's moving on by itself off or on: the steps where it is off.
+  z.object({ type: z.literal("auto.changed"), seq: z.int(), manual: z.array(z.int().check(z.minimum(0))) }),
   // To every socket of the person who voted, before the `ack`: the ballot as stored, and how many have voted now.
   z.object({
     type: z.literal("ballot.stored"),

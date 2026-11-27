@@ -220,7 +220,10 @@
     "unsavedTitle": "Discard the question?",
     "unsavedText": "The wall is not created yet. If you leave now, the question is gone.",
     "unit": "Unit of the estimate",
-    "unitHelp": "What the number counts, such as days, € or %. Leave empty for a bare number."
+    "unitHelp": "What the number counts, such as days, € or %. Leave empty for a bare number.",
+    "attribution": "Attribution",
+    "source": "Source: liberatingstructures.com",
+    "licence": "Licence CC BY-SA 4.0"
   },
   "join": {
     "title": "Join",
@@ -260,6 +263,11 @@
     "hiddenNone": "Hidden writing: no notes yet.",
     "hiddenNotes_one": "Hidden writing: 1 note.",
     "hiddenNotes_other": "Hidden writing: {{count}} notes.",
+    "teamNone": "Your team: no notes yet.",
+    "teamNotes_one": "Your team: 1 note.",
+    "teamNotes_other": "Your team: {{count}} notes.",
+    "teamSize_one": "You are alone in your team.",
+    "teamSize_other": "There are {{count}} of you in the team.",
     "hiddenOthersNone": "No note of the others lies on the wall yet.",
     "hiddenOthers_one": "1 note of the others lies hidden on the wall.",
     "hiddenOthers_other": "{{count}} notes of the others lie hidden on the wall.",
@@ -331,7 +339,12 @@
       "pause": "Pause clock",
       "resume": "Resume clock",
       "extend": "{{count}} more minutes",
-      "clear": "Turn clock off"
+      "clear": "Turn clock off",
+      "stepLeft_one": "1 minute left in this step.",
+      "stepLeft_other": "{{count}} minutes left in this step.",
+      "stepPaused_one": "The clock is paused: 1 minute left in this step.",
+      "stepPaused_other": "The clock is paused: {{count}} minutes left in this step.",
+      "autoNext": "Then it moves on by itself."
     },
     "delete": "Delete wall",
     "deleteTitle": "Delete wall?",
@@ -391,9 +404,40 @@
       "adminEstimateTalk": "You moderate: talk about why the estimates differ. The reasons are on the wall without names. Then everyone estimates again.",
       "memberEstimateTalk": "Talk about why the estimates differ: whoever knows something the others do not, says it. Then everyone estimates again.",
       "adminEstimateResult": "You moderate: both rounds stand by the method. What follows from the number? You can save it as Markdown under “More”.",
-      "memberEstimateResult": "Both rounds stand by the method: median, middle half and range, no single estimate."
+      "memberEstimateResult": "Both rounds stand by the method: median, middle half and range, no single estimate.",
+      "adminTeam": "You moderate: the app has formed the teams. Under “More” → “Teams” you find every team with its names, for your video tool's breakout rooms; you can also swap people there.",
+      "memberTeam": "Talk it over in your team and note down what counts. Only your team sees your notes, without names; in a pair it is easy to guess who wrote what.",
+      "adminPresent": "You moderate: call on the teams one after the other; each presents its core idea. All notes are now there for everyone, without names.",
+      "memberPresent": "Each team presents its core idea. All notes are now there for everyone, without names.",
+      "adminBeforeTeams": "You moderate: start the clock; then everyone thinks alone and writes, you too, and nobody reads along. When the time is up the app forms pairs and moves on by itself.",
+      "memberBeforeTeams": "Think alone and write your ideas on notes. Nobody reads along; afterwards you share them in a pair."
     },
-    "adminLinkCopied": "Facilitator link copied. Anyone who has it facilitates this wall and can delete it: share it only if someone should facilitate with you."
+    "adminLinkCopied": "Facilitator link copied. Anyone who has it facilitates this wall and can delete it: share it only if someone should facilitate with you.",
+    "team": {
+      "with": "You are in team {{n}} with {{names}}.",
+      "alone": "You are in team {{n}}.",
+      "room": "Talk in your video tool's breakout room {{n}}.",
+      "none": "You are in no team yet: the app forms the teams from everyone on the wall right now.",
+      "area": "Team {{n}}",
+      "areaOwn": "Team {{n}} · your team"
+    },
+    "teams": {
+      "open": "Teams",
+      "title": "Teams",
+      "text": "Each number is a breakout room in your video tool. To swap, choose one person, then the one they swap with. Whoever moves keeps seeing what they saw.",
+      "choosing": "Who does {{name}} swap with? Choose the person in another team.",
+      "team": "Team {{n}}",
+      "swap": "Swap: {{name}}",
+      "swapWith": "Swap with {{first}}: {{name}}",
+      "gone": "Deleted person",
+      "said": "Swapped. The teams are set anew."
+    },
+    "auto": {
+      "off": "Wait for “Next” when the time is up",
+      "on": "Move on by itself when the time is up",
+      "saidOff": "This step waits for “Next” when the time is up.",
+      "saidOn": "This step moves on by itself when the time is up."
+    }
   },
   "surface": {
     "label": "Surface",
@@ -476,6 +520,7 @@
     "ungrouped": "Without a group",
     "notes": "Notes",
     "own": "Your notes",
+    "ownTeam": "Your notes and your team's",
     "empty": "No notes yet. “New note” writes the first one, and everyone on the wall sees it at once.",
     "emptyHidden": "No notes of yours yet. “New note” writes the first one; the others see it only once the notes are revealed."
   },
@@ -602,6 +647,9 @@
   "reject": {
     "phaseBallot": "The vote is counted already: your vote was not taken any more. The result is on the wall.",
     "staleBallot": "The wall had moved on to the next step at the same moment: your vote was not taken.",
+    "invalidTeams": "These teams do not match the wall's teams: your swap was not taken. Try again.",
+    "staleTeams": "The teams changed at the same moment: your swap was not taken. “Teams” shows them as they are now.",
+    "phaseTeams": "The wall had moved to a step without teams at the same moment: your swap was not taken.",
     "notAuthorEdit": "Only the person who wrote a note can change its text.",
     "notAuthorDelete": "Only the person who wrote a note, or the facilitator, can delete it.",
     "notFound": "This note no longer exists: somebody has deleted it.",
@@ -687,7 +735,9 @@
   "licences": {
     "title": "Licences",
     "text": "{{app}} contains this free software and these fonts.",
-    "texts": "All licence texts as a text file"
+    "texts": "All licence texts as a text file",
+    "methods": "Methods",
+    "methodsText": "These methods come from Liberating Structures and are under CC BY-SA 4.0; our texts on them are under the same licence."
   },
   "legal": {
     "imprint": "Imprint",

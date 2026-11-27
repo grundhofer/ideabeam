@@ -33,6 +33,12 @@
 // many), never a single estimate. The second round shows the first round's summary above its field, and its counted
 // view both rounds; in the steps after, they stand beside the surface.
 //
+// A step of pairs or small groups (stage M4, „1-2-4-Alle“) says at the top which team the person is in and with whom
+// („Du bist in Team 3 mit Anna und Ben.“), and the breakout room of the video tool to talk in; each team's area stands
+// on the surface, and the list has a heading per team. The moderation sees every team and swaps people under „Mehr“ →
+// „Teams“ (components/Teams.tsx). A step that moves on by itself says so with its time; the moderation can switch that
+// off under „Mehr“. The method's attribution (Liberating Structures) stands under its description.
+//
 // With a key of its own (PLAN.md 4.5, „Eigener KI-Schlüssel“ in „Mehr“, store/key.ts) the moderation's browser asks
 // its own provider instead: the line under the action then names that provider, and a quiet line at the wall's top
 // says so and how to go back.
@@ -41,14 +47,18 @@ import { Trans, useTranslation } from "react-i18next";
 import { Link, useParams } from "react-router";
 import { offered, providerOf } from "@ideabeam/arrange";
 import {
+  areaBox,
+  areaHead,
   extendClock,
   generateHexId,
   MAX_GROUPS,
   MAX_NOTES,
   methodOfStep,
   NOTE_TEXT_MAX,
+  methodAttribution,
   methodTexts,
   nameInitials,
+  noteLevel,
   roundOf,
   self,
   shown,
@@ -71,6 +81,7 @@ import { OwnKeyAsk, providerFacts } from "../components/OwnKeyAsk";
 import { QrCode } from "../components/QrCode";
 import { Segmented } from "../components/Segmented";
 import { Surface, type WallHandle } from "../components/Surface";
+import { TeamsDialog } from "../components/Teams";
 import { View } from "../components/View";
 import { WallList } from "../components/WallList";
 import { useLang } from "../i18n";
@@ -85,7 +96,7 @@ import { checkText, DISPLAY_NAME_MAX, tidy, type TextFault } from "../lib/input"
 import { adminLink, wallLink } from "../lib/links";
 import { usePaced } from "../lib/paced";
 import { looseSpot } from "../lib/surface/groups";
-import { sizeOf } from "../lib/surface/notes";
+import { boxOf, sizeOf } from "../lib/surface/notes";
 import { rejectKey } from "../lib/rejected";
 import { firstView, storeView, type WallView } from "../lib/wall-view";
 import { ActionZone } from "../sebaro/react/ActionZone";
@@ -426,8 +437,19 @@ function OnWall({ wallId }: { wallId: string }) {
   const lang = useLang();
   const { state, status, outdated, rejected, skew, now, arranged } = useWall();
   // the store's actions: they are the same functions as long as the app runs
-  const { look, deleteWall, erase, send, goStep, setClock, dismissRejected, castBallot, countVotes } =
-    useWall.getState();
+  const {
+    look,
+    deleteWall,
+    erase,
+    send,
+    goStep,
+    setClock,
+    dismissRejected,
+    castBallot,
+    countVotes,
+    setTeams,
+    setAuto,
+  } = useWall.getState();
   const adminToken = useWalls((walls) => walls.adminTokens[wallId]);
   // the session key this browser joined the wall with: it says who asks for the wall as a file
   const sessionKey = useWalls((walls) => walls.walls.find((wall) => wall.id === wallId)?.sessionKey);
@@ -440,7 +462,7 @@ function OnWall({ wallId }: { wallId: string }) {
   // the dialog that asks first: deleting the wall, having the wall forget oneself, revealing the notes, or taking
   // an arrangement back once the wall has changed since; the dialog of the moderation's own key; and the one that
   // shows the wall's link as a QR code
-  const [asking, setAsking] = useState<"delete" | "erase" | "reveal" | "undo" | "key" | "qr" | null>(null);
+  const [asking, setAsking] = useState<"delete" | "erase" | "reveal" | "undo" | "key" | "qr" | "teams" | null>(null);
   // The wall as its surface or as its list: the browser's choice, else the list in a narrow window (lib/wall-view.ts).
   // Either one answers the wall's two actions, „Neuer Zettel“ and „Neue Gruppe“.
   const [mode, setMode] = useState<WallView>(firstView);
@@ -481,6 +503,7 @@ function OnWall({ wallId }: { wallId: string }) {
   const steps = state.agenda?.steps ?? [];
   const methodId = state.agenda === null ? null : methodOfStep(state.agenda, state.step);
   const method = methodId === null ? null : methodTexts(lang, methodId);
+  const attribution = methodId === null ? null : methodAttribution(lang, methodId);
   /** a step's name, in the words of its own method */
   const nameOf = (at: number) =>
     state.agenda === null || steps[at] === undefined
@@ -488,8 +511,62 @@ function OnWall({ wallId }: { wallId: string }) {
       : stepName(lang, methodOfStep(state.agenda, at), steps[at].key);
   const nextStep = state.step + 1 < steps.length ? state.step + 1 : null;
   const backStep = state.step > 0 && state.step - 1 < steps.length ? state.step - 1 : null;
-  // the next step shows the notes that are hidden now: moving there is revealing, and asks first
-  const nextReveals = nextStep !== null && state.agenda !== null && stepWidens(state.agenda, state, nextStep);
+  // the next step shows the notes that are hidden now to everybody: moving there is revealing, and asks first. (Into
+  // a step of teams the notes go to the team alone: that is the step's own doing, and asks nothing.)
+  const nextReveals =
+    nextStep !== null &&
+    state.agenda !== null &&
+    stepWidens(state.agenda, state, nextStep) &&
+    noteLevel(steps, Math.max(state.reach, nextStep)) === "all";
+  // Pairs and small groups (stage M4): the teams in force, if the step the wall is in works in them; the person's own
+  // team, its number and the names of the others in it; every team's area on the surface, once the wall has teams.
+  const stepHere = steps[state.step];
+  const teams = state.teams;
+  const teamStep = stepHere?.team !== undefined && teams !== null && teams.step === state.step;
+  const ownTeam = teamStep && teams !== null ? teams.own : null;
+  const names = new Map(state.participants.map((person) => [person.id, person.name]));
+  const mates =
+    ownTeam === null || teams === null
+      ? []
+      : (teams.members[ownTeam] ?? []).flatMap((id) => {
+          const name = id === state.you ? undefined : names.get(id);
+          return name === undefined ? [] : [name];
+        });
+  const teamLine = !teamStep
+    ? null
+    : ownTeam === null
+      ? t("wall.team.none")
+      : mates.length > 0
+        ? t("wall.team.with", {
+            n: ownTeam + 1,
+            names: new Intl.ListFormat(lang, { type: "conjunction" }).format(mates),
+          })
+        : t("wall.team.alone", { n: ownTeam + 1 });
+  // In a step of teams a member is shown their own team's area alone, where their notes are; the moderation every
+  // team's. A view fits an area by its head (`areaHead`), not its empty rest, so the notes stay readable.
+  const areas = useMemo(
+    () =>
+      teams === null
+        ? null
+        : teams.areas.flatMap((area, n) =>
+            teamStep && !admin && n !== teams.own
+              ? []
+              : [
+                  {
+                    n: n + 1,
+                    box: areaBox(area),
+                    head: areaHead(area),
+                    own: n === teams.own,
+                    label: t(n === teams.own ? "wall.team.areaOwn" : "wall.team.area", { n: n + 1 }),
+                  },
+                ],
+          ),
+    [teams, teamStep, admin, t],
+  );
+  const ownAreaOf = teams !== null && ownTeam !== null ? teams.areas[ownTeam] : undefined;
+  // a step that moves on by itself when its time is up, unless the moderation switched that off
+  const timed = stepHere?.advance === "auto";
+  const movesOn = timed && !state.manual.includes(state.step);
   // „Weiter: <next step>“: where it would reveal, it asks first; any other step move acts at once
   const goNext = () => {
     if (nextStep === null) return;
@@ -605,6 +682,27 @@ function OnWall({ wallId }: { wallId: string }) {
     }
     if (asking === "reveal") setAsking(null);
   }
+  // The person's team changed (formed, merged, a swap): said once, with whom; the surface looks at the team's area
+  // and at every note this browser holds, so nothing that was there leaves the view.
+  const teamKey = teamStep && teams !== null ? `${teams.rev}:${ownTeam ?? ""}` : "";
+  const [teamWas, setTeamWas] = useState(teamKey);
+  if (teamWas !== teamKey) {
+    setTeamWas(teamKey);
+    if (teamLine !== null) setSaid(teamLine);
+  }
+  const ownHead = teamStep && ownAreaOf !== undefined ? areaHead(ownAreaOf) : undefined;
+  useEffect(() => {
+    if (ownHead === undefined) return;
+    // the team's area by its head, and every note this browser holds: the team's own and the person's
+    const boxes = [ownHead, ...notes.map(boxOf)];
+    const x = Math.min(...boxes.map((box) => box.x));
+    const y = Math.min(...boxes.map((box) => box.y));
+    const w = Math.max(...boxes.map((box) => box.x + box.w)) - x;
+    const h = Math.max(...boxes.map((box) => box.y + box.h)) - y;
+    shownAs.current?.lookAt({ x, y, w, h }, false);
+    // when the team changes, not when its box is worked out anew
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [teamKey]);
   // The wall was arranged, or an arrangement was taken back, while this browser was on it: said once, for the whole
   // of it (PLAN.md 3.7: „Geordnet: 7 Gruppen.“), to everybody.
   const [run, setRun] = useState(state.arrangeRun);
@@ -636,6 +734,11 @@ function OnWall({ wallId }: { wallId: string }) {
   const unnamed = groups.filter((group) => group.title === "").length;
   // how many notes the AI may arrange: those in no group a person made by hand or renamed
   const free = useMemo(() => arrangeable({ notes, groups }), [notes, groups]);
+  // In a step of teams the sentence counts the team: its notes (the person's own and the team's, all this browser
+  // holds) and its people. Not paced: a team writes few notes, and a sentence that lags behind the notes on the
+  // surface (or names the wall's people where it speaks of the team) would say something else than it shows.
+  const teamSize = teamStep && teams !== null && ownTeam !== null ? (teams.members[ownTeam]?.length ?? 0) : 0;
+  const [held, together] = [notes.length, teamSize];
   const [stood, count, present, known, frames, sorted, untitled, open] = usePaced(
     [line, total, here, state.participants.length, groups.length, inGroups, unnamed, free].join(" "),
   ).split(" ");
@@ -655,6 +758,13 @@ function OnWall({ wallId }: { wallId: string }) {
     arranged: state.arrangeRun === null ? null : undoAsksFirst ? ("changed" as const) : ("fresh" as const),
     vote: voting ? { cast: state.ballot !== null, counted, estimate: estimating } : null,
     estimates: estimateStage,
+    teams: teamStep
+      ? ("team" as const)
+      : stepHere?.mode === "presentation" && teams !== null
+        ? ("present" as const)
+        : nextStep !== null && steps[nextStep]?.team !== undefined
+          ? ("before" as const)
+          : null,
   };
   // the first half of the state sentence: how many notes, and once the wall has groups, what the groups hold
   const noteCount = t("wall.noteCount", { count: standing.notes });
@@ -669,7 +779,9 @@ function OnWall({ wallId }: { wallId: string }) {
     noNotesGroups: t("wall.noNotesGroups", { groups: emptyGroups }),
     hiddenNone: t("wall.hiddenNone"),
     hiddenNotes: t("wall.hiddenNotes", { count: standing.notes }),
-  }[summary(standing)];
+    teamNone: t("wall.teamNone"),
+    teamNotes: t("wall.teamNotes", { count: held }),
+  }[summary({ ...standing, notes: standing.teams === "team" && writing ? held : standing.notes })];
   // A proposal stands: the state says so, with its numbers, and that nobody else sees it. It takes the place of the
   // wall's own sentence, which would count groups that are on no wall yet.
   const proposal =
@@ -702,7 +814,14 @@ function OnWall({ wallId }: { wallId: string }) {
     trouble ??
     proposal ??
     voteSentence ??
-    t("wall.summary", { notes: holds, people: t("wall.count", { count: Number(present) }) });
+    t("wall.summary", {
+      notes: holds,
+      // in a step of teams, how many are in the person's team; else how many are on the wall
+      people:
+        standing.teams === "team" && together > 0
+          ? t("wall.teamSize", { count: together })
+          : t("wall.count", { count: Number(present) }),
+    });
   // after a run: how many runs 24 hours allow a wall and how many of them this one has left now, said to the
   // moderation in a quiet line
   const runs =
@@ -714,12 +833,18 @@ function OnWall({ wallId }: { wallId: string }) {
         : t("arrange.runsNone", { runs: WALL_DAILY_RUNS });
   // The time left as a sentence in whole minutes, and the same, shorter, as the tab's title: the minutes first, so
   // they stay readable in a narrow tab. No bar, no seconds, no sound (sebaro „Collaboration“).
+  // a step that is no writing has its time as the step's; one that moves on by itself says so
   const timeSentence =
     time === null
       ? ""
       : time.is === "over"
         ? t("wall.clock.over")
-        : t(`wall.clock.${time.is}`, { count: time.minutes });
+        : [
+            stepHere?.type === "write"
+              ? t(`wall.clock.${time.is}`, { count: time.minutes })
+              : t(time.is === "left" ? "wall.clock.stepLeft" : "wall.clock.stepPaused", { count: time.minutes }),
+            ...(movesOn && time.is === "left" ? [t("wall.clock.autoNext")] : []),
+          ].join(" ");
   const tab =
     time === null
       ? undefined
@@ -883,6 +1008,9 @@ function OnWall({ wallId }: { wallId: string }) {
     say: setSaid,
     paused,
     motion,
+    areas,
+    // in a step of teams a new note goes into the person's own team's area
+    ownArea: teamStep && ownAreaOf !== undefined ? areaBox(ownAreaOf) : null,
   };
 
   // The wall's tools stand in its head, out of the content's way: the link as a key, and in „Mehr“ what belongs to
@@ -929,6 +1057,23 @@ function OnWall({ wallId }: { wallId: string }) {
                   id: "app-more-back",
                   label: t("wall.step.back", { name: nameOf(backStep) }),
                   onPress: () => goStep(backStep),
+                },
+              ]
+            : []),
+          // the moderation's map of the teams, to fill the breakout rooms and to swap people
+          ...(admin && teamStep
+            ? [{ id: "app-more-teams", label: t("wall.teams.open"), onPress: () => setAsking("teams") }]
+            : []),
+          // a step that moves on by itself: the moderation may let it wait for „Weiter“ instead, and back
+          ...(admin && timed && nextStep !== null
+            ? [
+                {
+                  id: "app-more-auto",
+                  label: t(movesOn ? "wall.auto.off" : "wall.auto.on"),
+                  onPress: () => {
+                    setAuto(state.step, !movesOn);
+                    setSaid(t(movesOn ? "wall.auto.saidOff" : "wall.auto.saidOn"));
+                  },
                 },
               ]
             : []),
@@ -1107,6 +1252,13 @@ function OnWall({ wallId }: { wallId: string }) {
           <p className="app-state__sentence" role="status">
             {sentence}
           </p>
+          {/* in a step of teams: which team, with whom, and the breakout room to talk in */}
+          {teamLine !== null && (
+            <p className="app-state__team" data-testid="team">
+              {teamLine}
+              {ownTeam !== null && <> {t("wall.team.room", { n: ownTeam + 1 })}</>}
+            </p>
+          )}
           {stood !== "outdated" && (
             <>
               {/* the clock of the writing, as large as the state: said when the minute turns. The region is there
@@ -1267,6 +1419,12 @@ function OnWall({ wallId }: { wallId: string }) {
               {t("wall.step.method", { name: method.name, short: method.short })}
             </p>
           )}
+          {/* the attribution the method's licence asks for (Liberating Structures, CC BY-SA 4.0) */}
+          {attribution !== null && (
+            <p className="app-wall__attribution app-muted" data-testid="attribution">
+              {attribution.credit} {attribution.licence}
+            </p>
+          )}
           {/* in the steps after a vote, its result beside the surface: what „Ergebnis besprechen“ talks about */}
           {!voting &&
             state.results.map((one) =>
@@ -1379,6 +1537,19 @@ function OnWall({ wallId }: { wallId: string }) {
           }
         }}
       />
+      {admin && teams !== null && (
+        <TeamsDialog
+          open={asking === "teams" && teamStep}
+          teams={teams}
+          participants={state.participants}
+          you={state.you}
+          onSwap={(next) => {
+            setTeams(next);
+            setSaid(t("wall.teams.said"));
+          }}
+          onClose={() => setAsking(null)}
+        />
+      )}
       {/* the wall's link as a QR code, large, with the link as text under it: what a team scans from across the room.
           Never the moderation link. Showing, not asking: its actions are secondary, „Schließen“ last */}
       <Dialog

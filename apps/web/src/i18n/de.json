@@ -220,7 +220,10 @@
     "unsavedTitle": "Frage verwerfen?",
     "unsavedText": "Die Wand ist noch nicht angelegt. Wenn du jetzt gehst, ist die Frage weg.",
     "unit": "Einheit der Schätzung",
-    "unitHelp": "Was die Zahl zählt, etwa Tage, € oder %. Leer lassen für eine bloße Zahl."
+    "unitHelp": "Was die Zahl zählt, etwa Tage, € oder %. Leer lassen für eine bloße Zahl.",
+    "attribution": "Namensnennung",
+    "source": "Quelle: liberatingstructures.com",
+    "licence": "Lizenz CC BY-SA 4.0"
   },
   "join": {
     "title": "Beitreten",
@@ -260,6 +263,11 @@
     "hiddenNone": "Verdecktes Schreiben: noch keine Zettel.",
     "hiddenNotes_one": "Verdecktes Schreiben: 1\u00a0Zettel.",
     "hiddenNotes_other": "Verdecktes Schreiben: {{count}}\u00a0Zettel.",
+    "teamNone": "Euer Team: noch keine Zettel.",
+    "teamNotes_one": "Euer Team: 1 Zettel.",
+    "teamNotes_other": "Euer Team: {{count}}\u00a0Zettel.",
+    "teamSize_one": "Du bist allein im Team.",
+    "teamSize_other": "Ihr seid {{count}} im Team.",
     "hiddenOthersNone": "Von den anderen liegt noch kein Zettel auf der Wand.",
     "hiddenOthers_one": "1\u00a0Zettel der anderen liegt verdeckt auf der Wand.",
     "hiddenOthers_other": "{{count}}\u00a0Zettel der anderen liegen verdeckt auf der Wand.",
@@ -331,7 +339,12 @@
       "pause": "Uhr anhalten",
       "resume": "Uhr fortsetzen",
       "extend": "{{count}}\u00a0Minuten mehr",
-      "clear": "Uhr ausschalten"
+      "clear": "Uhr ausschalten",
+      "stepLeft_one": "Noch 1 Minute in diesem Schritt.",
+      "stepLeft_other": "Noch {{count}} Minuten in diesem Schritt.",
+      "stepPaused_one": "Die Uhr ist angehalten: noch 1 Minute in diesem Schritt.",
+      "stepPaused_other": "Die Uhr ist angehalten: noch {{count}} Minuten in diesem Schritt.",
+      "autoNext": "Dann geht es von selbst weiter."
     },
     "delete": "Wand löschen",
     "deleteTitle": "Wand löschen?",
@@ -391,9 +404,40 @@
       "adminEstimateTalk": "Du moderierst: Besprecht, warum die Schätzungen auseinanderliegen. Die Begründungen stehen ohne Namen auf der Wand. Danach schätzen alle neu.",
       "memberEstimateTalk": "Besprecht, warum die Schätzungen auseinanderliegen: Wer etwas weiß, das die anderen nicht wissen, sagt es. Danach schätzen alle neu.",
       "adminEstimateResult": "Du moderierst: Beide Runden stehen bei der Methode. Was folgt aus der Zahl? Sichern kannst du sie unter „Mehr“ als Markdown.",
-      "memberEstimateResult": "Beide Runden stehen bei der Methode: Median, mittlere Hälfte und Spanne, keine einzelne Schätzung."
+      "memberEstimateResult": "Beide Runden stehen bei der Methode: Median, mittlere Hälfte und Spanne, keine einzelne Schätzung.",
+      "adminTeam": "Du moderierst: Die App hat die Teams gebildet. Unter „Mehr“ → „Teams“ stehen alle Teams mit Namen, für die Breakout-Räume eures Videotools; dort tauschst du auch Personen.",
+      "memberTeam": "Tauscht euch im Team aus und haltet auf Zetteln fest, was zählt. Eure Zettel sieht nur euer Team, ohne Namen; zu zweit ist leicht zu erraten, wer was schrieb.",
+      "adminPresent": "Du moderierst: Ruf die Teams nacheinander auf; jedes stellt seine Kernidee vor. Alle Zettel sind jetzt für alle zu sehen, ohne Namen.",
+      "memberPresent": "Jedes Team stellt seine Kernidee vor. Alle Zettel sind jetzt für alle zu sehen, ohne Namen.",
+      "adminBeforeTeams": "Du moderierst: Starte die Uhr; dann denken alle allein nach und schreiben, du auch, und niemand liest mit. Ist die Zeit um, bildet die App Paare und es geht von selbst weiter.",
+      "memberBeforeTeams": "Denk allein nach und schreib deine Ideen auf Zettel. Niemand liest mit; danach tauschst du dich zu zweit aus."
     },
-    "adminLinkCopied": "Moderationslink kopiert. Wer ihn hat, moderiert diese Wand und kann sie löschen: Gib ihn nur weiter, wenn jemand mit dir moderieren soll."
+    "adminLinkCopied": "Moderationslink kopiert. Wer ihn hat, moderiert diese Wand und kann sie löschen: Gib ihn nur weiter, wenn jemand mit dir moderieren soll.",
+    "team": {
+      "with": "Du bist in Team {{n}} mit {{names}}.",
+      "alone": "Du bist in Team {{n}}.",
+      "room": "Sprecht in eurem Videotool im Breakout-Raum {{n}}.",
+      "none": "Du bist noch in keinem Team: Die Teams bildet die App aus allen, die gerade auf der Wand sind.",
+      "area": "Team {{n}}",
+      "areaOwn": "Team {{n}} · dein Team"
+    },
+    "teams": {
+      "open": "Teams",
+      "title": "Teams",
+      "text": "Jede Nummer ist ein Breakout-Raum in eurem Videotool. Zum Tauschen wähl eine Person, dann die, mit der sie tauscht. Wer tauscht, sieht weiter, was er schon sah.",
+      "choosing": "Mit wem tauscht {{name}}? Wähl die Person in einem anderen Team.",
+      "team": "Team {{n}}",
+      "swap": "Tauschen: {{name}}",
+      "swapWith": "Mit {{first}} tauschen: {{name}}",
+      "gone": "Gelöschte Person",
+      "said": "Getauscht. Die Teams stehen neu."
+    },
+    "auto": {
+      "off": "Nach Ablauf auf „Weiter“ warten",
+      "on": "Nach Ablauf selbst weitergehen",
+      "saidOff": "Dieser Schritt wartet nach Ablauf der Zeit auf „Weiter“.",
+      "saidOn": "Dieser Schritt geht nach Ablauf der Zeit selbst weiter."
+    }
   },
   "surface": {
     "label": "Fläche",
@@ -476,6 +520,7 @@
     "ungrouped": "Ohne Gruppe",
     "notes": "Zettel",
     "own": "Deine Zettel",
+    "ownTeam": "Deine Zettel und die deines Teams",
     "empty": "Noch keine Zettel. „Neuer Zettel“ schreibt den ersten, und alle auf der Wand sehen ihn sofort.",
     "emptyHidden": "Noch keine Zettel von dir. „Neuer Zettel“ schreibt den ersten; die anderen sehen ihn erst nach dem Aufdecken."
   },
@@ -602,6 +647,9 @@
   "reject": {
     "phaseBallot": "Die Wahl ist schon ausgezählt: Deine Stimme wurde nicht mehr übernommen. Das Ergebnis steht auf der Wand.",
     "staleBallot": "Die Wand war im selben Moment schon im nächsten Schritt: Deine Stimme wurde nicht übernommen.",
+    "invalidTeams": "Diese Teams passen nicht zu den Teams der Wand: Dein Tausch wurde nicht übernommen. Versuch es noch mal.",
+    "staleTeams": "Die Teams hatten sich im selben Moment geändert: Dein Tausch wurde nicht übernommen. Unter „Teams“ stehen sie, wie sie jetzt sind.",
+    "phaseTeams": "Die Wand war im selben Moment schon in einem Schritt ohne Teams: Dein Tausch wurde nicht übernommen.",
     "notAuthorEdit": "Den Text eines Zettels ändert nur, wer ihn geschrieben hat.",
     "notAuthorDelete": "Einen Zettel löscht nur, wer ihn geschrieben hat, oder die Moderation.",
     "notFound": "Diesen Zettel gibt es nicht mehr: Jemand hat ihn gelöscht.",
@@ -687,7 +735,9 @@
   "licences": {
     "title": "Lizenzen",
     "text": "{{app}} enthält diese freie Software und diese Schriften.",
-    "texts": "Alle Lizenztexte als Textdatei"
+    "texts": "Alle Lizenztexte als Textdatei",
+    "methods": "Methoden",
+    "methodsText": "Diese Methoden stammen aus Liberating Structures und stehen unter CC BY-SA 4.0; unsere Texte zu ihnen stehen unter derselben Lizenz."
   },
   "legal": {
     "imprint": "Impressum",

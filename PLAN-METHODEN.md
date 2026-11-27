@@ -251,6 +251,72 @@ eines Teams, Weitergehen nach Ablauf der Zeit. Methode „1-2-4-Alle“.
 Abnahme: Ein Team sieht kein fremdes Team (Test auf Nachrichtenebene). Zusammenlegen zeigt genau den Unterschied. Ein
 Workshop überlebt den Ruhezustand des Durable Objects mitten im Schritt. Höchstens 60 Zeilen für 8 Personen.
 
+**Stand M4 (27.11.2026, Branch `methoden-m4` auf M3 `78ea465`, nicht committet):** gebaut, von dir nicht abgenommen,
+nicht deployt.
+
+- `packages/shared/src/domain/teams.ts` (rein): `formTeams` (Teams von etwa der Schrittgröße aus den Anwesenden,
+  zufällig nach einem gespeicherten Startwert, reihum verteilt, nie ein Team aus einer Person, sobald zwei da sind;
+  sechs Personen zu viert sind zwei Dreier), `mergeTeams` (je zwei Teams werden eins, ein übriges kommt zum letzten),
+  `placeLatecomer` (ins kleinste Team), `checkTeams`/`decideTeamsSet` (dieselben Personen, gleich viele Teams, keins
+  leer, keins aus einer Person, wo Paare passen; nur die Moderation, nur im Schritt der Teams, nur für die Revision,
+  für die der Tausch gemacht wurde), `enterTeams` (bilden, zusammenlegen oder beim Zurückgehen die Teams des Schritts
+  wiederholen), Bereiche (`areaBox`: ein Band unter den ersten Zetteln, je Team Felder, ein Vierer umfasst die Felder
+  seiner Paare), `teamViewFor` (die Moderation bekommt die ganze Karte, alle anderen ihr eigenes Team) und
+  `teamCounts` für den Export. Sichtbarkeit `team` in `visibility.ts`: Einen Zettel sieht, wer mit seinem Verfasser
+  ein Team teilt, in den Teams von jetzt oder in Teams von vorher für die Zettel, die geschrieben wurden, solange
+  diese galten; so wird nur weiter, nie enger. `revealedFor(notes, viewer, vorher, nachher)` gibt genau den
+  Unterschied. Die Uhr gehört nun auch zu jedem Schritt, der selbst weitergeht; `autoAt`, `nextAlarm`, `decideAuto`,
+  `decideAutoSwitch` in `flow.ts`.
+- Worker: `meta 'teams'` (eine Zeile je Änderung, mit `seq`), gebildet in der Transaktion des Schrittwechsels aus
+  den offenen Sockets mit einem Startwert aus `crypto.getRandomValues`; `admin.teams.set`, `team.changed` (je
+  Browser: seine Sicht der Teams, die Zettel, die er ab jetzt sieht, und wie viele ihm verborgen bleiben);
+  Nachzügler beim Beitritt; `admin.step.auto`, `auto.changed`. Der eine Wecker steht auf dem früheren von
+  Löschtag und Ende der Uhr eines Schritts, der selbst weitergeht; `alarm()` löscht zuerst, wenn der Löschtag da ist,
+  geht sonst weiter, wenn die Zeit um ist, und stellt den Wecker neu. Ein Wecker, der zu spät oder doppelt läutet,
+  findet nichts fällig. Protokoll 9.
+- Methode „1-2-4-Alle“ (`eins-zwei-vier`, „Ideen sammeln“, Experimente, 4–30 Personen, 15 Minuten) mit Texten DE/EN
+  aus dem Katalog und der Namensnennung (bei der Methode unter der Kurzbeschreibung auf der Wand, in „Mehr dazu“ auf
+  `/neu`, unter „Lizenzen“ und im Export). Wortlaut nach der Fußzeilen-Vorlage auf liberatingstructures.com/cc-license,
+  am 27.11.2026 gelesen: „Enthält Inhalte von www.liberatingstructures.com von Keith McCandless, Henri Lipmanowicz und
+  Nancy White (Liberating Structures Fieldbook, 2026), lizenziert unter CC BY-SA 4.0.“ Die Seite nennt die
+  Namensnennung des Katalogs („Lipmanowicz & McCandless“) nicht mehr allein, sondern mit Nancy White und dem
+  Fieldbook von 2026.
+- App: Stand mit „Du bist in Team 3 mit Anna und Ben. Sprecht in eurem Videotool im Breakout-Raum 3.“, Satz des
+  Stands „Die Teams schreiben für sich: 5 Zettel.“, eigene Sätze für vor den Teams, im Team und beim Vorstellen;
+  Bereiche der Teams auf der Fläche (gezeichnet; ein Mitglied sieht im Schritt mit Teams nur den eigenen, die
+  Moderation alle; der Beginn des Schritts und „Alles zeigen“ nehmen vom Bereich nur seinen Kopf mit, so bleiben die
+  Zettel so groß wie auf einer Wand mit ebenso vielen Zetteln, ein Ende-zu-Ende-Test vergleicht den Zoom), ein neuer
+  Zettel kommt in den eigenen Bereich, und beim Bilden der Teams legt die Wand die allein geschriebenen Zettel jeder
+  Person in den Bereich ihres Teams (eine Zeile, `layoutIntoAreas`, auch beim Zusammenlegen für Zettel außerhalb des
+  Bereichs, etwa nach einem Tausch); der Satz des Stands zählt im Schritt mit Teams das Team, ungebremst: „Euer Team:
+  2 Zettel. Ihr seid 2 im Team.“; Überschriften je Team in der Liste; „Mehr“ → „Teams“ (`components/Teams.tsx`): alle Teams mit
+  Namen, „Tauschen“ ohne Ziehen; „Mehr“ → „Nach Ablauf auf „Weiter“ warten“. Datenschutzerklärung 3.1 und 3.3 in
+  beiden Sprachen (die Zuordnung zu Teams bleibt, solange die Wand besteht).
+- Abweichungen von `docs/architektur-methoden.md` 3.2 und 3.3: (1) Keine Spalten `step` und `team` an den Zetteln:
+  Wer einen Zettel sieht, folgt aus seinem Verfasser und den Teams; alle Zettel von „1-2-4-Alle“ zählen ab Schritt 0,
+  wie bisher. Das Team eines Zettels für Bereich und Liste ist sein Ort (`areaAt`), nicht eine gespeicherte Angabe; wer
+  einen Zettel aus dem Bereich zieht, nimmt ihn aus der Überschrift des Teams. (2) Kein `flow.auto`: Der Zeitpunkt
+  ist das Ende der Uhr des Schritts, die Prüfung „noch derselbe“ ergibt sich daraus, dass ein Wechsel die Uhr anhält
+  oder neu startet. (3) „Abschaltbar je Schritt“ ist `flow.manual` (eine Liste der Schritte) und `admin.step.auto`,
+  nicht im Architekturvorschlag. (4) `formTeams` kennt nur `random` und `merge`, nicht `moderation` und `keep`.
+  (5) `team.changed` trägt die neu sichtbaren Zettel und die Zahl der verborgenen mit (eine Nachricht, eine
+  Nummer); beim Schrittwechsel stehen die Teams in `step.changed`, die neuen Zettel wie beim Aufdecken in
+  `notes.revealed` (jetzt mit `hidden`). (6) Ein übriges Team kommt beim Zusammenlegen zum letzten (ein Sechser),
+  statt eines Paars im Schritt zu viert. (7) Ein Tausch läuft über die ganze Liste der Teams, nicht über einzelne
+  Personen. (8) „Frage stellen“ steckt im Schreiben, wie in den anderen Methoden: vier statt fünf Schritte, 15 statt
+  16 Minuten. (9) Kein „Auch bekannt als“ für 1-2-4-Alle.
+- `CI=1 pnpm checks` grün: 379 Tests im geteilten Paket, 126 in `packages/arrange`, 258 im Worker, 300 in der App,
+  347 Ende-zu-Ende, keiner übersprungen. Kosten: ein Lauf von 1-2-4-Alle mit 8 Personen 38 Zeilen (Uhr samt Wecker 2,
+  24 Zettel und die Tagesmarke 25, drei Schritte durch den Wecker 10 samt dem Umlegen der Zettel in die Bereiche,
+  ein Tausch 1); die typische Wand bleibt bei 397.
+- Nicht geprüft: kein Bildschirmleser, nicht bei 2000 px angesehen; das selbst Weitergehen nur im Worker-Test mit
+  `runDurableObjectAlarm`, nie mit einem echten Wecker im Browser durchgespielt; kein Ende-zu-Ende-Test mit
+  ungerader Zahl oder Nachzügler (die prüfen Worker- und Regeltests); Texte und Belegsatz aus dem Katalog nicht neu
+  an den Quellen geprüft; die Moderation zählt beim Bilden mit, wenn sie da ist (sie kann sich nur tauschen, nicht
+  herausnehmen; so bleibt es vorerst). Auch in einem Team behält sie „Weiter“ und „Mehr“ → „Teams“ mit allen Teams,
+  sieht aber wie alle nur die Zettel ihres Teams; `tests/teams.spec.ts` spielt das mit der Moderation in einem Paar; „Schätzen – Diskutieren – Schätzen“ bespricht weiter gemeinsam, nicht in Kleingruppen (nicht
+  umgebaut, um laufende Wände nicht zu verschieben).
+
 ### M5 und M6: die übrigen Methoden
 
 M5: Rückblick nach Ziel und Daten, Scheitern vorwegdenken, Stille Ideenrunde mit Rangfolge, Was? Na und? Was nun?

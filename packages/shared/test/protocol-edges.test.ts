@@ -83,6 +83,8 @@ const sync = {
   ballot: null,
   voted: 0,
   results: [],
+  teams: null,
+  manual: [],
 };
 const answer = {
   proposal: { groups: [{ title: "Meetings", noteIds: [ID] }], loose: [] },

@@ -152,6 +152,18 @@ export function PrivacyEn() {
           bounds of the middle half, the smallest and the largest number, without identifiers. The short reason beside
           an estimate is a note like any other (above): hidden until the next step shows it to everyone, without names.
         </li>
+        <li>
+          <strong>Teams:</strong> in a method with pairs or small groups (such as “1-2-4-All”) the teams: which
+          identifiers of people are in which team, the step they were formed for, a random number the application formed
+          them with, and the teams before with the moment they were replaced (after a merge or a swap by the
+          facilitator). The application forms the teams at random from everyone connected when the step begins; whoever
+          comes later joins the smallest team.{" "}
+          <strong>The team assignment stays stored for as long as the wall exists</strong> (section 3.3), also after the
+          step with the teams. In a step with teams every person sees their team’s notes, without names; the facilitator
+          sees who is in which team, everybody else only their own team with the names in it. In a pair it is easy to
+          guess who wrote which note. The file of “Save as Markdown” names only how many teams there were, never who was
+          in them.
+        </li>
       </ul>
       <p>
         For every note, every group and the layout of the notes the wall also keeps the running number of the last
@@ -164,7 +176,8 @@ export function PrivacyEn() {
         person’s browser. Everybody else, the facilitator included, gets only a number of the other people’s notes: how
         many there are. Revealing is the facilitator’s, asks first and cannot be taken back; after it everyone sees all
         notes. Only the facilitator sets the clock of the writing phase; everyone sees the time left. When it runs out,
-        nothing happens by itself.
+        nothing happens by itself, except in short, timed steps such as those of “1-2-4-All”: there the wall moves on to
+        the next step by itself when the clock runs out, which the facilitator can switch off per step.
       </p>
       <p>
         <strong>Voting in secret.</strong> People vote in their own browser; only “Cast vote” sends the ballot to the
@@ -228,9 +241,9 @@ export function PrivacyEn() {
           A wall deletes itself <strong>30 days after the last time a person joined, automatically</strong>. Coming back
           and every automatic reconnection count as joining too. The deadline moves at most once a day; so the deletion
           lies 29 to 30 days after the last join. If nobody joins, the wall deletes itself 30 days after it was created.
-          The application then deletes the whole storage of the wall, with all notes, groups, ballots and results. Until
-          then the ballots stay stored per person. After that the link leads to “Unknown wall”, as for a wall that never
-          existed.
+          The application then deletes the whole storage of the wall, with all notes, groups, ballots, teams and
+          results. Until then the ballots stay stored per person, and so does the team assignment. After that the link
+          leads to “Unknown wall”, as for a wall that never existed.
         </li>
         <li>
           The facilitator can delete the wall <strong>at any time</strong> (“Delete wall”): at once and completely, with

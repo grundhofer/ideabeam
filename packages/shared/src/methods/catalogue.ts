@@ -24,6 +24,16 @@ import type { Method, MethodId } from "../domain/method.js";
 //    schreiben“: the wall shows its question from the start. „Abweichungen besprechen“ is the catalogue's step in
 //    small groups; until stage M4 brings pairs and small groups it is a step for everyone (`plenary`). The unit
 //    (`unit`) is the moderation's, named on `/neu` (domain/agenda.ts); no bounds.
+//  - „1-2-4-Alle“ (method 3, stage M4, from Liberating Structures, CC BY-SA 4.0 with the attribution of
+//    methods/texts.ts): everyone thinks and writes alone for a minute, hidden; then in pairs, which the app forms at
+//    random from the people present, each pair seeing its own notes; then the pairs are merged into fours, each four
+//    seeing its notes and finding what matters most; then every four presents its core idea to everybody, and every
+//    note is there for everyone. Its first step of the catalogue, „Frage stellen“, is part of the writing, as in
+//    „Still sammeln“: four steps instead of five, about 15 minutes instead of 16. The three short steps move on by
+//    themselves when their time is up (`advance: "auto"`, the owner's decision 2: only in short, timed methods
+//    like this one); the moderation starts the first clock, and can pause a clock, switch a step's moving on off,
+//    or press „Weiter“ at any time. The presenting has no clock and waits for „Weiter“, of which there is none:
+//    it is the last step.
 //  - „Freie Wand“: one step, writing and arranging, every note there for everyone at once: the wall made without
 //    hidden writing.
 //
@@ -87,6 +97,55 @@ export const CATALOGUE: Readonly<Record<MethodId, Method>> = {
     minutes: 25,
     groupSize: [3, 30],
     evidence: "metaAnalysis",
+  },
+  "eins-zwei-vier": {
+    id: "eins-zwei-vier",
+    version: 1,
+    purpose: "collect",
+    steps: [
+      {
+        key: "alone",
+        type: "write",
+        mode: "individual",
+        visibility: "hidden",
+        durationSec: 1 * MINUTE,
+        advance: "auto",
+        output: "notes",
+      },
+      {
+        key: "pairs",
+        type: "discuss",
+        mode: "pair",
+        visibility: "team",
+        durationSec: 2 * MINUTE,
+        advance: "auto",
+        output: "notes",
+        team: { size: 2, form: "random" },
+      },
+      {
+        key: "fours",
+        type: "discuss",
+        mode: "group",
+        visibility: "team",
+        durationSec: 5 * MINUTE,
+        advance: "auto",
+        output: "notes",
+        team: { size: 4, form: "merge" },
+      },
+      {
+        key: "present",
+        type: "discuss",
+        mode: "presentation",
+        visibility: "all",
+        durationSec: 7 * MINUTE,
+        advance: "moderation",
+        output: "notes",
+      },
+    ],
+    minutes: 15,
+    groupSize: [4, 30],
+    evidence: "experiments",
+    attribution: "liberatingStructures",
   },
   schaetzen: {
     id: "schaetzen",
@@ -169,7 +228,7 @@ export const CATALOGUE: Readonly<Record<MethodId, Method>> = {
 
 /** The methods in the order of the choice on `/neu` (docs/methoden-katalog.md, (b)): by purpose, the one that is
  *  chosen at first leading, „Freie Wand“ last. */
-export const METHOD_ORDER: readonly MethodId[] = ["still-sammeln", "schaetzen", "free"];
+export const METHOD_ORDER: readonly MethodId[] = ["still-sammeln", "eins-zwei-vier", "schaetzen", "free"];
 
 /** The method a new wall gets when nothing else is asked: the best supported one (PLAN-METHODEN.md 3). */
 export const DEFAULT_METHOD: MethodId = "still-sammeln";

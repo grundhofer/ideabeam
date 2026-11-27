@@ -248,3 +248,18 @@ test("in a step that estimates: how to estimate, also while the reasons beside i
     say({ admin: true, notes: 3, people: 4, vote: { cast: false, counted: false, estimate: true } }, "en"),
   ).toContain("“Count votes” shows everyone the median and the range at once.");
 });
+
+test("pairs and small groups (stage M4): before the teams, in a team, and when the teams present", () => {
+  const at = (admin: boolean, teams: "team" | "present" | "before", hidden = false) =>
+    guide({ admin, notes: 3, people: 4, hidden, step: hidden ? "write" : "discuss", teams });
+  expect([at(true, "before", true), at(false, "before", true)]).toEqual(["adminBeforeTeams", "memberBeforeTeams"]);
+  // a step of teams counts its notes as hidden from the other teams: the team's sentence comes first all the same
+  expect([at(true, "team", true), at(false, "team", true)]).toEqual(["adminTeam", "memberTeam"]);
+  expect([at(true, "present"), at(false, "present")]).toEqual(["adminPresent", "memberPresent"]);
+  // alone before the teams, the link comes first
+  expect(guide({ admin: true, notes: 0, people: 1, hidden: true, teams: "before" })).toBe("adminHiddenAlone");
+  expect(say({ admin: false, notes: 3, people: 4, hidden: true, teams: "team" })).toContain(
+    "Eure Zettel sieht nur euer Team",
+  );
+  expect(say({ admin: true, notes: 3, people: 4, hidden: true, teams: "team" }, "en")).toContain("“More” → “Teams”");
+});

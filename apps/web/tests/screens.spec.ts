@@ -30,6 +30,7 @@ import { expect, test, type Page } from "@playwright/test";
 import {
   enter,
   enterEstimate,
+  enterTeams,
   enterVote,
   ESTIMATE_QUESTION,
   GROUPS,
@@ -43,6 +44,7 @@ import {
   openOwnKey,
   QUESTION,
   takeOwnKey,
+  TEAM_QUESTION,
   visit,
   writeNote,
 } from "./app";
@@ -1523,6 +1525,56 @@ const screens: Screen[] = [
           7,
         ),
       (page) => expect(page.locator(".sb-primary-action")).toHaveText("Als Markdown sichern"),
+    ),
+  },
+  {
+    // a step of pairs (stage M4, „1-2-4-Alle“): the team and the partner at the top with the breakout room, the
+    // step's clock with its moving on, the team's area on the surface with the partner's note. Also at 200 %
+    name: "wand-team",
+    largeText: true,
+    path: "/",
+    heading: TEAM_QUESTION,
+    view: '[data-sb-view="wand"][data-sb-view-type="tool"]',
+    overlay: null,
+    prepare: then(
+      (page) => enterTeams(page),
+      (page) => writeNote(page, "Zu zweit: ein Pate reicht"),
+      press("Alles zeigen"),
+      (page) => expect(page.locator(".app-area[data-own]")).toHaveCount(1),
+      (page) => expect(page.locator(".app-state__sentence")).toHaveText("Euer Team: 2 Zettel. Ihr seid 2 im Team."),
+      (page) => expect(page.locator(".app-state__clock")).toContainText("Dann geht es von selbst weiter."),
+    ),
+  },
+  {
+    // the same step as a list: the notes under the team's heading
+    name: "wand-team-liste",
+    path: "/",
+    heading: TEAM_QUESTION,
+    view: '[data-sb-view="wand"][data-sb-view-type="list"]',
+    overlay: null,
+    prepare: then(
+      (page) => enterTeams(page, { view: "list" }),
+      (page) => writeInList(page, "Zu zweit: ein Pate reicht"),
+      (page) => expect(page.locator(".app-list .sb-list-header").first()).toContainText("· dein Team"),
+    ),
+  },
+  {
+    // the moderation's map of the teams under „Mehr“ → „Teams“, a swap begun: names by team, „Tauschen“ keys. Also
+    // at 200 %
+    name: "wand-teams",
+    largeText: true,
+    path: "/",
+    heading: TEAM_QUESTION,
+    view: '[data-sb-view="wand"]',
+    overlay: "app-dlg-teams",
+    prepare: then(
+      (page) => enterTeams(page, { admin: true }),
+      press("Alles zeigen"),
+      press("Mehr"),
+      item("Teams"),
+      (page) => page.getByRole("button", { name: "Tauschen: Anna" }).click(),
+      (page) => expect(page.locator(".app-state__sentence")).toHaveText("Euer Team: 1 Zettel. Ihr seid 2 im Team."),
+      (page) => expect(page.locator("#app-dlg-teams")).toContainText("Mit wem tauscht Anna?"),
     ),
   },
   {

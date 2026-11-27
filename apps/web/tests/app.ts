@@ -435,3 +435,35 @@ export async function enterEstimate(page: Page, options: { round?: 1 | 2; counte
     .waitFor();
   return wall;
 }
+
+/** „1-2-4-Alle“ (stage M4): alone 0, pairs 1, fours 2, presenting 3. */
+export const TEAM_STEPS = { alone: 0, pairs: 1, fours: 2, present: 3 } as const;
+export const TEAM_QUESTION = "Wie arbeiten wir neue Leute schneller ein?";
+
+/** A wall of „1-2-4-Alle“ in its pairs: the page is on it as Anna (with the admin token where `admin` says so) and
+ *  three guests who are no browser, Ben (who moderates too), Cem and Dora, each writes a note alone; then Ben moves the
+ *  wall into the pairs, which the app forms from the four who are there. The guests stay on the wall. With `fours`,
+ *  Ben moves on into the fours as well. */
+export async function enterTeams(
+  page: Page,
+  options: { admin?: boolean; view?: "surface" | "list"; fours?: boolean } = {},
+) {
+  const { admin = false, view = "surface", fours = false } = options;
+  const wall = await makeWall(page, TEAM_QUESTION, { agenda: { items: [{ methodId: "eins-zwei-vier" }] } });
+  await know(page, [
+    { id: wall.wallId, question: TEAM_QUESTION, as: "Anna", ...(admin ? { adminToken: wall.adminToken } : {}) },
+  ]);
+  await lookAt(page, view);
+  await page.goto(`/w/${wall.wallId}`);
+  await page.locator(".app-surface__ground, .app-list").waitFor();
+  const ben = await join(wall.wallId, "Ben", wall.adminToken);
+  const cem = await join(wall.wallId, "Cem");
+  const dora = await join(wall.wallId, "Dora");
+  await ben.write("Ein Pate für die erste Woche", 0, 0);
+  await cem.write("Zugänge am ersten Tag bereit", 260, 0);
+  await dora.write("Ein Glossar der Abkürzungen", 520, 0);
+  await ben.go(TEAM_STEPS.alone, TEAM_STEPS.pairs);
+  if (fours) await ben.go(TEAM_STEPS.pairs, TEAM_STEPS.fours);
+  await expect(page.locator(".app-state__team")).toContainText(/^Du bist in Team \d mit /);
+  return { ...wall, guests: [ben, cem, dora] };
+}

@@ -1,10 +1,11 @@
 // SPDX-FileCopyrightText: 2026 Sebastian Grundhöfer
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import { methodTexts } from "../methods/texts.js";
+import { methodAttribution, methodTexts, stepName } from "../methods/texts.js";
 import type { ArrangeLanguage, Group } from "../protocol.js";
 import type { NoteLevel } from "./agenda.js";
 import type { MethodId } from "./method.js";
+import { teamCounts, type Teams } from "./teams.js";
 import { notesFor, type StoredNote } from "./visibility.js";
 import { CATALOGUE } from "../methods/catalogue.js";
 import type { EstimateResult, EstimateSummary, RankingResult, VoteResult } from "./vote.js";
@@ -40,6 +41,10 @@ type VoteKind = RankingResult["kind"];
 //    moved since the round before. Never a single estimate.
 //  - **The reasons of a method that asks for them** (the notes beside a first estimate, stage M3) stand under
 //    „Begründungen“ instead of „Zettel“, without names like every note.
+//  - **Teams by their count alone** (stage M4): how many teams each step in pairs or small groups had, never who was
+//    in them; the notes the teams wrote stand like every note, once a step shows them to everybody (the presenting
+//    of „1-2-4-Alle“). While a step of teams lasts, a person's file holds their own notes and their team's.
+//  - **The attribution a method's licence asks for** (Liberating Structures, CC BY-SA 4.0), under its description.
 //  - **The fixed words in the language of whoever asks** (`de` or `en`, as „Ordnen“ takes it: a wall has no
 //    language of its own). They stand in the table below and nowhere else; the Worker writes the file, so they
 //    cannot come from the app's string tables.
@@ -56,6 +61,9 @@ export interface ExportInput {
   groups: readonly Group[];
   /** The results of the wall's counted votes, in the order of their steps. Left out: none. */
   results?: readonly VoteResult[];
+  /** The wall's teams (stage M4): who sees what in a step of teams, and how many teams each step had. Left out:
+   *  none. */
+  teams?: Teams | null;
   /** The participant the export is for. */
   viewer: string;
   /** The moment of the export, milliseconds since 1970: the date in the file and in its name. */
@@ -81,6 +89,12 @@ const COUNTED_EN: Record<VoteKind, (limit: number) => string> = {
 const WORDS = {
   de: {
     reasons: "Begründungen",
+    teams: (parts: string) => `In Teams gearbeitet: ${parts}.`,
+    teamCount: (step: string, n: number) => `${step}: ${n === 1 ? "1 Team" : `${n} Teams`}`,
+    hiddenTeam: (count: number) =>
+      count === 1
+        ? "Die Teams arbeiten noch für sich: Hier stehen deine Zettel und die deines Teams. 1 Zettel der anderen fehlt."
+        : `Die Teams arbeiten noch für sich: Hier stehen deine Zettel und die deines Teams. ${count} Zettel der anderen fehlen.`,
     round: (n: number) => `Schätzung, Runde ${n}`,
     estimated: (n: number) =>
       `Verdeckt geschätzt, zugleich ausgezählt: ${n === 1 ? "1 Schätzung" : `${n} Schätzungen`}.`,
@@ -102,6 +116,7 @@ const WORDS = {
     ungrouped: "Ohne Gruppe",
     notes: "Zettel",
     own: "Deine Zettel",
+    ownTeam: "Deine Zettel und die deines Teams",
     result: "Ergebnis der Wahl",
     resultOf: (step: number) => `Ergebnis der Wahl (Schritt ${step})`,
     counted: (kind: VoteKind, limit: number, voters: number) =>
@@ -122,6 +137,12 @@ const WORDS = {
   },
   en: {
     reasons: "Reasons",
+    teams: (parts: string) => `Worked in teams: ${parts}.`,
+    teamCount: (step: string, n: number) => `${step}: ${n === 1 ? "1 team" : `${n} teams`}`,
+    hiddenTeam: (count: number) =>
+      count === 1
+        ? "The teams still work on their own: your notes and your team's are here. 1 note by the others is left out."
+        : `The teams still work on their own: your notes and your team's are here. ${count} notes by the others are left out.`,
     round: (n: number) => `Estimate, round ${n}`,
     estimated: (n: number) => `Estimated in secret, counted at once: ${n === 1 ? "1 estimate" : `${n} estimates`}.`,
     noEstimate: "Nobody estimated.",
@@ -142,6 +163,7 @@ const WORDS = {
     ungrouped: "Without a group",
     notes: "Notes",
     own: "Your notes",
+    ownTeam: "Your notes and your team's",
     result: "Result of the vote",
     resultOf: (step: number) => `Result of the vote (step ${step})`,
     counted: (kind: VoteKind, limit: number, voters: number) =>
@@ -232,7 +254,7 @@ function estimateLines(
 /** The wall as one person may see it, as a Markdown document. */
 export function wallMarkdown(input: ExportInput): string {
   const words = WORDS[input.language];
-  const view = notesFor(input.notes, input.sight, input.viewer);
+  const view = notesFor(input.notes, input.sight, input.viewer, input.teams);
   const groups = [...input.groups].sort((a, b) => a.ord - b.ord || (a.id < b.id ? -1 : a.id > b.id ? 1 : 0));
   const notes = [...view.notes].sort((a, b) => a.createdAt - b.createdAt || (a.id < b.id ? -1 : a.id > b.id ? 1 : 0));
   const known = new Set(groups.map((group) => group.id));
@@ -254,6 +276,16 @@ export function wallMarkdown(input: ExportInput): string {
     `**${escapeMarkdown(method.name)}:** ${escapeMarkdown(method.short)}`,
     "",
   ];
+  const attribution = methodAttribution(input.language, input.methodId);
+  if (attribution !== null) lines.push(`_${escapeMarkdown(`${attribution.credit} ${attribution.licence}`)}_`, "");
+  const counts = teamCounts(input.teams);
+  if (counts.length > 0) {
+    const steps = CATALOGUE[input.methodId].steps;
+    const parts = counts.map(({ step, teams }) =>
+      words.teamCount(stepName(input.language, input.methodId, steps[step]?.key ?? ""), teams),
+    );
+    lines.push(`_${escapeMarkdown(words.teams(parts.join("; ")))}_`, "");
+  }
   const results = input.results ?? [];
   const rankings = results.filter((result) => result.kind !== "estimate");
   let rounds = 0;
@@ -273,7 +305,9 @@ export function wallMarkdown(input: ExportInput): string {
     }
     lines.push("");
   }
-  if (writing && view.hidden > 0) lines.push(`_${words.hidden(view.hidden)}_`, "");
+  if (writing && view.hidden > 0) {
+    lines.push(`_${input.sight === "team" ? words.hiddenTeam(view.hidden) : words.hidden(view.hidden)}_`, "");
+  }
   if (notes.length === 0 && groups.length === 0) lines.push(`_${writing ? words.noneOwn : words.none}_`, "");
 
   for (const group of groups) {
@@ -288,7 +322,7 @@ export function wallMarkdown(input: ExportInput): string {
     // on a wall without groups these are simply its notes; while the notes are hidden, one's own (as the list says)
     const reasons = CATALOGUE[input.methodId].steps.some((step) => step.noteKind === "reason");
     lines.push(
-      `## ${groups.length > 0 ? words.ungrouped : writing ? words.own : reasons ? words.reasons : words.notes}`,
+      `## ${groups.length > 0 ? words.ungrouped : writing ? (input.sight === "team" ? words.ownTeam : words.own) : reasons ? words.reasons : words.notes}`,
       "",
     );
     for (const text of loose) lines.push(`- ${escapeMarkdown(text)}`);

@@ -169,6 +169,20 @@ run the rest; their result is the run itself. Keep this file current.
   notice says; the worker test (`apps/worker/test/estimates.test.ts`) checks with four people that the two in the
   middle reach no frame. Nobody looked at the panels at 2000 px or with a screen reader; the step „Abweichungen
   besprechen“ is one for everyone until stage M4 brings small groups.
+- Pairs and small groups (stage M4): `tests/teams.spec.ts` plays „1-2-4-Alle“ with four browsers (the moderation and
+  three who join at the door): each writes alone, the moderation moves into the pairs, each browser names its team
+  and partner and holds its partner's note; every frame each browser received since the move is read for the other
+  pair's notes and a note written in a pair is read for in the other pair's frames; the moderation swaps two people
+  through „Mehr“ → „Teams“ with the keyboard alone (Enter, arrow keys, Tab; the focus stays on the pressed key after
+  the swap); the merge shows every note to the four; the presenting asks before it shows everything; the export
+  names how many teams there were and no name. The screens `wand-team` (surface, team's area) and `wand-teams` (the
+  moderation's map with a swap begun) run axe in light at 390 px, dark at 1440 px and at 200 %, `wand-team-liste`
+  (the list with the team's heading) in light and dark. Moving on by itself when the time is up is tested in the
+  Worker only (`apps/worker/test/teams.test.ts`, with `runDurableObjectAlarm`): no end-to-end test waits a minute
+  for it, so the browser's side of it (the step frame with the clock the move started) is read only by the unit
+  test of the reducer's input and by `tests/teams.spec.ts` for a move the moderation made. Nobody looked at the
+  areas at 2000 px or with a screen reader; the areas on the surface are drawn and hidden from screen readers, the
+  list says the same with a heading per team.
 
 ## Waivers
 

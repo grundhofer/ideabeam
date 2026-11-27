@@ -9,6 +9,7 @@ import {
   generateSessionKey,
   initialWallState,
   PROTOCOL_VERSION,
+  type AutoCommand,
   type Ballot,
   type BallotCommand,
   type ClockCommand,
@@ -17,6 +18,7 @@ import {
   type RejectCode,
   type ServerEvent,
   type StepCommand,
+  type TeamsCommand,
   type WallState,
 } from "@ideabeam/shared";
 import type { ProviderFailure, ProviderId } from "@ideabeam/arrange";
@@ -31,8 +33,9 @@ export type Refusal = "NAME_TAKEN" | "WALL_FULL";
 
 /** The commands of the wall's flow, whose result shows once the wall has said so, to everyone at once: the
  *  moderation's step moves (revealing among them), the controls of the writing's clock and counting a vote; and
- *  everybody's ballot, which shows as stored once the wall has stored it (stage M2). */
-type FlowCommand = StepCommand | ClockCommand | BallotCommand | CountCommand;
+ *  everybody's ballot, which shows as stored once the wall has stored it (stage M2); the moderation's teams and the
+ *  switch of a step's moving on by itself (stage M4). */
+type FlowCommand = StepCommand | ClockCommand | BallotCommand | CountCommand | TeamsCommand | AutoCommand;
 
 /** A change of this browser that the wall did not take, and so is taken back: the reason, and the kind of command
  *  it was (null: neither a change of the wall's content nor a step of its flow). Beside the wall's own reasons:
@@ -131,6 +134,11 @@ type Live = {
   /** The moderation's „Auszählen“: the vote of the step the wall is in is counted, and everybody gets the result at
    *  once. */
   countVotes(): void;
+  /** The moderation's teams for the step the wall is in, whole (a swap): made for the teams as this browser knows
+   *  them. Nothing shows before the wall has said so. */
+  setTeams(teams: string[][]): void;
+  /** The moderation's: a step that moves on by itself when its time is up does so, or waits for „Weiter“. */
+  setAuto(step: number, on: boolean): void;
   /** The reason of the last reject has been read. */
   dismissRejected(): void;
 };
@@ -288,12 +296,18 @@ export const useWall = create<Live>()((set, get) => {
         }
         // The worker's time, where a frame carries it: the distance to this browser's clock, and the moment the
         // clock's sentence is worked out for, in the same step as the clock itself.
-        const timed = event.type === "sync" || event.type === "clock.changed";
+        // (a step move that starts the step's clock carries it too)
+        const serverNow =
+          event.type === "sync" || event.type === "clock.changed"
+            ? event.serverNow
+            : event.type === "step.changed"
+              ? event.serverNow
+              : undefined;
         set((live) => {
           const state = applyServerEvent(live.state, event);
           return {
             state,
-            ...(timed ? { skew: Date.now() - event.serverNow, now: event.serverNow } : {}),
+            ...(serverNow !== undefined ? { skew: Date.now() - serverNow, now: serverNow } : {}),
             // an arrangement arrived: the run, and where the wall stands right after it
             ...(event.type === "arrange.applied" ? { arranged: { runId: event.runId, seq: state.seq } } : {}),
           };
@@ -383,6 +397,12 @@ export const useWall = create<Live>()((set, get) => {
     },
     countVotes() {
       ask({ type: "admin.step.count", opId: generateHexId(), step: get().state.step });
+    },
+    setTeams(teams) {
+      ask({ type: "admin.teams.set", opId: generateHexId(), rev: get().state.teams?.rev ?? 0, teams });
+    },
+    setAuto(step, on) {
+      ask({ type: "admin.step.auto", opId: generateHexId(), step, on });
     },
     look() {
       set((live) => ({ now: workerTime(Date.now(), live.skew) }));

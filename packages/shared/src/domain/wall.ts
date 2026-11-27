@@ -18,6 +18,7 @@ import { numbersOf } from "./arrange.js";
 import { NO_CLOCK, stoppedClock } from "./clock.js";
 import { NO_STEP, stepContext, type StepContext } from "./flow.js";
 import { decide, type WallReader } from "./rules.js";
+import type { TeamView } from "./teams.js";
 import type { Ballot, VoteResult, VoteRound } from "./vote.js";
 
 /** What a wall holds: its notes with their places, and its groups. Both in the order they were made. */
@@ -67,6 +68,10 @@ export interface WallState extends WallContent {
   voted: number;
   /** The results of the counted votes. */
   results: VoteResult[];
+  /** The teams as this person is told them (stage M4, domain/teams.ts), or null: the wall has formed none. */
+  teams: TeamView | null;
+  /** The steps that move on by themselves whose moving on the moderation has switched off. */
+  manual: number[];
   // `notes` and `groups` are what the worker has told: the wall as it is stored. What a browser shows is `shown()`.
   /** The number of the last stored change this browser has heard of (protocol.ts, `seq`). */
   seq: number;
@@ -95,6 +100,8 @@ export const initialWallState: WallState = {
   ballot: null,
   voted: 0,
   results: [],
+  teams: null,
+  manual: [],
   notes: [],
   groups: [],
   seq: 0,
@@ -124,6 +131,8 @@ export function applyServerEvent(state: WallState, event: ServerEvent): WallStat
         ballot: event.ballot,
         voted: event.voted,
         results: event.results,
+        teams: event.teams,
+        manual: event.manual,
         notes: event.notes,
         groups: event.groups,
         seq: event.seq,
@@ -183,20 +192,37 @@ export function applyServerEvent(state: WallState, event: ServerEvent): WallStat
       // somebody else changed a note this browser may not read: the change's number, and how many are hidden now
       return { ...state, hidden: event.hidden, ...numbered(state, event.seq) };
     case "notes.revealed":
-      // the notes this browser did not have: nothing is hidden any more
+      // the notes this browser did not have: nothing is hidden any more, or, into a step of teams, those of the
+      // other teams
       return {
         ...state,
         notes: event.notes.reduce((notes, note) => place(without(notes, note.id), note, madeBefore), state.notes),
-        hidden: 0,
+        hidden: event.hidden ?? 0,
         ...numbered(state, event.seq),
       };
+    case "team.changed":
+      return {
+        ...state,
+        teams: event.team,
+        notes: event.notes.reduce((notes, note) => place(without(notes, note.id), note, madeBefore), state.notes),
+        hidden: event.hidden,
+        ...numbered(state, event.seq),
+      };
+    case "auto.changed":
+      return { ...state, manual: event.manual, ...numbered(state, event.seq) };
     case "step.changed":
       return {
         ...state,
+        // forming teams moved notes into the teams' areas
+        ...(event.moves === undefined || event.moves.length === 0
+          ? {}
+          : { notes: applyChange(state, { type: "notes.moved", moves: event.moves }).notes }),
         step: event.step,
         reach: Math.max(event.reach, event.step),
-        // the step is over, and with it its time: the worker stores the same (domain/flow.ts)
-        clock: stoppedClock(state.clock),
+        // the step is over, and with it its time: the worker stores the same (domain/flow.ts); a step that moves on
+        // by itself starts its own
+        clock: event.clock ?? stoppedClock(state.clock),
+        teams: event.team ?? state.teams,
         // the step's vote, how many have voted in it and one's own ballot, where the step votes
         votes: event.round === undefined ? state.votes : withRound(state.votes, event.round),
         voted: event.voted ?? 0,
@@ -351,8 +377,10 @@ function rearranged(
  *  browser's person's (`mine`). `arrangeRun` is the run that can be taken back, as far as a browser knows it: which
  *  one it was (`WallState.arrangeRun`). */
 export function readerOf(content: WallContent, arrangeRun: string | null = null): WallReader {
-  let byId: Map<string, Note> | null = null;
-  const note = (id: string) => (byId ??= new Map(content.notes.map((n) => [n.id, n]))).get(id) ?? null;
+  // every note a browser holds is one it may read: in a step of teams, its own or its team's (`shared`)
+  let byId: Map<string, Note & { shared: true }> | null = null;
+  const note = (id: string) =>
+    (byId ??= new Map(content.notes.map((n) => [n.id, { ...n, shared: true as const }]))).get(id) ?? null;
   return {
     note,
     placement: note,
