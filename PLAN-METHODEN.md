@@ -1,6 +1,6 @@
 # IdeaBeam: geführte Methoden (Plan für v0.2)
 
-Stand 27.11.2026. Entwurf, von dir noch nicht freigegeben. Grundlage: dein Auftrag vom 27.11.2026 („ein miro mit
+Stand 27.11.2026. Deine Antworten auf die Fragen in Abschnitt 7 stehen dort; M1 ist freigegeben („Erst M1 und M2“). Grundlage: dein Auftrag vom 27.11.2026 („ein miro mit
 bewährten wissenschaftlichen und unternehmerischen konzepten … moderator wählt die agenda und das setup aus einer
 großen liste und man arbeitet dann kollaborativ oder einzeln für sich“), die Recherche
 [`docs/recherche-methoden.md`](docs/recherche-methoden.md) und der Methodenkatalog
@@ -191,8 +191,9 @@ Abnahme: Eine Agenda aus drei Methoden läuft durch. Was eine Methode erzeugt, k
 
 ## 7 Fragen an dich
 
-Jede mit Empfehlung zuerst. Alle anderen Einzelheiten (Anhang A, Abschnitt 7) entscheide ich nach der Empfehlung,
-wenn du nichts anderes sagst.
+Jede mit Empfehlung zuerst. **Entschieden am 27.11.2026:** 1, 2, 5 und 8 von dir, jeweils wie empfohlen (IdeaBeam
+bleibt; die Moderation drückt „Weiter“; Evidenz als Wort mit einem Satz; erst M1 und M2). 3, 4, 6 und 7 sowie die
+Einzelheiten in Anhang A gelten nach der Empfehlung, solange du nichts anderes sagst.
 
 1. **Name.** Bleibt es IdeaBeam?
    - *Behalten (empfohlen).* Pro: Domain, Repo und Startseite sind da; „Idee“ passt zu Workshops. Contra: Der Name
