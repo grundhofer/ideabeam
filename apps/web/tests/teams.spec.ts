@@ -215,3 +215,48 @@ test("a team member sees their team's area at a readable zoom: no smaller than a
   expect(await zoomOf(page)).toBeGreaterThanOrEqual(plain);
   await expect(page.locator(".app-state__sentence")).toHaveText("Euer Team: 2 Zettel. Ihr seid 2 im Team.");
 });
+
+/** Where the team areas lie in the surface's frame: the top of the first from the left, in pixels from the frame's
+ *  top; whether every area's heading lies whole inside the frame (a member is shown one area, the moderation all). */
+const firstArea = (page: Page) =>
+  page.locator(".app-surface__frame").evaluate((frame: HTMLElement) => {
+    const outer = frame.getBoundingClientRect();
+    const areas = [...frame.querySelectorAll<HTMLElement>(".app-area")].sort(
+      (a, b) => a.getBoundingClientRect().left - b.getBoundingClientRect().left,
+    );
+    const area = areas[0];
+    if (area === undefined) return null;
+    const inside = (head: DOMRect) =>
+      head.left >= outer.left && head.right <= outer.right && head.top >= outer.top && head.bottom <= outer.bottom;
+    return {
+      top: area.getBoundingClientRect().top - outer.top,
+      headIn: areas.every((one) => inside(one.querySelector(".app-area__head")!.getBoundingClientRect())),
+    };
+  });
+
+test("in a step of teams the view starts at the top of the areas with their headings in view; a member's at a readable zoom", async ({
+  page,
+}) => {
+  await page.setViewportSize({ width: 2000, height: 1200 });
+  await enter(page, { hidden: false, notes: ["Weniger Termine", "Mehr Pausen"] });
+  await page.getByRole("button", { name: "Alles zeigen", exact: true }).click();
+  const plain = await zoomOf(page);
+  // the margin of „Alles zeigen“ (lib/surface/view.ts, MARGIN: 24 units of 1/16 rem, 24 px at the default size), and
+  // a pixel for rounding
+  const margin = 25;
+
+  for (const admin of [false, true]) {
+    await enterTeams(page, { admin });
+    await expect(page.locator(".app-area")).toHaveCount(admin ? 2 : 1);
+    // the look when the team is formed, then „Alles zeigen“
+    for (const fitted of [false, true]) {
+      if (fitted) await page.getByRole("button", { name: "Alles zeigen", exact: true }).click();
+      await expect.poll(async () => (await firstArea(page))?.headIn).toBe(true);
+      const area = (await firstArea(page))!;
+      expect(area.top).toBeGreaterThanOrEqual(0);
+      expect(area.top).toBeLessThanOrEqual(margin);
+      // a member's own area at the readable zoom; the moderation's every area across, all its headings in view
+      if (!admin) expect(await zoomOf(page)).toBeGreaterThanOrEqual(plain);
+    }
+  }
+});

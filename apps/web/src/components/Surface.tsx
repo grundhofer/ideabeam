@@ -93,6 +93,8 @@ import {
   wheelZoom,
   zoomAt,
   ZOOM_STEP,
+  fitTop,
+  around as aroundBoxes,
   type Box,
   type Point,
   type Size,
@@ -113,6 +115,9 @@ export type WallHandle = {
    *  once it is applied. With `remember` the view it leaves is kept for `lookBack`; without, there is no way back
    *  any more. The list has no view: there it does nothing. */
   lookAt(box: Box, remember: boolean): void;
+  /** A step of teams: the view of „Alles zeigen“ there, the areas this person is shown from the top of their band, at
+   *  the readable zoom of the notes. The list does nothing. */
+  lookAtTeams(): void;
   /** Back to the view `lookAt` remembered, if there is one: the proposal was discarded. */
   lookBack(): void;
   /** The wall's content takes the focus: the surface's ground, or the list. Where the focus goes once what had it
@@ -152,6 +157,8 @@ export type WallProps = {
   areas?: Array<{ n: number; box: Box; head: Box; own: boolean; label: string }> | null;
   /** In a step of teams: the person's own team's area, where a new note goes. null: anywhere. */
   ownArea?: Box | null;
+  /** A step of teams: „Alles zeigen“ looks at the areas' band from its top (`lookAtTeams`). */
+  teamStep?: boolean;
 };
 
 // The count of characters shows once the text comes near the limit: before, it would only be noise.
@@ -503,6 +510,7 @@ export const Surface = memo(function Surface({
   motion,
   areas = null,
   ownArea = null,
+  teamStep = false,
 }: WallProps) {
   const { t } = useTranslation();
   const frame = useRef<HTMLDivElement>(null);
@@ -693,8 +701,32 @@ export const Surface = memo(function Surface({
 
   // „Alles zeigen“ shows the notes and the frames: an empty group is part of the wall too, and so is the head of a
   // team's area (its number), not its empty rest, which would shrink the notes past reading
-  const fitAll = () =>
+  // In a step of teams the view starts at the top of the areas' band, its headings a margin under the surface's top,
+  // no empty band above (`fitTop`); the areas may run off the bottom. A member is shown their own area alone, at the
+  // readable zoom of its heading and its notes, as large as they fit. The moderation is shown every area: the zoom
+  // takes every heading across, so none is cut at a side (text the surface cuts fails the screen checks)
+  const fitTeams = () => {
+    const shown = areas ?? [];
+    const band = aroundBoxes(shown.map((area) => area.box));
+    if (band === null) return false;
+    const { x, y, w, h } = band;
+    const inside = notes.filter((note) => note.x >= x && note.x < x + w && note.y >= y && note.y < y + h);
+    show(
+      fitTop(
+        everything(
+          inside,
+          shown.map((area) => area.head),
+        ),
+        band,
+        metric.current.size,
+      ),
+    );
+    return true;
+  };
+  const fitAll = () => {
+    if (teamStep && fitTeams()) return;
     show(fit(everything(notes, [...groups, ...(areas ?? []).map((area) => area.head)]), metric.current.size));
+  };
   const zoomBy = (factor: number) => show(zoomAt(view.current, middle(), view.current.zoom * factor));
 
   // The first look: everything, before the first paint. From then on the view is the person's own.
@@ -1056,6 +1088,11 @@ export const Surface = memo(function Surface({
       measure();
       leftView.current = remember ? view.current : null;
       show(fit(box, metric.current.size));
+    },
+    lookAtTeams: () => {
+      measure();
+      leftView.current = null;
+      fitTeams();
     },
     lookBack: () => {
       const back = leftView.current;

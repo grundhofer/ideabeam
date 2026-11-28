@@ -3,6 +3,7 @@ import {
   around,
   clampZoom,
   fit,
+  fitTop,
   MARGIN,
   MAX_ZOOM,
   MIN_ZOOM,
@@ -150,4 +151,22 @@ test("revealing moves the view by the least distance that shows the box whole", 
   // larger than the surface: its top left corner shows
   const big = reveal(view, SURFACE, { x: 500, y: 300, w: 4000, h: 3000 });
   expect(toSurface(big, { x: 500, y: 300 })).toEqual({ x: MARGIN, y: MARGIN });
+});
+
+test("„Alles zeigen“ in a step of teams keeps the zoom of the notes and puts the areas' band at the top", () => {
+  // one area, narrower than the surface: the zoom of the notes and the head, the band in the middle across, its top a
+  // margin under the surface's top, whatever lies below it
+  const area = { x: 0, y: 1200, w: 832, h: 1280 };
+  const notes = { x: 0, y: 1200, w: 832, h: 160 };
+  const one = fitTop(notes, area, SURFACE);
+  expect(one.zoom).toBe(fit(notes, SURFACE).zoom);
+  const at = toSurface(one, area);
+  expect(at.y).toBeCloseTo(MARGIN);
+  expect(at.x).toBeCloseTo((SURFACE.w - area.w * one.zoom) / 2);
+  // a band wider than the surface at that zoom: its left edge a margin from the surface's left, the first heading
+  // whole; the rest runs off to the right
+  const band = { x: 0, y: 1200, w: 1728, h: 1280 };
+  const wide = fitTop({ x: 0, y: 1200, w: 300, h: 100 }, band, SURFACE);
+  expect(wide.zoom).toBe(1);
+  expect(toSurface(wide, band)).toEqual({ x: MARGIN, y: MARGIN });
 });

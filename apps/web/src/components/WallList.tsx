@@ -316,6 +316,7 @@ export const WallList = memo(function WallList({
     },
     // the list has no view: every row is there to scroll to
     lookAt() {},
+    lookAtTeams() {},
     lookBack() {},
     focus: () => root.current?.focus(),
   }));

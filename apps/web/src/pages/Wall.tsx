@@ -117,7 +117,7 @@ import { checkText, DISPLAY_NAME_MAX, tidy, type TextFault } from "../lib/input"
 import { adminLink, wallLink } from "../lib/links";
 import { usePaced } from "../lib/paced";
 import { looseSpot } from "../lib/surface/groups";
-import { boxOf, sizeOf } from "../lib/surface/notes";
+import { sizeOf } from "../lib/surface/notes";
 import { rejectKey } from "../lib/rejected";
 import { firstView, storeView, type WallView } from "../lib/wall-view";
 import { ActionZone } from "../sebaro/react/ActionZone";
@@ -875,24 +875,17 @@ function OnWall({ wallId }: { wallId: string }) {
       setSaid(t("wall.turn.said", { shown: turnShown, total: turnTotal }));
     }
   }
-  // The person's team changed (formed, merged, a swap): said once, with whom; the surface looks at the team's area
-  // and at every note this browser holds, so nothing that was there leaves the view.
+  // The person's team changed (formed, merged, a swap): said once, with whom; the surface looks at the areas from
+  // the top of their band at the readable zoom of the notes this browser holds (Surface.tsx, `lookAtTeams`).
   const teamKey = teamStep && teams !== null ? `${teams.rev}:${ownTeam ?? ""}` : "";
   const [teamWas, setTeamWas] = useState(teamKey);
   if (teamWas !== teamKey) {
     setTeamWas(teamKey);
     if (teamLine !== null) setSaid(teamLine);
   }
-  const ownHead = teamStep && ownAreaOf !== undefined ? areaHead(ownAreaOf) : undefined;
   useEffect(() => {
-    if (ownHead === undefined) return;
-    // the team's area by its head, and every note this browser holds: the team's own and the person's
-    const boxes = [ownHead, ...notes.map(boxOf)];
-    const x = Math.min(...boxes.map((box) => box.x));
-    const y = Math.min(...boxes.map((box) => box.y));
-    const w = Math.max(...boxes.map((box) => box.x + box.w)) - x;
-    const h = Math.max(...boxes.map((box) => box.y + box.h)) - y;
-    shownAs.current?.lookAt({ x, y, w, h }, false);
+    if (!teamStep || teamKey === "") return;
+    shownAs.current?.lookAtTeams();
     // when the team changes, not when its box is worked out anew
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [teamKey]);
@@ -1224,6 +1217,7 @@ function OnWall({ wallId }: { wallId: string }) {
     areas,
     // in a step of teams a new note goes into the person's own team's area
     ownArea: teamStep && ownAreaOf !== undefined ? areaBox(ownAreaOf) : null,
+    teamStep,
   };
 
   // The wall's tools stand in its head, out of the content's way: the link as a key, and in „Mehr“ what belongs to

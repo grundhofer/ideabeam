@@ -104,6 +104,20 @@ export function fit(box: Box | null, surface: Size, margin = MARGIN): View {
   };
 }
 
+/** „Alles zeigen“ in a step of teams: the zoom of `fit` for `box` (the notes and the headings of the areas, so the
+ *  notes stay readable), the view placed at the top of the areas' band `areas`: its top edge with the headings a
+ *  margin under the surface's top, no empty band above it; across, the band in the middle where it fits, else its
+ *  left edge a margin from the surface's left, so the first heading is never cut. The band may run off the bottom. */
+export function fitTop(box: Box | null, areas: Box, surface: Size, margin = MARGIN): View {
+  const { zoom } = fit(box ?? areas, surface, margin);
+  const across = areas.w * zoom;
+  return {
+    zoom,
+    x: across <= surface.w - 2 * margin ? (surface.w - across) / 2 - areas.x * zoom : margin - areas.x * zoom,
+    y: margin - areas.y * zoom,
+  };
+}
+
 /** The view moved by the least distance that shows the box whole, with room around it; a view that shows it
  *  already stays. A box larger than the surface shows its top left corner. */
 export function reveal(view: View, surface: Size, box: Box, margin = MARGIN): View {
