@@ -16,14 +16,14 @@ without names) and stage M4 (pairs and small groups: teams formed at random, swa
 steps that move on by themselves through the one alarm, „1-2-4-Alle“) are merged into `main` and deployed (`cd154d5`,
 2026-11-27, with the evidence rating removed); stage M5 (revealing by turn, the ranking panel, actions with „Wer“ and
 „Bis wann“, rounds that hide again, and the methods „Rückblick nach Ziel und Daten“, „Scheitern vorwegdenken“,
-„Stille Ideenrunde mit Rangfolge“, „Was? Na und? Was nun?“) is committed (`1a2b46a`, not merged); stage M6 (the
+„Stille Ideenrunde mit Rangfolge“, „Was? Na und? Was nun?“) is merged (`1a2b46a`); stage M6 (the
 score by criteria with its table, roles of teams, the consent round, decisions and measurable results recorded by the
 moderation, fixed fields, and the methods „Kriterienbewertung“, „Nutzen und Aufwand“, „Gegenposition prüfen“,
-„Entscheidungsprotokoll mit Zustimmungsrunde“, „Annahmen prüfen“, „Ziele mit messbaren Ergebnissen“) is committed
-(`3a14f30`, not merged); stage M7 (an agenda of up to eight methods on one wall, each with its own prompt, the earlier
+„Entscheidungsprotokoll mit Zustimmungsrunde“, „Annahmen prüfen“, „Ziele mit messbaren Ergebnissen“) is merged
+(`3a14f30`); stage M7 (an agenda of up to eight methods on one wall, each with its own prompt, the earlier
 methods' groups and notes offered to a later vote, „Mehr“ → „Ablauf“ for the methods not reached, `admin.agenda.set`,
-protocol 12, an export section per method, and „Geführte Methoden“ on the start) is built on `methoden-m7`, not
-committed. Each stage's state is under its heading there.
+protocol 12, an export section per method, and „Geführte Methoden“ on the start) is merged (`b3c3894`); M5 to M7 are deployed
+since 2026-11-28. Each stage's state is under its heading there.
 
 ## Commands
 
