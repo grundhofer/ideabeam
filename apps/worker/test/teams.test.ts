@@ -365,10 +365,13 @@ describe("steps that move on by themselves", () => {
     await settle();
     expect((await stored(wallId)).step).toBe(0);
     expect((await resync(member.socket)).manual).toEqual([0]);
-    // switched on again, with the time up: the next alarm moves on
+    // switched on again, with the time up: the alarm is set to the time that has passed, so workerd may ring it
+    // at once by itself (then it reads null while ringing); either way it moves on
+    const endsAt = (await stored(wallId)).clock.endsAt;
     expect(await ask(anna.socket, { type: "admin.step.auto", step: 0, on: true })).toBe("ack");
-    expect((await stored(wallId)).alarm).toBe((await stored(wallId)).clock.endsAt);
-    expect(await runDurableObjectAlarm(stubOf(wallId))).toBe(true);
+    const armed = await stored(wallId);
+    if (armed.step === 0 && armed.alarm !== null) expect(armed.alarm).toBe(endsAt);
+    await runDurableObjectAlarm(stubOf(wallId)); // false when it rang by itself already
     await member.socket.waitFor((e) => e.type === "step.changed" && e.step === 1);
   });
 

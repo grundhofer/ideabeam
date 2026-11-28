@@ -12,6 +12,11 @@ updates:
     groups:
       minor-and-patch:
         update-types: [minor, patch]
+    # the Worker's test set, moved by hand and together (AGENTS.md)
+    ignore:
+      - dependency-name: vitest
+      - dependency-name: "@cloudflare/vitest-pool-workers"
+      - dependency-name: wrangler
   - package-ecosystem: github-actions
     directory: /
     schedule:
