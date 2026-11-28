@@ -1134,6 +1134,19 @@
 .app-landing-methods__short {
   margin: 0;
 }
+/* the purposes differ in length (six methods to decide, one without a plan): in the rows of a grid a short purpose
+   beside a long one left half a row empty, so on a wide screen they flow down two columns, each purpose whole */
+@media (min-width: 40rem) {
+  .app-landing-methods > .app-landing-grid--two {
+    display: block;
+    columns: 2;
+    column-gap: var(--sb-space-8);
+  }
+  .app-landing-methods > .app-landing-grid--two > section {
+    break-inside: avoid;
+    margin-block-end: var(--sb-space-8);
+  }
+}
 .app-landing-methods__name {
   font-weight: var(--sb-type-body-strong-weight);
 }

@@ -1098,7 +1098,17 @@ export class WallRoom extends DurableObject<Env> {
     const seq = this.currentSeq();
     const to = decision.flow.step;
     const before = this.readTeams();
-    const formed = enterTeams(before, state.agenda.steps[to] ?? {}, to, [...this.onlineIds()], randomSeed(), now);
+    // into a step of teams the wall's groups are read first: areas formed anew keep clear of them (`bandTop`)
+    const early = state.agenda.steps[to]?.team === undefined ? null : this.readContent();
+    const formed = enterTeams(
+      before,
+      state.agenda.steps[to] ?? {},
+      to,
+      [...this.onlineIds()],
+      randomSeed(),
+      now,
+      early?.groups ?? [],
+    );
     const widens = decision.widens || formed !== null;
     const changedSeq = widens ? seq + 2 : seq + 1;
     const teams = formed === null ? before : { ...formed, seq: changedSeq };
@@ -1107,7 +1117,7 @@ export class WallRoom extends DurableObject<Env> {
     // into a step that reveals by turn, a step entered again included: its order, and which of its notes are still
     // there (stage M5)
     const turning = state.agenda.steps[to]?.turns === true;
-    const content = widens || decision.opens || turning ? this.readContent() : null;
+    const content = widens || decision.opens || turning ? (early ?? this.readContent()) : null;
     // what is seen of the notes before the move and after it (stage M5: per note where it differs)
     const was: Sight = { level: sightOf(state.agenda, state.flow), teams: before };
     // Teams formed anew: every note written alone goes into its writer's team's area (`layoutIntoAreas`), one
