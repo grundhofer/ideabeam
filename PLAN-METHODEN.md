@@ -559,7 +559,7 @@ nicht deployt.
 | Barrierefreiheit | Plus/Minus statt Ziehen beim Punkten, Schrittwechsel und „Zeit um“ werden angesagt, Fokus springt nie, während jemand schreibt |
 | Rund 300 Texte je Sprache | Texte im geteilten Paket mit Gleichstands-Test DE/EN, nachgeladen, damit der Start nicht schwerer wird |
 | Ungeprüfte Belege in der App | Entfällt: Seit dem 27.11.2026 zeigt die App keine Belege (Abschnitt 7, Frage 5). Die Regeln der Abläufe stützen sich auf die geprüfte Recherche |
-| Marken | Vor dem Bau von M5 eine Suche in TMview für die Namen mit „Register offen“ im Katalog |
+| Marken | Erledigt am 28.11.2026: Suche in TMview, Ergebnis in methoden-katalog.md. „PREMORTEM“ ist in den USA eingetragen, in der EU nichts; die App zeigt keinen der Namen |
 
 ## 7 Fragen an dich
 

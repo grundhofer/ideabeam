@@ -16,8 +16,11 @@ Definition der Stufen sind deshalb aus diesem Katalog entfernt. Die Begründung 
   neben dem Namen ihre Kurzbeschreibung. Ein Name allein erscheint nirgends.
 - **„Auch bekannt als“** nennt einen verbreiteten Namen nur beschreibend, nie als Name einer Vorlage. Riskante Namen
   fehlen ganz (die Methode mit den Denkhüten, RAPID, Value Proposition Canvas, Cynefin, Lean Canvas). Für die mit
-  „(Register offen)“ markierten Namen hat niemand in DPMA, EUIPO/TMview oder USPTO gesucht (Recherche, Abschnitt
-  Lizenzen): Vor dem Start je Name eine TMview-Suche, sonst die Zeile weglassen.
+  „(Register offen)“ markierten Namen gab es am 28.11.2026 eine Suche in TMview (Wortlaut enthält, alle Ämter), aber
+  keine Prüfung durch einen Anwalt. „pre-mortem“ und „premortem“: „PREMORTEM“ in den USA eingetragen (USPTO 97833316,
+  Klasse 41), „PEER PRE-MORTEM“ in den USA angemeldet (USPTO 99700761, Klasse 42), nichts bei EUIPO oder DPMA.
+  „nominal group“, „Nominalgruppe“, „mini-delphi“: nichts Einschlägiges; „Delphi“ allein hat über 6.000 Treffer
+  fremder Firmen. Die App zeigt keinen dieser Namen; bleibt so, solange niemand anders entscheidet.
 - **Vokabular des Ablaufs.** Modus: allein, zu zweit, Kleingruppe, alle, vorstellen (eine Person oder Gruppe stellt
   vor, die anderen sehen zu). Sichtbarkeit: verdeckt (nur die Person selbst), Gruppe (nur die eigene Zweier- oder
   Kleingruppe), alle, nur Summe (sichtbar ist erst das Ergebnis der Auszählung), ohne Namen (Inhalt für alle, Urheber
