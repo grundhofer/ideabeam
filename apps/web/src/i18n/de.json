@@ -238,7 +238,7 @@
     "promptLabel": "Frage der Methode",
     "promptHelp": "Leer lassen: Es gilt die Frage der Wand.",
     "unit": "Einheit der Schätzung, Methode {{n}}",
-    "choose": "Methode {{n}} wählen: {{name}}",
+    "choose": "Methode wählen: {{n}}. {{name}}",
     "chooseWord": "Methode wählen",
     "up": "Nach oben: {{n}}. {{name}}",
     "down": "Nach unten: {{n}}. {{name}}",

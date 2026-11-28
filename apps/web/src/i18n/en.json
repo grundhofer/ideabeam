@@ -238,7 +238,7 @@
     "promptLabel": "The method’s question",
     "promptHelp": "Leave it empty to ask the wall’s question.",
     "unit": "Unit of the estimate, method {{n}}",
-    "choose": "Choose method {{n}}: {{name}}",
+    "choose": "Choose method: {{n}}. {{name}}",
     "chooseWord": "Choose method",
     "up": "Move up: {{n}}. {{name}}",
     "down": "Move down: {{n}}. {{name}}",
