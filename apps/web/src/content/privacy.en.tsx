@@ -144,10 +144,22 @@ export function PrivacyEn() {
           agreed on an action is not stored.
         </li>
         <li>
+          <strong>Decisions and measurable results:</strong> in a method that records decisions (such as “Decision
+          record with consent round”) or agrees on measurable results (“Goals with measurable results”), they are notes
+          like any other (above). When the facilitator records a decision, the wall stores with the note{" "}
+          <strong>its reasons, the objections still open and the review date</strong>; when it agrees on a result,{" "}
+          <strong>the goal it belongs to, its target, who owns it and the review date</strong>, each free text as the
+          team types it (at most 300, 60 and 40 characters). Who decided is not stored: in this version it is always the
+          facilitator, and the application says so. Everything stays stored for as long as the wall exists (section
+          3.3), everyone on the wall sees it, and the file of “Save as Markdown” holds it.
+        </li>
+        <li>
           <strong>Groups:</strong> up to 80 per wall, each with its title (at most 60 characters, it may be missing),
           the place and size of its frame, its position in the order of the groups, and two details for grouping
           (section 3.4): whether the title comes from a person or from the AI and whether grouping leaves the group
-          untouched. Who created or changed a group is not stored.
+          untouched. Who created or changed a group is not stored. A wall of the method “Test your assumptions” begins
+          with five such groups (the fields); their titles are in the language of the browser that creates the wall, and
+          the language itself is not stored.
         </li>
         <li>
           <strong>Votes:</strong> in a step in which people vote, one ballot per person: which options (groups or notes)
@@ -155,6 +167,19 @@ export function PrivacyEn() {
           overwrites one’s own ballot. When the votes are counted, the wall stores the result: for each option its title
           or text, its points, its place and how many ballots gave it anything, and the number of ballots, without
           identifiers. What is up for the vote the wall fixes when the step begins.
+        </li>
+        <li>
+          <strong>Ratings:</strong> in a step in which people rate (such as “Rating by criteria”), one ballot per person
+          with a number from 1 to 5 per option and criterion, as above. Where the criteria are notes, the wall fixes
+          their texts when the step begins. When the ratings are counted, it stores only the means per option and
+          criterion, the overall value and how many rated, without identifiers.
+        </li>
+        <li>
+          <strong>Consent round:</strong> in “Decision record with consent round”, one answer per person (“Agree”, “Can
+          live with it” or “Objection”), an objection with its <strong>reason</strong> (at most 300 characters), like a
+          ballot: with the identifier of the person and the running number of the change. When the round is counted, the
+          wall stores how many gave which answer and the reasons of the objections, sorted alphabetically and without
+          identifiers; everyone on the wall then sees these reasons, and the file of “Save as Markdown” holds them.
         </li>
         <li>
           <strong>Estimates:</strong> in a step in which people estimate, one number per person, like a ballot: the
@@ -170,11 +195,12 @@ export function PrivacyEn() {
           facilitator). The application forms the teams at random from everyone connected when the step begins; whoever
           comes later joins the smallest team.{" "}
           <strong>The team assignment stays stored for as long as the wall exists</strong> (section 3.3), also after the
-          step with the teams. In a step with teams every person sees their team’s notes, without names; the facilitator
-          sees who is in which team, everybody else only their own team with the names in it. In a pair it is easy to
-          guess who wrote which note. The file of “Save as Markdown” names only how many teams there were, never who was
-          in them. In a method with several rounds (such as “What? So what? Now what?”) the small groups stay the same
-          from round to round.
+          step with the teams. In “Test the counter-position” every team has a role; which one follows from its number
+          and is not stored on its own. In a step with teams every person sees their team’s notes, without names; the
+          facilitator sees who is in which team, everybody else only their own team with the names in it. In a pair it
+          is easy to guess who wrote which note. The file of “Save as Markdown” names only how many teams there were,
+          never who was in them. In a method with several rounds (such as “What? So what? Now what?”) the small groups
+          stay the same from round to round.
         </li>
       </ul>
       <p>
@@ -203,7 +229,9 @@ export function PrivacyEn() {
         after counting either: counting is the facilitator’s, and then everyone gets only the result, all at once. The
         file of “Save as Markdown” holds only the result too. The same holds for estimates: the result is the summary of
         the round. The smallest and the largest number are in it; who estimated them is not. In a small group they still
-        let one guess more than a median does.
+        let one guess more than a median does. For ratings the result holds only means. In the consent round nobody but
+        the person who objects sees the reason of an objection before counting; afterwards everyone sees it, without
+        names. In a small group a reason may let one guess who gave it.
       </p>
       <p>
         <strong>Who can do what.</strong> Every person who has joined the wall can write notes. While notes are written
@@ -259,8 +287,9 @@ export function PrivacyEn() {
           and every automatic reconnection count as joining too. The deadline moves at most once a day; so the deletion
           lies 29 to 30 days after the last join. If nobody joins, the wall deletes itself 30 days after it was created.
           The application then deletes the whole storage of the wall, with all notes, groups, ballots, teams, actions
-          and results. Until then the ballots stay stored per person, and so do the team assignment and the “Who” and
-          “By when” of the actions. After that the link leads to “Unknown wall”, as for a wall that never existed.
+          and results. Until then the ballots stay stored per person (the answers and reasons of the consent round too),
+          and so do the team assignment, the “Who” and “By when” of the actions and the fields of decisions and
+          measurable results. After that the link leads to “Unknown wall”, as for a wall that never existed.
         </li>
         <li>
           The facilitator can delete the wall <strong>at any time</strong> (“Delete wall”): at once and completely, with

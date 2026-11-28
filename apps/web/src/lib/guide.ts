@@ -54,7 +54,18 @@ export type Standing = {
   arranged?: "fresh" | "changed" | null;
   /** In a step that votes: whether this person's ballot is stored, whether the vote is counted, and whether it is
    *  an estimate. */
-  vote?: { cast: boolean; counted: boolean; estimate?: boolean; rank?: boolean } | null;
+  vote?: {
+    cast: boolean;
+    counted: boolean;
+    estimate?: boolean;
+    rank?: boolean;
+    /** a score (stage M6) */
+    score?: boolean;
+    /** a consent round (stage M6) */
+    consent?: boolean;
+  } | null;
+  /** In a step of type `decide` (stage M6): what it records, decisions or measurable results; left out, actions. */
+  records?: "action" | "decision" | "result";
   /** In a step that reveals by turn (stage M5): how many notes are left to reveal. null or left out: no such step. */
   turn?: { left: number } | null;
   /** After a counted estimate, outside a step that votes: another round of estimates follows (`talk`), or none does
@@ -128,7 +139,23 @@ export type GuideKey =
   | "adminBeforeGroups"
   | "memberBeforeGroups"
   | "adminPresentGroups"
-  | "memberPresentGroups";
+  | "memberPresentGroups"
+  | "adminScore"
+  | "adminScoreCast"
+  | "adminScored"
+  | "memberScore"
+  | "memberScoreCast"
+  | "memberScored"
+  | "adminConsent"
+  | "adminConsentCast"
+  | "adminConsented"
+  | "memberConsent"
+  | "memberConsentCast"
+  | "memberConsented"
+  | "adminRecordDecision"
+  | "memberRecordDecision"
+  | "adminRecordResult"
+  | "memberRecordResult";
 
 /** The sentence that says what to do now. Alone, the next step is to bring the others in; with others, to write;
  *  once notes lie there, to put what belongs together into a group; once groups stand, to move the rest together
@@ -155,6 +182,12 @@ export function guide(standing: Standing): GuideKey {
       return `${admin ? "admin" : "member"}${state}`;
     }
     if (vote.rank === true && !vote.counted) return `${admin ? "admin" : "member"}${vote.cast ? "RankCast" : "Rank"}`;
+    if (vote.score === true) {
+      return `${admin ? "admin" : "member"}${vote.counted ? "Scored" : vote.cast ? "ScoreCast" : "Score"}`;
+    }
+    if (vote.consent === true) {
+      return `${admin ? "admin" : "member"}${vote.counted ? "Consented" : vote.cast ? "ConsentCast" : "Consent"}`;
+    }
     const state = vote.counted ? "Counted" : vote.cast ? "VoteCast" : "Vote";
     return `${admin ? "admin" : "member"}${state}`;
   }
@@ -163,7 +196,11 @@ export function guide(standing: Standing): GuideKey {
   if (turn !== null) return admin ? (turn.left > 0 ? "adminTurn" : "adminTurnDone") : "memberTurn";
   // somebody presents, and nobody writes yet; the moderation agrees on the actions
   if (standing.step === "present") return admin ? "adminListen" : "memberListen";
-  if (standing.step === "decide") return admin ? "adminDecide" : "memberDecide";
+  if (standing.step === "decide") {
+    if (standing.records === "decision") return admin ? "adminRecordDecision" : "memberRecordDecision";
+    if (standing.records === "result") return admin ? "adminRecordResult" : "memberRecordResult";
+    return admin ? "adminDecide" : "memberDecide";
+  }
   // a step of teams: talk in the team, and who reads its notes; the moderation has the map
   const teams = standing.teams ?? null;
   if (teams === "team") return admin ? "adminTeam" : "memberTeam";

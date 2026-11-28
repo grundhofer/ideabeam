@@ -143,9 +143,9 @@ test("ACCEPTANCE: „Stille Ideenrunde mit Rangfolge“ with two browsers; no fr
   await expect(page.locator(".sb-action-hint")).toHaveText("Alle Zettel sind aufgedeckt.");
   await forward(page, "Klären, ohne zu bewerten");
   await expect(stepLine(ben.page)).toHaveText(
-    "Schritt 3 von 5: Klären, ohne zu bewerten · danach Die fünf wichtigsten ranken",
+    "Schritt 3 von 5: Klären, ohne zu bewerten · danach Die wichtigsten ranken",
   );
-  await forward(page, "Die fünf wichtigsten ranken");
+  await forward(page, "Die wichtigsten ranken");
 
   // Ben ranks with the keyboard alone: chooses two, moves the second up, casts
   await ben.page.locator(".app-rank").waitFor();

@@ -28,14 +28,20 @@
 // that ends in a sentence has its own look in tests/own-key.spec.ts, for the same reason as the spent budget.
 import { expect, test, type Page } from "@playwright/test";
 import {
+  CONSENT_QUESTION,
+  CRITERIA_QUESTION,
   enter,
   enterAdjust,
+  enterConsent,
   enterEstimate,
+  enterGoals,
+  enterScore,
   enterRound,
   enterTeams,
   enterVote,
   ESTIMATE_QUESTION,
   FAILURE_QUESTION,
+  GOALS_QUESTION,
   GROUPS,
   join,
   know,
@@ -1645,6 +1651,96 @@ const screens: Screen[] = [
         expect(page.locator("[data-action]").filter({ hasText: "Skripte vorher dokumentieren" })).toContainText(
           "Festgelegt · Wer: Dora · Bis wann: 15. Januar",
         ),
+    ),
+  },
+  {
+    // the score (stage M6, „Kriterienbewertung“) in the place of the surface: every option with a select per
+    // criterion, one option scored, „Abgeben“ as the primary action. Also at 200 %
+    name: "wand-bewertung",
+    largeText: true,
+    path: "/",
+    heading: CRITERIA_QUESTION,
+    view: '[data-sb-view="wand"][data-sb-view-type="form"]',
+    overlay: null,
+    prepare: then(
+      (page) => enterScore(page),
+      (page) => page.locator("#app-f-score-1-1").selectOption("4"),
+      (page) => page.locator("#app-f-score-1-2").selectOption("3"),
+      (page) => page.locator("#app-f-score-1-3").selectOption("5"),
+      (page) => expect(page.locator(".app-ballot__left")).toHaveText("1 von 2 Optionen bewertet."),
+      (page) => expect(page.locator(".sb-primary-action")).toHaveText("Abgeben"),
+    ),
+  },
+  {
+    // the counted score as a table: the means per criterion, the total and how many scored, in its scrolling wrap on
+    // a phone. Also at 200 %
+    name: "wand-bewertung-ergebnis",
+    largeText: true,
+    path: "/",
+    heading: CRITERIA_QUESTION,
+    view: '[data-sb-view="wand"][data-sb-view-type="result"]',
+    overlay: null,
+    prepare: then(
+      (page) => enterScore(page, { counted: true }),
+      (page) => expect(page.locator(".app-score__table tbody tr")).toHaveCount(2),
+    ),
+  },
+  {
+    // the consent round (stage M6): the proposal, the three answers, an objection with its field for the reason.
+    // Also at 200 %
+    name: "wand-zustimmung",
+    largeText: true,
+    path: "/",
+    heading: CONSENT_QUESTION,
+    view: '[data-sb-view="wand"][data-sb-view-type="form"]',
+    overlay: null,
+    prepare: then(
+      (page) => enterConsent(page),
+      (page) => page.getByRole("radio", { name: "Einwand", exact: true }).check(),
+      (page) => expect(page.getByLabel("Begründung des Einwands")).toBeVisible(),
+      (page) => expect(page.locator(".sb-primary-action")).toHaveText("Abgeben"),
+    ),
+  },
+  {
+    // the counted consent round: how many gave each answer, and the objection without a name
+    name: "wand-zustimmung-ergebnis",
+    path: "/",
+    heading: CONSENT_QUESTION,
+    view: '[data-sb-view="wand"][data-sb-view-type="result"]',
+    overlay: null,
+    prepare: then(
+      (page) => enterConsent(page, { counted: true }),
+      (page) => expect(page.locator(".app-results")).toContainText("Ein Jahr Bindung ist zu lang"),
+    ),
+  },
+  {
+    // the decisions of a step that records them (stage M6) for the moderation: one recorded with its reasons, open
+    // objections and review date, one open, each with its fields. Also at 200 %
+    name: "wand-entscheidungen",
+    largeText: true,
+    path: "/",
+    heading: CONSENT_QUESTION,
+    view: '[data-sb-view="wand"][data-sb-view-type="list"]',
+    overlay: null,
+    prepare: then(
+      (page) => enterConsent(page, { admin: true, record: true }),
+      (page) => expect(page.locator(".app-actions__row")).toHaveCount(2),
+      (page) => expect(page.locator(".app-actions .app-ballot__left")).toHaveText("1 von 2 festgehalten."),
+    ),
+  },
+  {
+    // the measurable results for the moderation (stage M6): the goal to choose, target, owner and review date. Also
+    // at 200 %
+    name: "wand-ergebnisse",
+    largeText: true,
+    path: "/",
+    heading: GOALS_QUESTION,
+    view: '[data-sb-view="wand"][data-sb-view-type="list"]',
+    overlay: null,
+    prepare: then(
+      (page) => enterGoals(page, { admin: true }),
+      (page) => expect(page.locator(".app-actions__row")).toHaveCount(2),
+      (page) => expect(page.locator(".app-actions .app-ballot__left")).toHaveText("1 von 2 festgelegt."),
     ),
   },
   {

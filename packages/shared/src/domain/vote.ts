@@ -11,7 +11,7 @@ import type { RejectCode } from "../protocol.js";
 // tally goes to everyone at once (the owner's decisions, PLAN-METHODEN.md 7). What may be chosen is frozen when the
 // wall enters the step: the groups after „Bündeln“, else the notes.
 //
-// Five kinds, set by the method's step (`Step.vote`):
+// Six kinds, set by the method's step (`Step.vote`):
 //  - `dots`: points with a budget a person, stacked on an option or spread; the default budget is a quarter of the
 //    options, at least two (docs/methoden-katalog.md, method 2).
 //  - `approval`: up to so many options, each chosen once.
@@ -20,6 +20,14 @@ import type { RejectCode } from "../protocol.js";
 //  - `estimate` (stage M3): one number a person, with the step's unit and within its bounds; no options. The result
 //    is the median with the quartiles, the lowest and the highest estimate and how many there were
 //    (`aggregate`), never the mean alone and never a single estimate (docs/architektur-methoden.md 3.1).
+//  - `consent` (stage M6): one answer a person, „Zustimmung“, „Kann damit leben“ or „Einwand“, an objection with its
+//    reason; no options to choose from (what the round is about are the notes of `optionsFrom`, frozen as options are,
+//    but nobody marks them). The result counts the answers and lists the objections' reasons as text, in an order
+//    that says nothing about who gave them (sorted); never who answered what.
+//
+// A score's criteria (stage M6) are the step's own keys (the quick „Nutzen und Aufwand“, „Annahmen prüfen“), or the
+// notes written in earlier steps (`Step.criteriaFrom`, „Kriterienbewertung“): then their words are frozen into the round
+// when the wall enters the step, as its options are, and go into the result with it.
 //
 // This file imports nothing from the protocol at run time (domain/method.ts imports it, and the protocol imports
 // that): the schemas it needs stand here.
@@ -29,8 +37,10 @@ export const MAX_OPTIONS = 80;
 /** The lowest and the highest score. */
 export const SCORE_MIN = 1;
 export const SCORE_MAX = 5;
-/** How many criteria a score may have. */
+/** How many criteria a score may have; of criteria taken from notes, the first so many count. */
 export const MAX_CRITERIA = 5;
+/** How long the words of an option or a criterion in a result are at most: a note's text. */
+const LABEL_MAX = 300;
 /** The largest budget a step may name. */
 export const MAX_BUDGET = 100;
 
@@ -58,6 +68,7 @@ export const voteConfigSchema = z.discriminatedUnion("kind", [
     /** The text keys of the criteria (`<methodId>.<criterion>`); none: one score for an option. */
     criteria: z.array(criterionKeySchema).check(z.maxLength(MAX_CRITERIA)),
   }),
+  z.object({ kind: z.literal("consent") }),
   z.object({
     kind: z.literal("estimate"),
     /** What the number counts, or null: a bare number. The moderation names it on `/neu` (domain/agenda.ts). */
@@ -83,8 +94,21 @@ export const voteRoundSchema = z.object({
   omitted: z.int().check(z.minimum(0)),
   limit: z.int().check(z.minimum(0)),
   counted: z.boolean(),
+  /** A score whose criteria are notes (stage M6, `Step.criteriaFrom`): their words, frozen when the wall entered the
+   *  step; `criteriaOmitted`, how many more criteria notes there were past MAX_CRITERIA. Left out: the criteria are
+   *  the step's own keys. */
+  criteria: z.optional(z.array(z.string().check(z.maxLength(LABEL_MAX))).check(z.maxLength(MAX_CRITERIA))),
+  criteriaOmitted: z.optional(z.int().check(z.minimum(1))),
 });
 export type VoteRound = z.infer<typeof voteRoundSchema>;
+
+/** The answers of a consent round (stage M6). */
+export const CONSENT_ANSWERS = ["agree", "live", "object"] as const;
+export type ConsentAnswer = (typeof CONSENT_ANSWERS)[number];
+/** The reason of an objection: a note's length, one line, no control characters. */
+const consentReasonSchema = z
+  .string()
+  .check(z.trim(), z.minLength(1), z.maxLength(LABEL_MAX), z.regex(/^[^\p{Cc}\u2028\u2029]+$/u));
 
 const idsUnique = (ids: readonly string[]) => new Set(ids).size === ids.length;
 const fewKeys = (record: Record<string, unknown>) => Object.keys(record).length <= MAX_OPTIONS;
@@ -122,6 +146,12 @@ export const ballotSchema = z.discriminatedUnion("kind", [
     /** The person's number, in the step's unit. */
     value: estimateValueSchema,
   }),
+  z.object({
+    kind: z.literal("consent"),
+    answer: z.enum(CONSENT_ANSWERS),
+    /** Why, for an objection, which needs one; no other answer carries one. */
+    reason: z.optional(consentReasonSchema),
+  }),
 ]);
 export type Ballot = z.infer<typeof ballotSchema>;
 
@@ -132,7 +162,7 @@ export type Ballot = z.infer<typeof ballotSchema>;
 export const voteResultRowSchema = z.object({
   id: hexIdSchema,
   kind: z.enum(["group", "note"]),
-  label: z.string().check(z.maxLength(300)),
+  label: z.string().check(z.maxLength(LABEL_MAX)),
   points: z.number(),
   by: z.int().check(z.minimum(0)),
   rank: z.int().check(z.minimum(1)),
@@ -148,6 +178,9 @@ export const rankingResultSchema = z.object({
   limit: z.int().check(z.minimum(0)),
   voters: z.int().check(z.minimum(0)),
   rows: z.array(voteResultRowSchema).check(z.maxLength(MAX_OPTIONS)),
+  /** A score whose criteria were notes (stage M6): their words, as the round froze them; `scores` of each row stand in
+   *  this order. Left out: the step's own criteria, or none. */
+  criteria: z.optional(z.array(z.string().check(z.maxLength(LABEL_MAX))).check(z.maxLength(MAX_CRITERIA))),
 });
 export type RankingResult = z.infer<typeof rankingResultSchema>;
 
@@ -173,8 +206,21 @@ export const estimateResultSchema = z.object({
 });
 export type EstimateResult = z.infer<typeof estimateResultSchema>;
 
-/** A counted vote: a ranking of options, or the summary of estimates. */
-export const voteResultSchema = z.union([rankingResultSchema, estimateResultSchema]);
+/** A counted consent round (stage M6): how many answered, how many gave each answer, and the reasons of the objections
+ *  as text, sorted, so that their order says nothing about who gave them. Never who answered what. */
+export const consentResultSchema = z.object({
+  step: z.int().check(z.minimum(0)),
+  kind: z.literal("consent"),
+  voters: z.int().check(z.minimum(0)),
+  agree: z.int().check(z.minimum(0)),
+  live: z.int().check(z.minimum(0)),
+  object: z.int().check(z.minimum(0)),
+  objections: z.array(z.string().check(z.maxLength(LABEL_MAX))).check(z.maxLength(200)),
+});
+export type ConsentResult = z.infer<typeof consentResultSchema>;
+
+/** A counted vote: a ranking of options, the summary of estimates, or the answers of a consent round. */
+export const voteResultSchema = z.union([rankingResultSchema, estimateResultSchema, consentResultSchema]);
 export type VoteResult = z.infer<typeof voteResultSchema>;
 
 // ───────────────────────── the options ─────────────────────────
@@ -208,7 +254,7 @@ export function optionsFor(content: VoteContent, shown: boolean): { options: Vot
 
 /** The budget of a vote over `options` options: what the step names, else the default. Points: a quarter of the
  *  options, at least two (docs/methoden-katalog.md, method 2). Approval: the same, never more than the options.
- *  Rank: the first five, never more than the options. Score: every option. */
+ *  Rank: the first five, never more than the options. Score: every option. Estimate and consent: one answer. */
 export function limitOf(config: VoteConfig, options: number): number {
   const quarter = Math.max(2, Math.ceil(options / 4));
   switch (config.kind) {
@@ -221,15 +267,54 @@ export function limitOf(config: VoteConfig, options: number): number {
     case "score":
       return options;
     case "estimate":
+    case "consent":
       return 1;
   }
 }
 
+/** The criteria of a score taken from notes (stage M6, `Step.criteriaFrom`): the words of the notes, in the order they
+ *  were written, the first MAX_CRITERIA of them, and how many more there were. */
+export function criteriaOf(notes: ReadonlyArray<{ id: string; text: string; createdAt: number }>): {
+  criteria: string[];
+  omitted: number;
+} {
+  const sorted = [...notes].sort((a, b) => a.createdAt - b.createdAt || compare(a.id, b.id));
+  return {
+    criteria: sorted.slice(0, MAX_CRITERIA).map((note) => note.text.slice(0, LABEL_MAX)),
+    omitted: Math.max(0, sorted.length - MAX_CRITERIA),
+  };
+}
+
 /** The vote of step `step` as it begins: its options frozen, its budget set, nothing counted. An estimate has no
- *  options: it asks for a number. */
-export function openRound(step: number, config: VoteConfig, content: VoteContent, shown: boolean): VoteRound {
+ *  options: it asks for a number. A score whose criteria are notes gets their words (`criteriaOf`), frozen with it. */
+export function openRound(
+  step: number,
+  config: VoteConfig,
+  content: VoteContent,
+  shown: boolean,
+  criteria?: { criteria: string[]; omitted: number },
+): VoteRound {
   const { options, omitted } = config.kind === "estimate" ? { options: [], omitted: 0 } : optionsFor(content, shown);
-  return { step, options, omitted, limit: limitOf(config, options.length), counted: false };
+  return {
+    step,
+    options,
+    omitted,
+    limit: limitOf(config, options.length),
+    counted: false,
+    ...(config.kind === "score" && criteria !== undefined
+      ? {
+          criteria: criteria.criteria,
+          ...(criteria.omitted > 0 ? { criteriaOmitted: criteria.omitted } : {}),
+        }
+      : {}),
+  };
+}
+
+/** How many scores a score asks for an option: one for each criterion, the round's (taken from notes) or the step's
+ *  own, and one where there is none. */
+export function scoreWidth(round: Pick<VoteRound, "criteria">, config: VoteConfig): number {
+  const count = round.criteria?.length ?? (config.kind === "score" ? config.criteria.length : 0);
+  return Math.max(1, count);
 }
 
 /** The vote of a step, from a flow's rounds, or null: the wall has not entered it yet. */
@@ -251,15 +336,22 @@ export function ballotUse(ballot: Ballot): number {
     case "score":
       return Object.keys(ballot.scores).length;
     case "estimate":
+    case "consent":
       return 1;
   }
 }
 
 /** Whether a ballot fits the vote: the kind of the step, only its options, within its budget, and at least one mark
  *  (an empty ballot says nothing, and „abgegeben“ would be untrue of it). */
-export function checkBallot(round: Pick<VoteRound, "options" | "limit">, config: VoteConfig, ballot: Ballot): boolean {
+export function checkBallot(
+  round: Pick<VoteRound, "options" | "limit"> & Partial<Pick<VoteRound, "criteria">>,
+  config: VoteConfig,
+  ballot: Ballot,
+): boolean {
   if (ballot.kind !== config.kind) return false;
   if (ballot.kind === "estimate") return config.kind === "estimate" && withinBounds(config, ballot.value);
+  // an objection needs its reason, and no other answer has one
+  if (ballot.kind === "consent") return (ballot.answer === "object") === (ballot.reason !== undefined);
   const known = new Set(round.options.map((option) => option.id));
   const ids =
     ballot.kind === "dots"
@@ -280,7 +372,7 @@ export function checkBallot(round: Pick<VoteRound, "options" | "limit">, config:
     case "rank":
       return use <= round.limit;
     case "score": {
-      const width = config.kind === "score" ? Math.max(1, config.criteria.length) : 1;
+      const width = scoreWidth(round, config);
       return Object.values(ballot.scores).every((scores) => scores.length === width);
     }
   }
@@ -303,6 +395,12 @@ export function canonicalBallot(ballot: Ballot): Ballot {
     case "estimate":
       // -0 and 0 are one number, and one text
       return { kind: "estimate", value: ballot.value === 0 ? 0 : ballot.value };
+    case "consent":
+      return {
+        kind: "consent",
+        answer: ballot.answer,
+        ...(ballot.reason === undefined ? {} : { reason: ballot.reason.trim() }),
+      };
   }
 }
 
@@ -315,7 +413,7 @@ export function sameBallot(a: Ballot | null, b: Ballot | null): boolean {
 // ───────────────────────── counting ─────────────────────────
 
 /** The vote kinds that rank options. */
-export type RankingConfig = Exclude<VoteConfig, { kind: "estimate" }>;
+export type RankingConfig = Exclude<VoteConfig, { kind: "estimate" | "consent" }>;
 
 /** The result of a vote from its ballots: a ranking of its options, or for an estimate its summary (`aggregate`).
  *  `label` gives an option's words as the wall holds them now. A ballot that does not fit the vote (it cannot be
@@ -342,6 +440,22 @@ export function tally(
   if (config.kind === "estimate") {
     const values = valid.flatMap((ballot) => (ballot.kind === "estimate" ? [ballot.value] : []));
     return { step: round.step, kind: "estimate", unit: config.unit, voters: values.length, summary: aggregate(values) };
+  }
+  if (config.kind === "consent") {
+    const answers = valid.flatMap((ballot) => (ballot.kind === "consent" ? [ballot] : []));
+    const many = (answer: ConsentAnswer) => answers.filter((one) => one.answer === answer).length;
+    return {
+      step: round.step,
+      kind: "consent",
+      voters: answers.length,
+      agree: many("agree"),
+      live: many("live"),
+      object: many("object"),
+      // sorted: the order of the stored ballots must not tell who objected
+      objections: answers
+        .flatMap((one) => (one.answer === "object" && one.reason !== undefined ? [one.reason] : []))
+        .sort(compare),
+    };
   }
   const points = new Map<string, number>();
   const by = new Map<string, number>();
@@ -390,12 +504,13 @@ export function tally(
     kind: config.kind,
     limit: round.limit,
     voters: valid.length,
+    ...(config.kind === "score" && round.criteria !== undefined ? { criteria: round.criteria } : {}),
     rows: rows.map(({ option, row }, at) => {
       if (at === 0 || (rows[at - 1]?.row.points ?? 0) !== row.points) place = at + 1;
       return {
         id: option.id,
         kind: option.kind,
-        label: label(option).slice(0, 300),
+        label: label(option).slice(0, LABEL_MAX),
         points: row.points,
         by: row.by,
         rank: place,

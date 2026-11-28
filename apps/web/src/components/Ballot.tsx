@@ -16,7 +16,7 @@ import { titleOf } from "./Asks";
 export type Marks = Readonly<Record<string, number>>;
 
 /** What a vote shows of its options: the words, and for a group the notes in it. */
-function wordsOf(
+export function wordsOf(
   t: TFunction,
   option: Pick<VoteOption, "id" | "kind">,
   notes: readonly Note[],

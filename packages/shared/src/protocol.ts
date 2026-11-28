@@ -35,11 +35,14 @@ z.config({ jitless: true });
 // and steps that move on by themselves: `admin.step.auto`, `auto.changed`, the clock a step move starts. Stage M5
 // brought revealing by turn (domain/turns.ts): `admin.turn.next`, `turn.shown`, the turns in `sync` and
 // `step.changed`; the step a note was written in (`Note.step`), and actions with „Wer“ and „Bis wann“ (`note.action`).
+// Stage M6 brought the consent round (a ballot of kind `consent`, its result), a score's criteria taken from notes (in
+// the vote's round and its result), roles of teams (in the agenda), and the record of a decision and of a measurable
+// result in `note.action` (`why`, `open`, `target`, `goal`).
 
 // The version of these frames. A deploy disconnects every socket, and a tab that reconnects still runs the old
 // script: the worker names its version in every `sync`, and a browser that reads another one asks for a reload
 // instead of guessing. Raised with every change a running tab cannot read (PLAN.md 3.4).
-export const PROTOCOL_VERSION = 10;
+export const PROTOCOL_VERSION = 11;
 
 // The admin's capability, minted with the wall and kept in the creating browser: 128 bits of hex. Anything else
 // cannot be one and is refused before it is compared.
@@ -82,11 +85,24 @@ export const noteTextSchema = z.string().check(z.trim(), z.minLength(1), z.maxLe
 /** How long „Wer“ and „Bis wann“ of an action are at most (stage M5): a name or two, a date or a word for one. */
 export const ACTION_WHO_MAX = 60;
 export const ACTION_DUE_MAX = 40;
+/** How long the reasons of a decision and the objections still open are at most (stage M6): a note's length. */
+export const RECORD_TEXT_MAX = 300;
+/** How long the target of a measurable result is at most (stage M6): „von 3 auf 1 Tag“. */
+export const RECORD_TARGET_MAX = 60;
+const oneLine = (max: number) => z.string().check(z.trim(), z.maxLength(max), z.regex(/^[^\p{Cc}\u2028\u2029]*$/u));
 /** What the moderation agreed on for an action (stage M5, a step of type `decide`): who does it and by when, as the
- *  team typed it, free text, each of it may be empty. One line each, no control characters. */
+ *  team typed it, free text, each of it may be empty. One line each, no control characters. Stage M6 records decisions
+ *  and measurable results in the same way, each with its own fields (domain/rules.ts): a decision `why` (its reasons),
+ *  `open` (the objections still open) and `due` (the date to look at it again), never `who` (the moderation decides,
+ *  in v1); a result `who` (who answers for it), `target`, `goal` (the option of the vote on the goals it belongs to)
+ *  and `due` (the date to check it). */
 export const noteActionSchema = z.object({
-  who: z.string().check(z.trim(), z.maxLength(ACTION_WHO_MAX), z.regex(/^[^\p{Cc}\u2028\u2029]*$/u)),
-  due: z.string().check(z.trim(), z.maxLength(ACTION_DUE_MAX), z.regex(/^[^\p{Cc}\u2028\u2029]*$/u)),
+  who: oneLine(ACTION_WHO_MAX),
+  due: oneLine(ACTION_DUE_MAX),
+  why: z.optional(oneLine(RECORD_TEXT_MAX)),
+  open: z.optional(oneLine(RECORD_TEXT_MAX)),
+  target: z.optional(oneLine(RECORD_TARGET_MAX)),
+  goal: z.optional(hexIdSchema),
 });
 export type NoteAction = z.infer<typeof noteActionSchema>;
 export const groupTitleSchema = z.string().check(z.trim(), z.maxLength(GROUP_TITLE_MAX));

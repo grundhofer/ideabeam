@@ -125,8 +125,12 @@ export type Guest = {
   count(step: number): Promise<void>;
   /** The moderation's „Nächster Zettel“ in a step that reveals by turn (stage M5), made for `shown` shown notes. */
   turn(step: number, shown: number): Promise<void>;
-  /** The moderation's: agrees on an action with who and by when (stage M5), or (null) no longer. */
-  agree(noteId: string, action: { who: string; due: string } | null): Promise<void>;
+  /** The moderation's: agrees on an action with who and by when (stage M5), or (null) no longer; records a decision
+   *  or a measurable result with their fields (stage M6). */
+  agree(
+    noteId: string,
+    action: { who: string; due: string; why?: string; open?: string; target?: string; goal?: string } | null,
+  ): Promise<void>;
 };
 
 /** Somebody on the wall who is no browser: a socket of the test itself; with the wall's admin token, its
@@ -537,6 +541,122 @@ export async function enterAdjust(page: Page, options: { admin?: boolean } = {})
   await ben.leave();
   await know(page, [
     { id: wall.wallId, question: FAILURE_QUESTION, as: "Anna", ...(admin ? { adminToken: wall.adminToken } : {}) },
+  ]);
+  await page.goto(`/w/${wall.wallId}`);
+  await page.locator(".app-actions").waitFor();
+  return wall;
+}
+
+/** „Kriterienbewertung“ (stage M6): criteria 0, agree 1, options 2, score 3, discuss 4, decide 5. */
+export const CRITERIA_STEPS = { criteria: 0, agree: 1, options: 2, score: 3, discuss: 4, decide: 5 } as const;
+export const CRITERIA_QUESTION = "Welchen Anbieter nehmen wir?";
+
+/** A wall of „Kriterienbewertung“ in its score, made by a moderation that is no browser (Ben): three criteria, the
+ *  last of them long, and two options. With `counted`, Ben scores and counts. Ben leaves; the page goes onto the
+ *  wall as Anna, with the admin token where `admin` says so. */
+export async function enterScore(page: Page, options: { admin?: boolean; counted?: boolean } = {}) {
+  const { admin = false, counted = false } = options;
+  const wall = await makeWall(page, CRITERIA_QUESTION, { agenda: { items: [{ methodId: "kriterien" }] } });
+  const ben = await join(wall.wallId, "Ben", wall.adminToken);
+  const { criteria, agree, options: optionsStep, score } = CRITERIA_STEPS;
+  await ben.write("Geringe Kosten");
+  await ben.write("Schneller Start");
+  await ben.write("Guter Support auch am Wochenende und in den Ferien");
+  await ben.go(criteria, agree);
+  await ben.go(agree, optionsStep);
+  const a = await ben.write("Anbieter A", 0, 400);
+  const b = await ben.write("Anbieter B mit dem längeren Namen", 256, 400);
+  await ben.go(optionsStep, score);
+  if (counted) {
+    await ben.cast(score, { kind: "score", scores: { [a]: [5, 4, 3], [b]: [2, 3, 4] } });
+    await ben.count(score);
+  }
+  await ben.leave();
+  await know(page, [
+    { id: wall.wallId, question: CRITERIA_QUESTION, as: "Anna", ...(admin ? { adminToken: wall.adminToken } : {}) },
+  ]);
+  await page.goto(`/w/${wall.wallId}`);
+  await page
+    .locator(counted ? ".app-score__table" : ".app-score")
+    .first()
+    .waitFor();
+  return wall;
+}
+
+/** „Entscheidungsprotokoll mit Zustimmungsrunde“ (stage M6): frame 0, proposal 1, questions 2, reactions 3, consent
+ *  4, objections 5, record 6. */
+export const CONSENT_STEPS = {
+  frame: 0,
+  proposal: 1,
+  questions: 2,
+  reactions: 3,
+  consent: 4,
+  objections: 5,
+  record: 6,
+} as const;
+export const CONSENT_QUESTION = "Welchen Anbieter nehmen wir?";
+
+/** A wall of „Entscheidungsprotokoll“ made by a moderation that is no browser (Ben): the proposal, and the consent
+ *  round open. With `counted`, Ben objects with a reason and counts. With `record`, Ben goes on to the last step and
+ *  writes two decisions, the first recorded with reasons, open objections and a review date. Ben leaves; the page goes
+ *  onto the wall as Anna, with the admin token where `admin` says so. */
+export async function enterConsent(page: Page, options: { admin?: boolean; counted?: boolean; record?: boolean } = {}) {
+  const { admin = false, counted = false, record = false } = options;
+  const wall = await makeWall(page, CONSENT_QUESTION, { agenda: { items: [{ methodId: "entscheidung" }] } });
+  const ben = await join(wall.wallId, "Ben", wall.adminToken);
+  const steps = CONSENT_STEPS;
+  await ben.go(steps.frame, steps.proposal);
+  await ben.write("Anbieter B für ein Jahr, mit einer Kündigungsfrist von drei Monaten");
+  await ben.go(steps.proposal, steps.questions);
+  await ben.go(steps.questions, steps.reactions);
+  await ben.go(steps.reactions, steps.consent);
+  if (counted || record) {
+    await ben.cast(steps.consent, { kind: "consent", answer: "object", reason: "Ein Jahr Bindung ist zu lang" });
+    await ben.count(steps.consent);
+  }
+  if (record) {
+    await ben.go(steps.consent, steps.objections);
+    await ben.go(steps.objections, steps.record);
+    const first = await ben.write("Anbieter B für sechs Monate", 0, 400);
+    await ben.write("Im Juni neu entscheiden", 256, 400);
+    await ben.agree(first, { who: "", due: "1. Juni", why: "Kürzere Bindung", open: "Preis im zweiten Halbjahr" });
+  }
+  await ben.leave();
+  await know(page, [
+    { id: wall.wallId, question: CONSENT_QUESTION, as: "Anna", ...(admin ? { adminToken: wall.adminToken } : {}) },
+  ]);
+  await page.goto(`/w/${wall.wallId}`);
+  await page
+    .locator(record ? ".app-actions" : counted ? ".app-results" : ".app-consent")
+    .first()
+    .waitFor();
+  return wall;
+}
+
+/** „Ziele mit messbaren Ergebnissen“ (stage M6) in its last step, made by a moderation that is no browser (Ben): two
+ *  goals, both chosen, and two results, the first recorded with its goal, target, owner and review date. Ben leaves;
+ *  the page goes onto the wall as Anna, with the admin token where `admin` says so. */
+export const GOALS_QUESTION = "Unsere Ziele fürs erste Quartal";
+export async function enterGoals(page: Page, options: { admin?: boolean } = {}) {
+  const { admin = false } = options;
+  const wall = await makeWall(page, GOALS_QUESTION, { agenda: { items: [{ methodId: "ziele" }] } });
+  const ben = await join(wall.wallId, "Ben", wall.adminToken);
+  await ben.go(0, 1);
+  const faster = await ben.write("Schnellerer Support");
+  const calmer = await ben.write("Ruhigere Releases", 256, 0);
+  await ben.go(1, 2);
+  await ben.go(2, 3);
+  await ben.cast(3, { kind: "approval", chosen: [faster, calmer] });
+  await ben.count(3);
+  await ben.go(3, 4);
+  const first = await ben.write("Antwort innerhalb eines Tages", 16, 1300);
+  await ben.write("Weniger Rückfragen je Ticket", 272, 1300);
+  await ben.go(4, 5);
+  await ben.go(5, 6);
+  await ben.agree(first, { who: "Ben", due: "Ende März", target: "von 3 auf 1 Tag", goal: faster });
+  await ben.leave();
+  await know(page, [
+    { id: wall.wallId, question: GOALS_QUESTION, as: "Anna", ...(admin ? { adminToken: wall.adminToken } : {}) },
   ]);
   await page.goto(`/w/${wall.wallId}`);
   await page.locator(".app-actions").waitFor();

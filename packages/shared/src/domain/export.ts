@@ -1,14 +1,14 @@
 // SPDX-FileCopyrightText: 2026 Sebastian Grundhöfer
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import { methodAttribution, methodTexts, stepName } from "../methods/texts.js";
+import { criterionName, methodAttribution, methodTexts, roleTexts, stepName } from "../methods/texts.js";
 import type { ArrangeLanguage, Group } from "../protocol.js";
 import { keepsSteps } from "./agenda.js";
 import type { MethodId, Step } from "./method.js";
-import { teamCounts, type Teams } from "./teams.js";
+import { areaAt, roleOf, teamCounts, type TeamArea, type Teams } from "./teams.js";
 import { notesFor, type Seen, type StoredNote } from "./visibility.js";
 import { CATALOGUE } from "../methods/catalogue.js";
-import type { EstimateResult, EstimateSummary, RankingResult, VoteResult } from "./vote.js";
+import type { ConsentResult, EstimateResult, EstimateSummary, RankingResult, VoteResult } from "./vote.js";
 
 type VoteKind = RankingResult["kind"];
 
@@ -51,6 +51,12 @@ type VoteKind = RankingResult["kind"];
 //    agreed on stand last, as task lines with who does them and by when (`- [ ] … — Wer: …, bis: …`), as typed and
 //    escaped like every text; an action nobody agreed on stays a note of its step. A note still waiting for its turn
 //    is left out like a hidden one, and a line says how many are.
+//  - **Stage M6:** a score with criteria as a table, the mean per criterion and the total for every option, never a
+//    single score; a consent round as how many gave each answer and the reasons of the objections, sorted, never who
+//    answered what; the decisions the moderation recorded, each with who decided (the moderation), its reasons, the
+//    objections still open and the review date; the measurable results it recorded, as a nested list under the goal
+//    each belongs to, with target, owner and review date; and, in a step whose teams have roles, the notes of each
+//    team under its role (from the team's area, as the list has them), never who was in it.
 //  - **The fixed words in the language of whoever asks** (`de` or `en`, as „Ordnen“ takes it: a wall has no
 //    language of its own). They stand in the table below and nowhere else; the Worker writes the file, so they
 //    cannot come from the app's string tables.
@@ -97,6 +103,24 @@ const COUNTED_EN: Record<VoteKind, (limit: number) => string> = {
 
 const WORDS = {
   de: {
+    consent: "Zustimmungsrunde",
+    answered: (n: number) => `Verdeckt abgegeben, zugleich ausgezählt: ${n === 1 ? "1 Antwort" : `${n} Antworten`}.`,
+    agree: (n: number) => `Zustimmung: ${n}`,
+    live: (n: number) => `Kann damit leben: ${n}`,
+    object: (n: number) => `Einwand: ${n}`,
+    objections: "Einwände",
+    table: { place: "Platz", option: "Option", total: "Gesamt", by: "Bewertet von" },
+    decisions: "Entscheidungen",
+    decidedBy: "Entschieden von: der Moderation",
+    why: "Begründung",
+    open: "Offene Einwände",
+    review: "Prüftermin",
+    goals: "Ziele und messbare Ergebnisse",
+    goal: (label: string) => `Ziel: ${label}`,
+    noGoal: "Ohne Ziel",
+    target: "Zielwert",
+    owner: "Verantwortlich",
+    team: (step: string, n: number, role: string) => `${step} · Team ${n}: ${role}`,
     reasons: "Begründungen",
     agreed: "Festgelegte Aktionen",
     who: "Wer",
@@ -152,6 +176,24 @@ const WORDS = {
             : `${points} Punkte`,
   },
   en: {
+    consent: "Consent round",
+    answered: (n: number) => `Answered in secret, counted at once: ${n === 1 ? "1 answer" : `${n} answers`}.`,
+    agree: (n: number) => `Agree: ${n}`,
+    live: (n: number) => `Can live with it: ${n}`,
+    object: (n: number) => `Objection: ${n}`,
+    objections: "Objections",
+    table: { place: "Place", option: "Option", total: "Overall", by: "Rated by" },
+    decisions: "Decisions",
+    decidedBy: "Decided by: the moderation",
+    why: "Reasons",
+    open: "Open objections",
+    review: "Review date",
+    goals: "Goals and measurable results",
+    goal: (label: string) => `Goal: ${label}`,
+    noGoal: "Without a goal",
+    target: "Target",
+    owner: "Owner",
+    team: (step: string, n: number, role: string) => `${step} · team ${n}: ${role}`,
     reasons: "Reasons",
     agreed: "Agreed actions",
     who: "Who",
@@ -272,6 +314,62 @@ function estimateLines(
   return [...lines, ""];
 }
 
+/** The lines of a counted consent round (stage M6): how many answered, how many gave each answer, and the reasons of
+ *  the objections as the result has them (sorted). */
+function consentLines(result: ConsentResult, language: ArrangeLanguage): string[] {
+  const words = WORDS[language];
+  const lines = [`## ${words.consent}`, "", `_${words.answered(result.voters)}_`, ""];
+  lines.push(`- ${words.agree(result.agree)}`, `- ${words.live(result.live)}`, `- ${words.object(result.object)}`);
+  if (result.objections.length > 0) {
+    lines.push(`- ${words.objections}:`);
+    for (const reason of result.objections) lines.push(`  - ${escapeMarkdown(reason)}`);
+  }
+  return [...lines, ""];
+}
+
+/** The words of a score's criteria (stage M6): those frozen with the result (notes), else the step's own keys in the
+ *  language. None: one score for an option. */
+function criteriaWords(result: RankingResult, steps: readonly Step[], methodId: MethodId, language: ArrangeLanguage) {
+  if (result.criteria !== undefined) return result.criteria;
+  const vote = steps[result.step]?.vote;
+  return vote?.kind === "score" ? vote.criteria.map((key) => criterionName(language, methodId, key)) : [];
+}
+
+/** A number of a mean as the language writes it: „3,5“, „3.5“. */
+function meanNumber(value: number, language: ArrangeLanguage): string {
+  return language === "de" ? String(value).replace(".", ",") : String(value);
+}
+
+/** A counted score with criteria as a Markdown table (stage M6): place, option, the mean per criterion, the total and
+ *  how many scored it. Never a single score. */
+function scoreTable(result: RankingResult, criteria: readonly string[], language: ArrangeLanguage): string[] {
+  const words = WORDS[language];
+  const head = [
+    words.table.place,
+    words.table.option,
+    ...criteria.map(escapeMarkdown),
+    words.table.total,
+    words.table.by,
+  ];
+  const lines = [`| ${head.join(" | ")} |`, `|${head.map(() => "---").join("|")}|`];
+  for (const row of result.rows) {
+    const label = row.label.trim() === "" ? words.untitled : escapeMarkdown(row.label);
+    const cells =
+      row.by === 0 ? criteria.map(() => "–") : criteria.map((_, at) => meanNumber(row.scores?.[at] ?? 0, language));
+    const total = row.by === 0 ? "–" : meanNumber(row.points, language);
+    lines.push(`| ${[String(row.rank), label, ...cells, total, String(row.by)].join(" | ")} |`);
+  }
+  return lines;
+}
+
+/** The areas of the teams a step had (stage M6, the notes of a step with roles by team), or null. */
+function areasOf(teams: Teams | null | undefined, step: number): readonly TeamArea[] | null {
+  if (teams === null || teams === undefined) return null;
+  if (teams.step === step) return teams.areas;
+  const entry = [...teams.history].reverse().find((one) => one.step === step);
+  return entry?.areas ?? null;
+}
+
 /** The wall as one person may see it, as a Markdown document. */
 export function wallMarkdown(input: ExportInput): string {
   const words = WORDS[input.language];
@@ -282,14 +380,22 @@ export function wallMarkdown(input: ExportInput): string {
   const steps = input.steps ?? CATALOGUE[input.methodId].steps;
   // a method of more than one round of writing, or with actions, lists its notes by the step they were written in
   const actionSteps = new Set(steps.flatMap((step, at) => (step.noteKind === "action" ? [at] : [])));
+  const decisionSteps = new Set(steps.flatMap((step, at) => (step.noteKind === "decision" ? [at] : [])));
+  const resultSteps = new Set(steps.flatMap((step, at) => (step.noteKind === "result" ? [at] : [])));
   const sectioned = keepsSteps(steps);
-  // the actions the moderation agreed on: as task lines at the end, nowhere else
-  const agreed = sectioned ? notes.filter((note) => note.action !== undefined && actionSteps.has(note.step ?? 0)) : [];
+  // the actions the moderation agreed on: as task lines at the end, nowhere else; the decisions and the measurable
+  // results it recorded (stage M6) in sections of their own before them
+  const recordedIn = (kinds: Set<number>) =>
+    sectioned ? notes.filter((note) => note.action !== undefined && kinds.has(note.step ?? 0)) : [];
+  const agreed = recordedIn(actionSteps);
+  const decided = recordedIn(decisionSteps);
+  const measured = recordedIn(resultSteps);
+  const recorded = new Set([...agreed, ...decided, ...measured]);
   const inGroup = new Map<string, string[]>();
   const loose: string[] = [];
   const looseBy = new Map<number, string[]>();
   for (const note of notes) {
-    if (agreed.includes(note)) continue;
+    if (recorded.has(note)) continue;
     // a note whose group is gone counts as in none, as in the list
     if (note.groupId === null || !known.has(note.groupId)) {
       loose.push(note.text);
@@ -317,7 +423,9 @@ export function wallMarkdown(input: ExportInput): string {
     lines.push(`_${escapeMarkdown(words.teams(parts.join("; ")))}_`, "");
   }
   const results = input.results ?? [];
-  const rankings = results.filter((result) => result.kind !== "estimate");
+  const rankings = results.filter(
+    (result): result is RankingResult => result.kind !== "estimate" && result.kind !== "consent",
+  );
   let rounds = 0;
   let before: EstimateSummary | null = null;
   for (const result of results) {
@@ -327,8 +435,17 @@ export function wallMarkdown(input: ExportInput): string {
       before = result.summary;
       continue;
     }
+    if (result.kind === "consent") {
+      lines.push(...consentLines(result, input.language));
+      continue;
+    }
     lines.push(`## ${rankings.length === 1 ? words.result : words.resultOf(result.step + 1)}`, "");
     lines.push(`_${words.counted(result.kind, result.limit, result.voters)}_`, "");
+    const criteria = criteriaWords(result, steps, input.methodId, input.language);
+    if (result.kind === "score" && criteria.length > 0) {
+      lines.push(...scoreTable(result, criteria, input.language), "");
+      continue;
+    }
     for (const row of result.rows) {
       const label = row.label.trim() === "" ? words.untitled : escapeMarkdown(row.label);
       lines.push(`- ${words.place(row.rank, label, words.amount(result.kind, row.points, row.by))}`);
@@ -355,10 +472,69 @@ export function wallMarkdown(input: ExportInput): string {
     lines.push("");
   }
   if (sectioned) {
-    // by the step they were written in, in the order of the steps
+    // by the step they were written in, in the order of the steps; in a step whose teams have roles (stage M6), by
+    // team, as the list has them: by the team's area the note lies in
+    const looseNotes = notes.filter(
+      (note) => !recorded.has(note) && (note.groupId === null || !known.has(note.groupId)),
+    );
     for (const [step, texts] of [...looseBy.entries()].sort((a, b) => a[0] - b[0])) {
-      lines.push(`## ${escapeMarkdown(stepName(input.language, input.methodId, steps[step]?.key ?? ""))}`, "");
+      const name = stepName(input.language, input.methodId, steps[step]?.key ?? "");
+      const areas = steps[step]?.team?.roles === undefined ? null : areasOf(input.teams, step);
+      if (areas !== null) {
+        const byTeam = new Map<number | null, string[]>();
+        for (const note of looseNotes.filter((one) => (one.step ?? 0) === step)) {
+          const team = areaAt(areas, note);
+          byTeam.set(team, [...(byTeam.get(team) ?? []), note.text]);
+        }
+        for (const [team, inTeam] of [...byTeam.entries()].sort((a, b) => (a[0] ?? 99) - (b[0] ?? 99))) {
+          const role = team === null ? null : roleOf(steps[step] ?? {}, team);
+          const words2 = role === null ? null : roleTexts(input.language, input.methodId, role);
+          const heading = team === null || words2 === null ? name : words.team(name, team + 1, words2.name);
+          lines.push(`## ${escapeMarkdown(heading)}`, "");
+          for (const text of inTeam) lines.push(`- ${escapeMarkdown(text)}`);
+          lines.push("");
+        }
+        continue;
+      }
+      lines.push(`## ${escapeMarkdown(name)}`, "");
       for (const text of texts) lines.push(`- ${escapeMarkdown(text)}`);
+      lines.push("");
+    }
+    if (decided.length > 0) {
+      lines.push(`## ${words.decisions}`, "");
+      for (const note of decided) {
+        lines.push(`- ${escapeMarkdown(note.text)}`, `  - ${words.decidedBy}`);
+        if (note.action?.why) lines.push(`  - ${words.why}: ${escapeMarkdown(note.action.why)}`);
+        if (note.action?.open) lines.push(`  - ${words.open}: ${escapeMarkdown(note.action.open)}`);
+        if (note.action?.due) lines.push(`  - ${words.review}: ${escapeMarkdown(note.action.due)}`);
+      }
+      lines.push("");
+    }
+    if (measured.length > 0) {
+      lines.push(`## ${words.goals}`, "");
+      // the goals in the order of the vote on them, then the results without one
+      const order = new Map<string, { rank: number; label: string }>();
+      for (const result of rankings) {
+        for (const row of result.rows) if (!order.has(row.id)) order.set(row.id, { rank: row.rank, label: row.label });
+      }
+      const goals = [...new Set(measured.map((note) => note.action?.goal ?? null))].sort((a, b) => {
+        const [x, y] = [a === null ? undefined : order.get(a), b === null ? undefined : order.get(b)];
+        return (x?.rank ?? Number.POSITIVE_INFINITY) - (y?.rank ?? Number.POSITIVE_INFINITY);
+      });
+      for (const goal of goals) {
+        const label = goal === null ? undefined : order.get(goal)?.label;
+        lines.push(
+          `- ${goal === null || label === undefined ? words.noGoal : words.goal(label.trim() === "" ? words.untitled : escapeMarkdown(label))}`,
+        );
+        for (const note of measured.filter((one) => (one.action?.goal ?? null) === goal)) {
+          const parts = [
+            ...(note.action?.target ? [`${words.target}: ${escapeMarkdown(note.action.target)}`] : []),
+            ...(note.action?.who ? [`${words.owner}: ${escapeMarkdown(note.action.who)}`] : []),
+            ...(note.action?.due ? [`${words.review}: ${escapeMarkdown(note.action.due)}`] : []),
+          ];
+          lines.push(`  - [ ] ${escapeMarkdown(note.text)}${parts.length > 0 ? ` — ${parts.join(", ")}` : ""}`);
+        }
+      }
       lines.push("");
     }
     if (agreed.length > 0) {

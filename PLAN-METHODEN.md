@@ -399,6 +399,92 @@ nicht deployt.
   fremden, reihum aufgedeckten Zettels sich erst mit der Antwort des Servers (die Regeln des Browsers kennen die
   Reihenfolge nicht); Texte aus dem Katalog nicht neu an den Quellen geprüft (sie behaupten keine Evidenz).
 
+**Stand M6 (28.11.2026, Branch `methoden-m6` auf M5 `1a2b46a`, nicht committet):** gebaut, von dir nicht abgenommen,
+nicht deployt.
+
+- Fünf Methoden und die Schnellvariante der Kriterienbewertung als sechste, mit Texten DE/EN in `methods/catalogue.ts`
+  und `methods/texts.ts`, jede mit Kurzbeschreibung, Dauer und Gruppengröße auf `/neu` und einem Satz je Schritt:
+  - „Kriterienbewertung“ (`kriterien`, Entscheiden, 3–12 Personen, 40 Minuten): Kriterien verdeckt vorschlagen,
+    festlegen (aufgedeckt; die Zettel, die beim Bewerten stehen, sind die Kriterien, die ersten fünf in der
+    Reihenfolge des Schreibens), Optionen für alle sichtbar schreiben und vorstellen, jede Option je Kriterium von 1
+    bis 5 verdeckt bewerten, Unterschiede besprechen, das Gesamturteil festhalten (Entscheidung mit Begründung).
+  - „Nutzen und Aufwand“ (`nutzen-aufwand`, Entscheiden, 3–12, 20 Minuten): Optionen, Bewertung nach „Nutzen“ und
+    „Geringer Aufwand“, Ergebnis besprechen, Gesamturteil festhalten.
+  - „Gegenposition prüfen“ (`gegenposition`, Entscheiden, 4–12, 35 Minuten): Vorschlag vorstellen (niemand schreibt),
+    eigene Bedenken verdeckt, zwei Kleingruppen mit Rollen („Gegenposition“: Schwächen und Gegenannahmen;
+    „Annahmen“: die Annahmen des Vorschlags), vorstellen, zusammenführen (Entscheidungen mit Begründung).
+  - „Entscheidungsprotokoll mit Zustimmungsrunde“ (`entscheidung`, Entscheiden, 3–12, 40 Minuten): Rahmen (niemand
+    schreibt), Vorschlag als Zettel für alle, Verständnisfragen, Reaktionen verdeckt, Zustimmungsrunde über die
+    Zettel des Vorschlags, Einwände einarbeiten (deckt die Reaktionen auf), Entscheidung mit Begründung, offenen
+    Einwänden und Prüftermin festhalten; die Moderation entscheidet und spricht zuletzt.
+  - „Annahmen prüfen“ (`annahmen`, Planen und Ziele, 3–12, 45 Minuten): eigene Leinwand aus fünf Feldern
+    („Kundschaft“, „Problem“, „Lösung“, „Geld“, „Umsetzung“; drei oben, zwei mittig darunter), Annahmen verdeckt in
+    die Felder, aufdecken und bündeln, jede Annahme nach „Schaden, wenn falsch“ und „Wie wenig wir wissen“ bewerten,
+    die riskantesten besprechen, Tests in Kleingruppen (etwa drei), Tests vorstellen und mit Wer und Bis wann festlegen.
+  - „Ziele mit messbaren Ergebnissen“ (`ziele`, Planen und Ziele, 3–15, 45 Minuten): Zeitraum und Richtung
+    vorstellen, Ziele verdeckt, aufdecken und bündeln, bis zu drei wählen (Auswahl), messbare Ergebnisse in
+    Kleingruppen, vorstellen, festlegen mit Ziel, Zielwert, Verantwortlichen und Prüftermin.
+- Bausteine in `packages/shared`: **Bewertung mit Kriterien** (`vote.ts`): die Kriterien sind die eigenen Schlüssel
+  des Schritts (Wörter in `texts.ts`, `criteria`) oder Zettel bestimmter Schritte (`Step.criteriaFrom`, `criteriaOf`):
+  deren Texte friert der Server beim Betreten in die Runde ein (`VoteRound.criteria`, `criteriaOmitted`), die Breite
+  eines Stimmzettels folgt daraus (`scoreWidth`), das Ergebnis trägt sie mit (`RankingResult.criteria`). **Optionen
+  aus mehreren Schritten** (`optionsFrom` als Liste, `optionsSteps`). **Zustimmungsrunde** (Abstimmungsart `consent`,
+  Schritttyp `consent`): je Person „Zustimmung“, „Kann damit leben“ oder „Einwand“ mit Begründung (Pflicht beim
+  Einwand, sonst keine); das Ergebnis zählt die Antworten und nennt die Begründungen alphabetisch, ohne Kennung
+  (`ConsentResult`). **Rollen** (`TeamSettings.roles`, `roleTeamCount`, `roleOf`): so viele Teams wie Rollen, mehr
+  erst über sieben je Team, Team n bekommt die Rolle n. **Entscheidungen und messbare Ergebnisse**: Zettel der Art
+  `decision` und `result`, die die Moderation in einem Schritt vom Typ `decide` festhält, mit demselben Befehl wie
+  Aktionen (`note.action`) und eigenen Feldern (`why`, `open`, `due`; `who`, `target`, `goal`, `due`), die die
+  Regeln je Art prüfen. **Feste Felder** (`Method.fields`, `fieldBoxes`). `checkAgenda` prüft `criteriaFrom`
+  (`criteriaShape`), Rollen nur bei zufälliger Bildung und Entscheidungen und Ergebnisse wie Aktionen. Protokoll 11.
+- Worker: die festen Felder beim Anlegen (fünf Gruppen, Titel in der Sprache aus der Anfrage, `language` im Eintrag
+  der Agenda, Vorgabe Deutsch); die Kriterien aus Zetteln beim Betreten der Bewertung; Optionen aus mehreren
+  Schritten. Sonst nichts Neues: Stimmzettel, Auszählen, Teams und `note.action` laufen über die Wege von M2 bis M5.
+- App: die Bewertung (`components/Score.tsx`: je Option eine Gruppe mit einem Auswahlfeld je Kriterium, „–“ und 1
+  bis 5, nur Tasten; das Ergebnis als Tabelle mit Mittelwerten je Kriterium und Gesamt, nie eine einzelne Bewertung),
+  die Zustimmungsrunde (`components/Consent.tsx`: der Vorschlag, drei Antworten als Segmented Control, das Feld der
+  Begründung; das Ergebnis mit Zahlen und Einwänden), Entscheidungen und messbare Ergebnisse in `Actions.tsx` (je Art
+  eigene Felder und Wörter), die Rolle des Teams im Stand („Eure Rolle: Gegenposition. …“) und an den Bereichen
+  („Team 1 · Gegenposition“), neue Sätze, was zu tun ist. `/neu` schickt bei „Annahmen prüfen“ die Sprache mit. Export:
+  Bewertung als Markdown-Tabelle, Zustimmungsrunde, Entscheidungen mit „Entschieden von: der Moderation“ und ihren
+  Feldern, messbare Ergebnisse als verschachtelte Liste unter ihrem Ziel, die Zettel eines Schritts mit Rollen je Team
+  und Rolle; keine Namen, keine einzelnen Stimmzettel. Datenschutzerklärung 3.1 und 3.3 in beiden Sprachen.
+- Aus der Durchsicht von M5: der Schritt der Rangfolge heißt jetzt „Die wichtigsten ranken“ / „Rank the most
+  important“, weil das Feld bei weniger Optionen weniger als fünf Plätze anbietet.
+- Abweichungen: (1) Die Schnellvariante ist eine eigene Methode („Nutzen und Aufwand“), kein Schalter auf `/neu`: So
+  steht sie mit eigener Dauer und Kurzbeschreibung in der Auswahl, und die Anfrage braucht kein neues Feld. (2)
+  Kriterienbewertung: „Summe zeigen“ ist das Auszählen der Bewertung, sechs statt sieben Schritte; das Ergebnis zeigt
+  keine Streuung (bei wenigen Personen verriete sie einzelne Bewertungen), der Ergebnistext sagt das. „Kriterien
+  festlegen“ heißt Zettel löschen, zusammenfassen und umformulieren; gewertet werden die ersten fünf. (3) „Geringer
+  Aufwand“ statt „Aufwand“ und „Wie wenig wir wissen“ statt „Wie gut belegt?“: So heißt 5 auf beiden Achsen dasselbe
+  (gut bzw. riskant), und der Mittelwert bei gleichen Gewichten ordnet richtig; die zwei Achsen stehen als Spalten der
+  Tabelle, nicht als Raster. (4) Annahmen prüfen: „Vorhaben in einem Satz“ ist die Frage der Wand, sechs statt sieben
+  Schritte, 45 statt 50 Minuten; die Felder sind gewöhnliche Gruppen (umbenennbar, löschbar). (5) Gegenposition: in der
+  Rollenrunde sieht jedes Team die Bedenken seiner Mitglieder (Sichtbarkeit wird nur weiter); unter vier Personen
+  entsteht nur ein Team mit der ersten Rolle. (6) Entscheidungsprotokoll: Kurzbeschreibung und „Wann nutzen“ sagen,
+  dass die Moderation den Rahmen nennt und entscheidet (v1), statt „Ihr klärt, wer entscheidet“; Frist und „wer trägt
+  bei“ werden gesagt, nicht gespeichert, das Protokoll hat den Prüftermin. (7) Entscheidung und Ergebnis liegen in der
+  Spalte `action` des Zettels (Schema 5) mit eigenen Feldern; kein neuer Befehl, keine neue Spalte. (8) Ziele: kein
+  „Auch bekannt als“ (Register offen, der Name wird nie benutzt); das Ziel eines Ergebnisses wählt die Moderation
+  beim Festlegen aus den gewählten Zielen (die Plätze 1 bis 3 mit Stimmen), ein Ergebnis wird nicht beim Schreiben an
+  ein Ziel gehängt. (9) Die Bewertung nutzt Auswahlfelder statt Tasten oder Segmented Control (das ist für zwei bis
+  vier Optionen). (10) `keepsSteps` gilt jetzt auch für Zettelarten außer Ideen und Begründungen und für Schritte mit
+  `optionsFrom` oder `criteriaFrom`. (11) Im Kostentest steht die Hilfsfunktion `run` jetzt auf Modulebene, für M5
+  und M6 gemeinsam, unverändert.
+- `CI=1 pnpm checks` grün: 446 Tests im geteilten Paket, 126 in `packages/arrange`, 277 im Worker, 302 in der App,
+  385 Ende-zu-Ende, keiner übersprungen.
+- Kosten mit 8 Personen: Kriterienbewertung 32 Zeilen (8 Kriterien, 4 Optionen, 8 Bewertungen, 1 Entscheidung), Nutzen
+  und Aufwand 24, Gegenposition 27 (8 Bedenken, 6 Zettel in den Teams, 3 Entscheidungen), Entscheidungsprotokoll 30
+  (8 Reaktionen, 8 Antworten, 1 Entscheidung), Annahmen prüfen 49 und 5 für die Felder beim Anlegen, zusammen 54 (16
+  Annahmen, je Person eine Bewegung in die Felder, 8 Bewertungen, 3 Tests), Ziele 44 (8 Ziele, 3 Bündel, 8 Stimmzettel,
+  6 Ergebnisse). Jeder Zettel, jede Bewegung und jedes Festhalten kostet eine Zeile mehr: Wer in „Annahmen prüfen“ jede
+  Annahme einzeln in ihr Feld schiebt (so arbeitet „Verschieben nach …“ in der Liste), zahlt 8 Zeilen mehr, 62, knapp
+  über 60.
+- Nicht geprüft: kein Bildschirmleser, nicht bei 2000 px angesehen; Rollenzeile und die Felder auf der Fläche in
+  keinem eigenen Bildschirm der axe-Prüfung (die Ende-zu-Ende-Tests lesen sie); eine Bewertung mit vielen Optionen auf
+  dem Handy (je Option bis zu fünf Auswahlfelder); die Felder der Entscheidungen und Ergebnisse ohne Maus; Texte aus
+  dem Katalog nicht neu an den Quellen geprüft (sie behaupten keine Evidenz).
+
 ### M7: Agenda und Startseite
 
 Mehrere Methoden hintereinander auf einer Wand (anhängen, entfernen, verschieben ohne Ziehen), Schritte ändern, die

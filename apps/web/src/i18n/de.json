@@ -301,7 +301,8 @@
       "count": "Auszählen",
       "hint": "Niemand sieht deine Punkte, auch die Moderation nicht: Alle sehen nur das Ergebnis, wenn ausgezählt ist.",
       "said": "Ausgezählt. Platz 1: {{name}}.",
-      "saidNone": "Ausgezählt. Es hat niemand abgestimmt."
+      "saidNone": "Ausgezählt. Es hat niemand abgestimmt.",
+      "saidConsent": "Ausgezählt. Zustimmung: {{agree}}, kann damit leben: {{live}}, Einwand: {{object}}."
     },
     "step": {
       "positionNext": "Schritt {{n}} von {{of}}: {{name}} · danach {{next}}",
@@ -423,7 +424,23 @@
       "adminBeforeGroups": "Du moderierst: Alle notieren für sich, du auch, und niemand liest mit. Mit „Weiter“ kommen die Kleingruppen zusammen.",
       "memberBeforeGroups": "Notier für dich, was dir einfällt. Niemand liest mit; danach tauschst du dich in deiner Kleingruppe aus.",
       "adminPresentGroups": "Du moderierst: Ruf die Kleingruppen nacheinander auf; jede stellt vor, was sie festgehalten hat. Alle Zettel sind jetzt für alle zu sehen, ohne Namen.",
-      "memberPresentGroups": "Jede Kleingruppe stellt vor, was sie festgehalten hat. Alle Zettel sind jetzt für alle zu sehen, ohne Namen."
+      "memberPresentGroups": "Jede Kleingruppe stellt vor, was sie festgehalten hat. Alle Zettel sind jetzt für alle zu sehen, ohne Namen.",
+      "adminScore": "Du moderierst: Alle bewerten jede Option für sich, du auch, und drücken „Abgeben“. Niemand sieht, wer wie bewertet hat. Wenn alle abgegeben haben, zeigt „Auszählen“ allen die Mittelwerte zugleich.",
+      "adminScoreCast": "Du moderierst: Deine Bewertung ist abgegeben, ändern geht bis zum Auszählen. Wenn alle abgegeben haben, zeigt „Auszählen“ allen die Mittelwerte zugleich.",
+      "memberScore": "Gib jeder Option für jedes Kriterium eine Zahl von 1 bis 5 und drück „Abgeben“. Niemand sieht deine Bewertung, nur die Mittelwerte, wenn die Moderation auszählt.",
+      "memberScoreCast": "Deine Bewertung ist abgegeben. Ändern geht, bis die Moderation auszählt, und niemand sieht sie.",
+      "adminScored": "Du moderierst: Die Mittelwerte stehen, für alle zugleich. Mit „Weiter“ geht es in den nächsten Schritt; sichern kannst du sie unter „Mehr“ als Markdown.",
+      "memberScored": "Die Mittelwerte stehen: Alle sehen dieselbe Tabelle. Einzelne Bewertungen zeigt die App nicht.",
+      "adminConsent": "Du moderierst: Alle antworten für sich, du auch, und drücken „Abgeben“; du entscheidest danach und sprichst zuletzt. Wenn alle abgegeben haben, zeigt „Auszählen“ allen das Ergebnis zugleich.",
+      "adminConsentCast": "Du moderierst: Deine Antwort ist abgegeben, ändern geht bis zum Auszählen. Wenn alle abgegeben haben, zeigt „Auszählen“ allen das Ergebnis zugleich.",
+      "memberConsent": "Wähl Zustimmung, Kann damit leben oder Einwand, ein Einwand mit Begründung, und drück „Abgeben“. Niemand sieht deine Antwort, nur das Ergebnis, wenn die Moderation auszählt.",
+      "memberConsentCast": "Deine Antwort ist abgegeben. Ändern geht, bis die Moderation auszählt, und niemand sieht sie.",
+      "adminConsented": "Du moderierst: Das Ergebnis steht, für alle zugleich, mit den Einwänden ohne Namen. Mit „Weiter“ geht es zum Einarbeiten der Einwände.",
+      "memberConsented": "Das Ergebnis steht: Alle sehen, wie viele zugestimmt haben und welche Einwände es gibt, ohne Namen.",
+      "adminRecordDecision": "Du moderierst: Halte die Entscheidung fest, mit Begründung, offenen Einwänden und Prüftermin, und sprich dabei zuletzt. Was festgehalten ist, steht in der Datei.",
+      "memberRecordDecision": "Die Moderation hält die Entscheidung fest. Sagt vorher, was euch wichtig ist.",
+      "adminRecordResult": "Du moderierst: Leg jedes Ergebnis fest, mit seinem Ziel, Zielwert, wer es verantwortet und Prüftermin. Was festgelegt ist, steht in der Datei unter seinem Ziel.",
+      "memberRecordResult": "Die Moderation legt die Ergebnisse fest, mit Ziel, Zielwert, Verantwortlichen und Prüftermin. Sagt vorher, was euch wichtig ist."
     },
     "adminLinkCopied": "Moderationslink kopiert. Wer ihn hat, moderiert diese Wand und kann sie löschen: Gib ihn nur weiter, wenn jemand mit dir moderieren soll.",
     "team": {
@@ -432,7 +449,10 @@
       "room": "Sprecht in eurem Videotool im Breakout-Raum {{n}}.",
       "none": "Du bist noch in keinem Team: Die Teams bildet die App aus allen, die gerade auf der Wand sind.",
       "area": "Team {{n}}",
-      "areaOwn": "Team {{n}} · dein Team"
+      "areaOwn": "Team {{n}} · dein Team",
+      "role": "Eure Rolle: {{role}}. {{hint}}",
+      "areaRole": "Team {{n}} · {{role}}",
+      "areaOwnRole": "Team {{n}} · {{role}} · dein Team"
     },
     "teams": {
       "open": "Teams",
@@ -824,5 +844,98 @@
     "said": "Festgelegt: {{text}}",
     "saidUndone": "Nicht mehr festgelegt: {{text}}",
     "hint": "Wer und Bis wann stehen in der Datei so, wie ihr sie schreibt."
+  },
+  "score": {
+    "heading": "Deine Bewertung: jede Option von 1 bis 5",
+    "headingCriteria_one": "Deine Bewertung: jede Option nach 1\u00a0Kriterium",
+    "headingCriteria_other": "Deine Bewertung: jede Option nach {{count}}\u00a0Kriterien",
+    "done_one": "{{count}} von {{of}} Optionen bewertet.",
+    "done_other": "{{count}} von {{of}} Optionen bewertet.",
+    "scale": "Je Kriterium 1 bis 5; was 5 heißt, sagt der Satz oben. Eine Option ohne Zahlen bleibt unbewertet.",
+    "omittedCriteria_one": "1 weiteres Kriterium wird nicht bewertet: Es zählen die ersten fünf.",
+    "omittedCriteria_other": "{{count}} weitere Kriterien werden nicht bewertet: Es zählen die ersten fünf.",
+    "rowDone": "Bewertet",
+    "rowHalf": "Noch nicht alle Kriterien bewertet",
+    "rowOpen": "Noch nicht bewertet",
+    "single": "Bewertung",
+    "none": "–",
+    "hint": "Niemand sieht deine Bewertung, auch die Moderation nicht: Alle sehen nur die Mittelwerte, wenn ausgezählt ist.",
+    "problemEmpty": "Bewerte mindestens eine Option, dann drück „Abgeben“.",
+    "problemHalf": "Bewerte bei „{{name}}“ alle Kriterien oder keins, dann drück „Abgeben“.",
+    "said": "Ausgezählt. Platz 1: {{name}}.",
+    "result": {
+      "heading": "Ergebnis der Bewertung",
+      "how": "Gezählt als Mittelwert der Bewertungen von 1 bis 5, je Kriterium und gesamt, alle Kriterien gleich gewichtet.",
+      "place": "Platz",
+      "option": "Option",
+      "total": "Gesamt",
+      "by": "Bewertet von"
+    }
+  },
+  "consent": {
+    "heading": "Deine Antwort: Sicher genug, um es auszuprobieren?",
+    "proposal": "Der Vorschlag",
+    "noProposal": "Als die Runde begann, stand kein Zettel des Vorschlags auf der Wand.",
+    "question": "Deine Antwort",
+    "agree": "Zustimmung",
+    "live": "Kann damit leben",
+    "object": "Einwand",
+    "reason": "Begründung des Einwands",
+    "reasonHelp": "Alle sehen sie nach dem Auszählen, ohne deinen Namen.",
+    "hint": "Niemand sieht deine Antwort, auch die Moderation nicht: Alle sehen nur das Ergebnis, wenn ausgezählt ist.",
+    "problemEmpty": "Wähl eine Antwort, dann drück „Abgeben“.",
+    "problemReason": "Ein Einwand braucht eine Begründung: Schreib sie auf, dann drück „Abgeben“.",
+    "result": {
+      "heading": "Ergebnis der Zustimmungsrunde",
+      "voters_one": "1\u00a0Antwort, verdeckt abgegeben.",
+      "voters_other": "{{count}}\u00a0Antworten, verdeckt abgegeben.",
+      "objections_one": "1\u00a0Einwand, ohne Namen",
+      "objections_other": "{{count}}\u00a0Einwände, ohne Namen",
+      "noObjections": "Kein Einwand."
+    }
+  },
+  "records": {
+    "decision": {
+      "heading": "Entscheidungen",
+      "agreedCount_one": "1 von {{of}} festgehalten.",
+      "agreedCount_other": "{{count}} von {{of}} festgehalten.",
+      "none": "Noch keine Entscheidung: Schreibt sie unten auf.",
+      "open": "Noch nicht festgehalten",
+      "agree": "Festhalten",
+      "unagree": "Nicht mehr festhalten",
+      "agreed": "Festgehalten",
+      "by": "Entschieden von der Moderation",
+      "whyIs": "Begründung: {{why}}",
+      "openIs": "Offene Einwände: {{open}}",
+      "dueIs": "Prüftermin: {{due}}",
+      "why": "Begründung",
+      "openObjections": "Offene Einwände",
+      "due": "Prüftermin",
+      "add": "Neue Entscheidung",
+      "addKey": "Entscheidung hinzufügen",
+      "hint": "Begründung, offene Einwände und Prüftermin stehen in der Datei so, wie ihr sie schreibt."
+    },
+    "result": {
+      "heading": "Messbare Ergebnisse",
+      "agreedCount_one": "1 von {{of}} festgelegt.",
+      "agreedCount_other": "{{count}} von {{of}} festgelegt.",
+      "none": "Noch keine Ergebnisse.",
+      "open": "Noch nicht festgelegt",
+      "agree": "Festlegen",
+      "unagree": "Nicht mehr festlegen",
+      "agreed": "Festgelegt",
+      "goalIs": "Ziel: {{goal}}",
+      "targetIs": "Zielwert: {{target}}",
+      "whoIs": "Verantwortlich: {{who}}",
+      "dueIs": "Prüftermin: {{due}}",
+      "goal": "Ziel",
+      "noGoal": "Ohne Ziel",
+      "target": "Zielwert",
+      "who": "Verantwortlich",
+      "due": "Prüftermin",
+      "add": "Neues Ergebnis",
+      "addKey": "Ergebnis hinzufügen",
+      "hint": "Ziel, Zielwert, Verantwortliche und Prüftermin stehen in der Datei so, wie ihr sie schreibt."
+    }
   }
 }

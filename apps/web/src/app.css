@@ -1190,6 +1190,40 @@
   margin-block-start: var(--sb-space-4);
 }
 
+/* A step that scores (components/Score.tsx, stage M6): every option a row with one select per criterion, side by side
+   where there is room and under each other where there is none; the counted result as sebaro's table in its scrolling
+   wrap, the numbers end-aligned. A consent round (components/Consent.tsx): the proposal's notes as rows, the three
+   answers as a segmented control, the reason of an objection under it. */
+.app-score__option {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sb-space-2);
+  flex: 1 1 auto;
+  min-inline-size: 0;
+  margin: 0;
+  padding: 0;
+  border: 0;
+}
+.app-score__fields {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--sb-space-2) var(--sb-space-4);
+}
+.app-score__fields .sb-field {
+  /* no sebaro token: a select holds „–“ or one digit; its label may be a criterion of a few words */
+  flex: 0 1 12rem;
+  min-inline-size: 0;
+}
+.app-score__table th[scope="row"] {
+  overflow-wrap: anywhere;
+}
+.app-consent__form {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sb-space-4);
+  margin-block-start: var(--sb-space-4);
+}
+
 /* A step that estimates (components/Estimate.tsx, stage M3): the number field with its unit and the reason, in the
    column of the ballot; a counted round as rows of a description list, the word at the start and the number at the
    end, as the rows of a list stand; no chart. */

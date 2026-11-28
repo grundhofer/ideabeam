@@ -3,7 +3,15 @@
 
 import * as z from "zod/mini";
 import { CATALOGUE, DEFAULT_METHOD } from "../methods/catalogue.js";
-import { MAX_STEPS, methodIdSchema, stepSchema, type MethodId, type Step, type StepVisibility } from "./method.js";
+import {
+  MAX_STEPS,
+  methodIdSchema,
+  stepSchema,
+  type MethodId,
+  type NoteKind,
+  type Step,
+  type StepVisibility,
+} from "./method.js";
 import { estimateUnitSchema } from "./vote.js";
 
 // A wall's agenda (docs/architektur-methoden.md 1): the methods it runs, one after the other, flattened into the
@@ -19,10 +27,18 @@ export const MAX_AGENDA_ITEMS = 1;
 
 /** What `POST /api/walls` may ask for: the methods, in order. `unit`: what the estimates of a method that estimates
  *  count („Tage“, „€“), as the moderation typed it on `/neu` (stage M3); it goes into the vote of every step of the
- *  method that estimates, and means nothing to a method without one. */
+ *  method that estimates, and means nothing to a method without one. `language` (stage M6): the language of the
+ *  moderation's browser, for the titles of the fields a method begins with (`Method.fields`, „Annahmen prüfen“); the
+ *  wall stores the titles as text, not the language. Left out: German. */
 export const agendaRequestSchema = z.strictObject({
   items: z
-    .array(z.strictObject({ methodId: methodIdSchema, unit: z.optional(estimateUnitSchema) }))
+    .array(
+      z.strictObject({
+        methodId: methodIdSchema,
+        unit: z.optional(estimateUnitSchema),
+        language: z.optional(z.enum(["de", "en"])),
+      }),
+    )
     .check(z.minLength(1), z.maxLength(MAX_AGENDA_ITEMS)),
 });
 export type AgendaRequest = z.infer<typeof agendaRequestSchema>;
@@ -121,13 +137,14 @@ export function capabilities(
   };
 }
 
-const VOTE_STEPS = new Set<Step["type"]>(["vote", "rank", "score", "estimate"]);
+const VOTE_STEPS = new Set<Step["type"]>(["vote", "rank", "score", "estimate", "consent"]);
 /** Which vote kinds a step type takes. */
 const VOTE_KINDS: Partial<Record<Step["type"], readonly string[]>> = {
   vote: ["dots", "approval"],
   rank: ["rank"],
   score: ["score"],
   estimate: ["estimate"],
+  consent: ["consent"],
 };
 
 // ───────────────────────── visibility ─────────────────────────
@@ -181,10 +198,16 @@ export function startsWriting(
 /** Whether the notes of an agenda keep the step they were written in (stage M5): where a round of writing begins
  *  after notes were shown to everybody (the next round of „Was? Na und? Was nun?“, the actions of „Rückblick nach
  *  Ziel und Daten“, the reasons of „Scheitern vorwegdenken“ after the plan was presented), or where notes are
- *  actions. Every method before stage M5 keeps none: every note of it counts from step 0, as it always did. */
+ *  actions. Stage M6: also where notes are of another kind than ideas and the reasons beside an estimate (criteria,
+ *  decisions, goals, results), and where a step takes its options or criteria from the notes of certain steps. Every
+ *  method before stage M5 keeps none: every note of it counts from step 0, as it always did. */
 export function keepsSteps(steps: readonly Step[]): boolean {
   return steps.some(
-    (step, at) => step.noteKind === "action" || (at > 0 && startsWriting(step) && noteLevel(steps, at) === "all"),
+    (step, at) =>
+      (step.noteKind !== undefined && step.noteKind !== "reason" && step.noteKind !== "idea") ||
+      step.optionsFrom !== undefined ||
+      step.criteriaFrom !== undefined ||
+      (at > 0 && startsWriting(step) && noteLevel(steps, at) === "all"),
   );
 }
 
@@ -201,14 +224,67 @@ export function writingFrom(steps: readonly Step[], at: number): number {
   return 0;
 }
 
-/** The step of the same agenda item that a step's `optionsFrom` names, or null. */
-export function optionsStep(steps: readonly ResolvedStep[], at: number): number | null {
+/** The earlier steps of the same agenda item that `keys` name, or null where one of them names none. */
+function stepsNamed(steps: readonly ResolvedStep[], at: number, keys: readonly string[]): number[] | null {
   const step = steps[at];
-  if (step?.optionsFrom === undefined) return null;
-  const found = steps.findIndex(
-    (other, index) => index < at && other.item === step.item && other.key === step.optionsFrom,
+  if (step === undefined) return null;
+  const found = keys.map((key) =>
+    steps.findIndex((other, index) => index < at && other.item === step.item && other.key === key),
   );
-  return found < 0 ? null : found;
+  return found.some((index) => index < 0) ? null : found;
+}
+
+/** The steps of the same agenda item whose notes a step's `optionsFrom` names, or null: it names none, or a key that
+ *  is no earlier step of its method. */
+export function optionsSteps(steps: readonly ResolvedStep[], at: number): number[] | null {
+  const from = steps[at]?.optionsFrom;
+  if (from === undefined) return null;
+  return stepsNamed(steps, at, typeof from === "string" ? [from] : from);
+}
+
+/** The steps of the same agenda item whose notes are the criteria of a score (`criteriaFrom`, stage M6), or null. */
+export function criteriaSteps(steps: readonly ResolvedStep[], at: number): number[] | null {
+  const from = steps[at]?.criteriaFrom;
+  return from === undefined ? null : stepsNamed(steps, at, from);
+}
+
+/** The steps whose notes a step of type `decide` records, by the kind of record (stage M5: actions; stage M6:
+ *  decisions and measurable results). */
+export const RECORD_KINDS = ["action", "decision", "result"] as const satisfies readonly NoteKind[];
+export type RecordKind = (typeof RECORD_KINDS)[number];
+
+/** The steps whose notes are of kind `kind`. */
+export function stepsOfKind(steps: readonly Pick<Step, "noteKind">[], kind: NoteKind): number[] {
+  return steps.flatMap((step, at) => (step.noteKind === kind ? [at] : []));
+}
+
+// ───────────────────────── fixed fields ─────────────────────────
+
+/** The width and the height of a fixed field (`Method.fields`, stage M6), in world units (1/16 rem): room for about
+ *  three notes side by side and four rows, so a field rarely grows. */
+export const FIELD_WIDTH = 832;
+export const FIELD_HEIGHT = 720;
+const FIELD_GAP = 64;
+/** How many fields stand in the first row: three, the rest below. Our own layout (three over two, read row by row),
+ *  no canvas of anybody else's. */
+const FIELDS_PER_ROW = 3;
+
+/** The frames of a method's fixed fields, in their order: three in a row, the rest centred in a row below. */
+export function fieldBoxes(count: number): Array<{ x: number; y: number; w: number; h: number }> {
+  const boxes: Array<{ x: number; y: number; w: number; h: number }> = [];
+  for (let at = 0; at < count; at += 1) {
+    const row = Math.floor(at / FIELDS_PER_ROW);
+    const inRow = Math.min(FIELDS_PER_ROW, count - row * FIELDS_PER_ROW);
+    const offset = ((FIELDS_PER_ROW - inRow) * (FIELD_WIDTH + FIELD_GAP)) / 2;
+    const col = at % FIELDS_PER_ROW;
+    boxes.push({
+      x: Math.round(offset + col * (FIELD_WIDTH + FIELD_GAP)),
+      y: row * (FIELD_HEIGHT + FIELD_GAP),
+      w: FIELD_WIDTH,
+      h: FIELD_HEIGHT,
+    });
+  }
+  return boxes;
 }
 
 // ───────────────────────── checks ─────────────────────────
@@ -238,8 +314,11 @@ export type AgendaProblem =
    *  over options (stage M5) */
   | { kind: "optionsShape"; step: number }
   /** a step of type `decide` that takes no actions, or an action step outside a method with a step of type `decide`
-   *  (stage M5): nobody could agree on them */
-  | { kind: "actionShape"; step: number };
+   *  (stage M5): nobody could agree on them. Since stage M6 decisions and measurable results alike */
+  | { kind: "actionShape"; step: number }
+  /** a score's `criteriaFrom` names no earlier step of its method, the step is no score, its vote names criteria of
+   *  its own, or the criteria notes are not seen by everybody when it begins (stage M6) */
+  | { kind: "criteriaShape"; step: number };
 
 export function checkAgenda(agenda: Pick<ResolvedAgenda, "steps">): AgendaProblem[] {
   const problems: AgendaProblem[] = [];
@@ -264,11 +343,22 @@ export function checkAgenda(agenda: Pick<ResolvedAgenda, "steps">): AgendaProble
       problems.push({ kind: "voteUnseen", step: at });
     }
     if (step.optionsFrom !== undefined) {
-      const from = optionsStep(agenda.steps, at);
-      if (from === null || !votes || step.vote?.kind === "estimate") {
+      const froms = optionsSteps(agenda.steps, at);
+      if (froms === null || !votes || step.vote?.kind === "estimate") {
         problems.push({ kind: "optionsShape", step: at });
-      } else if (noteLevel(agenda.steps, at, writingFrom(agenda.steps, from)) !== "all") {
+      } else if (froms.some((from) => noteLevel(agenda.steps, at, writingFrom(agenda.steps, from)) !== "all")) {
         problems.push({ kind: "voteUnseen", step: at });
+      }
+    }
+    if (step.criteriaFrom !== undefined) {
+      const froms = criteriaSteps(agenda.steps, at);
+      if (
+        froms === null ||
+        step.vote?.kind !== "score" ||
+        step.vote.criteria.length > 0 ||
+        froms.some((from) => noteLevel(agenda.steps, at, writingFrom(agenda.steps, from)) !== "all")
+      ) {
+        problems.push({ kind: "criteriaShape", step: at });
       }
     }
     if (
@@ -279,9 +369,13 @@ export function checkAgenda(agenda: Pick<ResolvedAgenda, "steps">): AgendaProble
     ) {
       problems.push({ kind: "turnShape", step: at });
     }
+    const recorded = (kind: NoteKind | undefined) => kind === "action" || kind === "decision" || kind === "result";
     if (
-      (step.type === "decide" && step.noteKind !== "action") ||
-      (step.noteKind === "action" && !agenda.steps.some((other) => other.item === step.item && other.type === "decide"))
+      (step.type === "decide" && !recorded(step.noteKind)) ||
+      (recorded(step.noteKind) &&
+        !agenda.steps.some(
+          (other) => other.item === step.item && other.type === "decide" && other.noteKind === step.noteKind,
+        ))
     ) {
       problems.push({ kind: "actionShape", step: at });
     }
@@ -289,7 +383,10 @@ export function checkAgenda(agenda: Pick<ResolvedAgenda, "steps">): AgendaProble
     if (
       teamed !== (step.visibility === "team") ||
       (teamed && step.mode !== "pair" && step.mode !== "group") ||
-      (teamed && step.team?.form === "merge" && !agenda.steps.slice(0, at).some((before) => before.team !== undefined))
+      (teamed &&
+        step.team?.form === "merge" &&
+        !agenda.steps.slice(0, at).some((before) => before.team !== undefined)) ||
+      (step.team?.roles !== undefined && step.team.form !== "random")
     ) {
       problems.push({ kind: "teamShape", step: at });
     }

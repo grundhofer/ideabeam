@@ -4,7 +4,10 @@
 import { DurableObject } from "cloudflare:workers";
 import {
   agendaFor,
+  CATALOGUE,
   changedTeams,
+  criteriaOf,
+  criteriaSteps,
   countedRounds,
   decide,
   decideAuto,
@@ -16,6 +19,8 @@ import {
   decideTeamsSet,
   decideTurn,
   enterTeams,
+  fieldBoxes,
+  fieldName,
   displayNameKey,
   eventFor,
   exportFileName,
@@ -33,7 +38,7 @@ import {
   notesFor,
   numbersOf,
   openRound,
-  optionsStep,
+  optionsSteps,
   placeLatecomer,
   planJoin,
   PROTOCOL_VERSION,
@@ -353,6 +358,27 @@ export class WallRoom extends DurableObject<Env> {
       JSON.stringify(initialFlow(agenda)),
       JSON.stringify(agenda),
     );
+    // the fixed fields a method begins with (stage M6, „Annahmen prüfen“): groups like any other, titled in the
+    // language of whoever made the wall, laid out by the shared rules; one row each, written once
+    const item = creation.agenda?.items[0];
+    const fields = item === undefined ? undefined : CATALOGUE[item.methodId].fields;
+    if (item !== undefined && fields !== undefined) {
+      const boxes = fieldBoxes(fields.length);
+      fields.forEach((key, at) => {
+        const box = boxes[at] ?? { x: 0, y: 0, w: 832, h: 720 };
+        this.writeGroup(
+          {
+            id: generateSecret(),
+            title: fieldName(item.language ?? "de", item.methodId, key),
+            titleSource: "person",
+            locked: true,
+            ...box,
+            ord: at + 1,
+          },
+          0,
+        );
+      });
+    }
     await this.ctx.storage.setAlarm(retentionAt);
   }
 
@@ -1091,13 +1117,19 @@ export class WallRoom extends DurableObject<Env> {
     let votes = state.flow.votes;
     if (decision.opens && config !== undefined && content !== null) {
       const sight = stepContext(state.agenda, decision.flow).sight;
-      // a vote over the notes of one step (stage M5, `optionsFrom`): those notes, and no groups
-      const from = optionsStep(state.agenda.steps, to);
+      // a vote over the notes of certain steps (stage M5, `optionsFrom`): those notes, and no groups
+      const froms = optionsSteps(state.agenda.steps, to);
       const offered =
-        from === null
+        froms === null
           ? content
-          : { notes: content.notes.filter((note) => (note.step ?? 0) === from), groups: [] as Group[] };
-      votes = [...(votes ?? []), openRound(to, config, offered, sight === "all")];
+          : { notes: content.notes.filter((note) => froms.includes(note.step ?? 0)), groups: [] as Group[] };
+      // a score whose criteria are notes (stage M6, `criteriaFrom`): their words, frozen with the options
+      const fromCriteria = criteriaSteps(state.agenda.steps, to);
+      const criteria =
+        fromCriteria === null
+          ? undefined
+          : criteriaOf(content.notes.filter((note) => fromCriteria.includes(note.step ?? 0)));
+      votes = [...(votes ?? []), openRound(to, config, offered, sight === "all", criteria)];
     }
     // Into a step that reveals by turn for the first time (stage M5): the notes nobody but their writer sees (or
     // their team) are put in their order now, interleaved by writer at random, in the same row.

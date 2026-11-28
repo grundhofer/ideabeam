@@ -301,7 +301,8 @@
       "count": "Count votes",
       "hint": "Nobody sees your points, not even the moderation: everyone sees only the result once the votes are counted.",
       "said": "Counted. Place 1: {{name}}.",
-      "saidNone": "Counted. Nobody voted."
+      "saidNone": "Counted. Nobody voted.",
+      "saidConsent": "Counted. Agree: {{agree}}, can live with it: {{live}}, objection: {{object}}."
     },
     "step": {
       "positionNext": "Step {{n}} of {{of}}: {{name}} · then {{next}}",
@@ -423,7 +424,23 @@
       "adminBeforeGroups": "You moderate: everyone notes for themselves, you too, and nobody reads along. “Next” brings the small groups together.",
       "memberBeforeGroups": "Note for yourself what comes to mind. Nobody reads along; afterwards you share it in your small group.",
       "adminPresentGroups": "You moderate: call on the small groups one after the other; each presents what it noted. All notes are now there for everyone, without names.",
-      "memberPresentGroups": "Each small group presents what it noted. All notes are now there for everyone, without names."
+      "memberPresentGroups": "Each small group presents what it noted. All notes are now there for everyone, without names.",
+      "adminScore": "You moderate: everyone rates each option on their own, you too, and presses “Submit”. Nobody sees who rated what. Once everyone has submitted, “Count” shows the means to everyone at once.",
+      "adminScoreCast": "You moderate: your rating is submitted; you can change it until counting. Once everyone has submitted, “Count” shows the means to everyone at once.",
+      "memberScore": "Give each option a number from 1 to 5 on each criterion and press “Submit”. Nobody sees your rating, only the means once the moderation counts.",
+      "memberScoreCast": "Your rating is submitted. You can change it until the moderation counts, and nobody sees it.",
+      "adminScored": "You moderate: the means are in, for everyone at once. “Next” moves to the next step; you can save them as Markdown under “More”.",
+      "memberScored": "The means are in: everyone sees the same table. The app shows no single rating.",
+      "adminConsent": "You moderate: everyone answers on their own, you too, and presses “Submit”; you decide afterwards and speak last. Once everyone has submitted, “Count” shows the result to everyone at once.",
+      "adminConsentCast": "You moderate: your answer is submitted; you can change it until counting. Once everyone has submitted, “Count” shows the result to everyone at once.",
+      "memberConsent": "Choose agree, can live with it or objection, an objection with its reason, and press “Submit”. Nobody sees your answer, only the result once the moderation counts.",
+      "memberConsentCast": "Your answer is submitted. You can change it until the moderation counts, and nobody sees it.",
+      "adminConsented": "You moderate: the result is in, for everyone at once, with the objections without names. “Next” moves on to working in the objections.",
+      "memberConsented": "The result is in: everyone sees how many agreed and which objections there are, without names.",
+      "adminRecordDecision": "You moderate: record the decision with its reasons, open objections and a review date, and speak last. What is recorded goes into the file.",
+      "memberRecordDecision": "The moderation records the decision. Say what matters to you before it does.",
+      "adminRecordResult": "You moderate: agree on each result with its goal, target, owner and review date. What is agreed goes into the file under its goal.",
+      "memberRecordResult": "The moderation agrees on the results with goal, target, owner and review date. Say what matters to you before it does."
     },
     "adminLinkCopied": "Facilitator link copied. Anyone who has it facilitates this wall and can delete it: share it only if someone should facilitate with you.",
     "team": {
@@ -432,7 +449,10 @@
       "room": "Talk in your video tool's breakout room {{n}}.",
       "none": "You are in no team yet: the app forms the teams from everyone on the wall right now.",
       "area": "Team {{n}}",
-      "areaOwn": "Team {{n}} · your team"
+      "areaOwn": "Team {{n}} · your team",
+      "role": "Your role: {{role}}. {{hint}}",
+      "areaRole": "Team {{n}} · {{role}}",
+      "areaOwnRole": "Team {{n}} · {{role}} · your team"
     },
     "teams": {
       "open": "Teams",
@@ -824,5 +844,98 @@
     "said": "Agreed: {{text}}",
     "saidUndone": "No longer agreed: {{text}}",
     "hint": "Who and by when go into the file as you write them."
+  },
+  "score": {
+    "heading": "Your rating: each option from 1 to 5",
+    "headingCriteria_one": "Your rating: each option on 1\u00a0criterion",
+    "headingCriteria_other": "Your rating: each option on {{count}}\u00a0criteria",
+    "done_one": "{{count}} of {{of}} options rated.",
+    "done_other": "{{count}} of {{of}} options rated.",
+    "scale": "1 to 5 per criterion; the sentence above says what 5 means. An option without numbers stays unrated.",
+    "omittedCriteria_one": "1 more criterion is not rated: the first five count.",
+    "omittedCriteria_other": "{{count}} more criteria are not rated: the first five count.",
+    "rowDone": "Rated",
+    "rowHalf": "Not every criterion rated yet",
+    "rowOpen": "Not rated yet",
+    "single": "Rating",
+    "none": "–",
+    "hint": "Nobody sees your rating, not even the moderation: everyone sees only the means once counted.",
+    "problemEmpty": "Rate at least one option, then press “Submit”.",
+    "problemHalf": "Rate every criterion of “{{name}}” or none, then press “Submit”.",
+    "said": "Counted. Place 1: {{name}}.",
+    "result": {
+      "heading": "Result of the rating",
+      "how": "Counted as the mean of ratings from 1 to 5, per criterion and overall, every criterion weighted equally.",
+      "place": "Place",
+      "option": "Option",
+      "total": "Overall",
+      "by": "Rated by"
+    }
+  },
+  "consent": {
+    "heading": "Your answer: safe enough to try?",
+    "proposal": "The proposal",
+    "noProposal": "When the round began, no note of the proposal stood on the wall.",
+    "question": "Your answer",
+    "agree": "Agree",
+    "live": "Can live with it",
+    "object": "Objection",
+    "reason": "Reason for the objection",
+    "reasonHelp": "Everyone sees it once counted, without your name.",
+    "hint": "Nobody sees your answer, not even the moderation: everyone sees only the result once counted.",
+    "problemEmpty": "Choose an answer, then press “Submit”.",
+    "problemReason": "An objection needs a reason: write it down, then press “Submit”.",
+    "result": {
+      "heading": "Result of the consent round",
+      "voters_one": "1\u00a0answer, submitted in secret.",
+      "voters_other": "{{count}}\u00a0answers, submitted in secret.",
+      "objections_one": "1\u00a0objection, without names",
+      "objections_other": "{{count}}\u00a0objections, without names",
+      "noObjections": "No objection."
+    }
+  },
+  "records": {
+    "decision": {
+      "heading": "Decisions",
+      "agreedCount_one": "1 of {{of}} recorded.",
+      "agreedCount_other": "{{count}} of {{of}} recorded.",
+      "none": "No decision yet: write it down below.",
+      "open": "Not recorded yet",
+      "agree": "Record",
+      "unagree": "Record no longer",
+      "agreed": "Recorded",
+      "by": "Decided by the moderation",
+      "whyIs": "Reasons: {{why}}",
+      "openIs": "Open objections: {{open}}",
+      "dueIs": "Review date: {{due}}",
+      "why": "Reasons",
+      "openObjections": "Open objections",
+      "due": "Review date",
+      "add": "New decision",
+      "addKey": "Add decision",
+      "hint": "Reasons, open objections and review date go into the file as you write them."
+    },
+    "result": {
+      "heading": "Measurable results",
+      "agreedCount_one": "1 of {{of}} agreed.",
+      "agreedCount_other": "{{count}} of {{of}} agreed.",
+      "none": "No results yet.",
+      "open": "Not agreed yet",
+      "agree": "Agree",
+      "unagree": "Agree no longer",
+      "agreed": "Agreed",
+      "goalIs": "Goal: {{goal}}",
+      "targetIs": "Target: {{target}}",
+      "whoIs": "Owner: {{who}}",
+      "dueIs": "Review date: {{due}}",
+      "goal": "Goal",
+      "noGoal": "No goal",
+      "target": "Target",
+      "who": "Owner",
+      "due": "Review date",
+      "add": "New result",
+      "addKey": "Add result",
+      "hint": "Goal, target, owner and review date go into the file as you write them."
+    }
   }
 }

@@ -76,7 +76,13 @@ export default function NewWall() {
     }
     setBusy(true);
     setFailure(null);
-    const made = await createWall(tidy(question), method, estimates && tidy(unit) !== "" ? tidy(unit) : undefined);
+    const made = await createWall(
+      tidy(question),
+      method,
+      estimates && tidy(unit) !== "" ? tidy(unit) : undefined,
+      // a method that begins with fixed fields titles them in this language (stage M6, „Annahmen prüfen“)
+      CATALOGUE[method].fields === undefined ? undefined : lang,
+    );
     setBusy(false);
     if (!made.ok) {
       setFailure(made);

@@ -157,8 +157,8 @@ run the rest; their result is the run itself. Keep this file current.
 - The hidden vote (stage M2): `tests/vote.spec.ts` reads every frame of a second browser before counting (no other
   person's ballot, no tally), sends a ballot twice, counts, and walks the ballot with the keyboard alone; the
   screens `wand-wahl` and `wand-ergebnis` run axe in light at 390 px, dark at 1440 px and at 200 %. The ballot panel
-  offers points and choices (`dots`, `approval`); ranking (`rank`) has its panel since stage M5 (below), scores
-  (`score`) are rules and Worker only, without a panel: no method uses them yet. Nobody looked at the panel at 2000 px or with a screen reader; the guide
+  offers points and choices (`dots`, `approval`); ranking (`rank`) has its panel since stage M5, scores (`score`)
+  theirs since stage M6 (both below). Nobody looked at the panel at 2000 px or with a screen reader; the guide
   sentences speak of points, which is true for the one vote there is. „5 von 8“ counts the people here now, at least
   as many as have voted.
 - Estimating in rounds (stage M3): `tests/estimate.spec.ts` plays „Schätzen – Diskutieren – Schätzen“ with two
@@ -197,6 +197,23 @@ run the rest; their result is the run itself. Keep this file current.
   seen: the small groups of „Was? Na und? Was nun?“ and of the retrospective with more than one team in a browser
   (the Worker test plays eight people in two teams), the turn step in the list view, the ranking and the actions at
   2000 px or with a screen reader, the actions' fields filled by somebody without a mouse beyond Enter in a field.
+- The methods of stage M6: `tests/methods-m6.spec.ts` plays each of the six methods („Kriterienbewertung“, „Nutzen
+  und Aufwand“, „Gegenposition prüfen“, „Entscheidungsprotokoll mit Zustimmungsrunde“, „Annahmen prüfen“, „Ziele mit
+  messbaren Ergebnissen“) with two browsers through all its steps and saves its export; „Gegenposition prüfen“ with
+  two more people who are no browser, so that two teams with their roles form. „Kriterienbewertung“: the second
+  browser scores six fields with the keyboard alone (Tab to each select, a digit chooses, Tab to „Abgeben“, Enter);
+  the moderation's received frames carry no `"scores"` before counting, and the other browser's carry only its own
+  ballot as stored; half an option cannot be sent. „Entscheidungsprotokoll“: the answer is chosen with the arrow
+  keys, an objection without its reason is not sent, and before counting neither browser's frames carry the other's
+  answer or the reason. „Annahmen prüfen“ moves an assumption into a field through the list's „Verschieben nach …“
+  in the hidden step, and reads the moderation's frames for it. The Worker reads the frames of three people for
+  scores and consent answers (`apps/worker/test/methods-m6.test.ts`). The screens `wand-bewertung` (the score with
+  one option scored), `wand-bewertung-ergebnis` (the table), `wand-zustimmung` (an objection with its field),
+  `wand-entscheidungen` (the moderation's decisions with their fields) and `wand-ergebnisse` (the measurable results
+  with the goal to choose) run axe in light at 390 px, dark at 1440 px and at 200 %, `wand-zustimmung-ergebnis` in
+  light and dark. Not seen: the role line and the fields of „Annahmen prüfen“ on the surface in a screen of their own
+  (the end-to-end tests read them), any of the panels at 2000 px or with a screen reader, a score with many options
+  on a phone (each option is a group of up to five selects), the decision and result fields filled without a mouse.
 
 ## Waivers
 

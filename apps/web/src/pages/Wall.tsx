@@ -57,6 +57,7 @@ import {
   areaBox,
   areaHead,
   extendClock,
+  criterionName,
   generateHexId,
   MAX_GROUPS,
   MAX_NOTES,
@@ -65,6 +66,8 @@ import {
   methodAttribution,
   methodTexts,
   nameInitials,
+  roleOf,
+  roleTexts,
   roundOf,
   self,
   shown,
@@ -79,11 +82,15 @@ import {
   type Note,
   type NoteAction,
   type Participant,
+  type RankingResult,
+  type RecordKind,
   type VoteResult,
   type WallInfo,
 } from "@ideabeam/shared";
-import { ActionsPanel } from "../components/Actions";
+import { ActionsPanel, type Goal } from "../components/Actions";
 import { BallotPanel, Results, type Marks } from "../components/Ballot";
+import { ConsentPanel, ConsentResults, type Consent } from "../components/Consent";
+import { ScorePanel, ScoreResults, halfScored, scored, type Scores } from "../components/Score";
 import { EstimatePanel, EstimateResults, summarySentence } from "../components/Estimate";
 import { ClockControls } from "../components/ClockControls";
 import { CopyKey } from "../components/CopyKey";
@@ -548,6 +555,9 @@ function OnWall({ wallId }: { wallId: string }) {
   const turnTotal = (turnView?.shown ?? 0) + turnLeft;
   // a step that decides (stage M5): the actions of the method, in the order of the vote on them where there was one
   const deciding = step.can.decide;
+  // stage M6: a step of type `decide` records actions, decisions or measurable results, by the kind of its notes
+  const recordKind: RecordKind =
+    stepHere?.noteKind === "decision" ? "decision" : stepHere?.noteKind === "result" ? "result" : "action";
   const teams = state.teams;
   const teamStep = stepHere?.team !== undefined && teams !== null && teams.step === state.step;
   const ownTeam = teamStep && teams !== null ? teams.own : null;
@@ -569,6 +579,15 @@ function OnWall({ wallId }: { wallId: string }) {
             names: new Intl.ListFormat(lang, { type: "conjunction" }).format(mates),
           })
         : t("wall.team.alone", { n: ownTeam + 1 });
+  // a step whose teams have roles (stage M6, „Gegenposition prüfen“): each team's role, by its number, in the words of
+  // the method; the person's own, with what the team does
+  const roleWords = (n: number) => {
+    if (teams === null || state.agenda === null) return null;
+    const teamsStep = steps[teams.step];
+    const role = teamsStep === undefined ? null : roleOf(teamsStep, n);
+    return role === null ? null : roleTexts(lang, methodOfStep(state.agenda, teams.step), role);
+  };
+  const ownRole = teamStep && ownTeam !== null ? roleWords(ownTeam) : null;
   // In a step of teams a member is shown their own team's area alone, where their notes are; the moderation every
   // team's. A view fits an area by its head (`areaHead`), not its empty rest, so the notes stay readable.
   const areas = useMemo(
@@ -584,11 +603,20 @@ function OnWall({ wallId }: { wallId: string }) {
                     box: areaBox(area),
                     head: areaHead(area),
                     own: n === teams.own,
-                    label: t(n === teams.own ? "wall.team.areaOwn" : "wall.team.area", { n: n + 1 }),
+                    label: (() => {
+                      const role = roleWords(n);
+                      if (role === null)
+                        return t(n === teams.own ? "wall.team.areaOwn" : "wall.team.area", { n: n + 1 });
+                      return t(n === teams.own ? "wall.team.areaOwnRole" : "wall.team.areaRole", {
+                        n: n + 1,
+                        role: role.name,
+                      });
+                    })(),
                   },
                 ],
           ),
-    [teams, teamStep, admin, t],
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- the roles follow from the teams and the agenda
+    [teams, teamStep, admin, t, state.agenda, lang],
   );
   const ownAreaOf = teams !== null && ownTeam !== null ? teams.areas[ownTeam] : undefined;
   // a step that moves on by itself when its time is up, unless the moderation switched that off
@@ -618,6 +646,29 @@ function OnWall({ wallId }: { wallId: string }) {
   // a step that ranks (stage M5): the options chosen, in order; the draft until „Abgeben“
   const ranking = voteConfig?.kind === "rank";
   const [rankDraft, setRankDraft] = useState<string[] | null>(null);
+  // a step that scores (stage M6): the scores by option and criterion; the criteria are the round's (notes) or the
+  // step's own, in the words of the method
+  const scoring = voteConfig?.kind === "score";
+  const criteriaOf = (config: typeof voteConfig, frozen: readonly string[] | undefined, at: number): string[] => {
+    if (frozen !== undefined) return [...frozen];
+    if (config?.kind !== "score" || state.agenda === null) return [];
+    const methodHere = methodOfStep(state.agenda, at);
+    return config.criteria.map((key) => criterionName(lang, methodHere, key));
+  };
+  const criteria = scoring && round !== null ? criteriaOf(voteConfig, round.criteria, state.step) : [];
+  /** a counted vote over options: a score with criteria as its table, any other as the ranked list */
+  const rankingResults = (one: RankingResult, compact = false) => {
+    const words = criteriaOf(steps[one.step]?.vote, one.criteria, one.step);
+    return one.kind === "score" && words.length > 0 ? (
+      <ScoreResults key={one.step} result={one} criteria={words} compact={compact} />
+    ) : (
+      <Results key={one.step} result={one} notes={stored.notes} compact={compact} />
+    );
+  };
+  const [scoreDraft, setScoreDraft] = useState<Scores | null>(null);
+  // a consent round (stage M6): the answer and the reason of an objection
+  const consenting = voteConfig?.kind === "consent";
+  const [consentDraft, setConsentDraft] = useState<Consent | null>(null);
   const cap = voteConfig?.kind === "dots" ? (voteConfig.maxPerOption ?? round?.limit ?? 0) : 1;
   const [draft, setDraft] = useState<Marks | null>(null);
   const [voteProblem, setVoteProblem] = useState<string | null>(null);
@@ -642,12 +693,20 @@ function OnWall({ wallId }: { wallId: string }) {
     setDraftOf({ ballot: state.ballot, step: state.step });
     setDraft(null);
     setRankDraft(null);
+    setScoreDraft(null);
+    setConsentDraft(null);
     setTyped(null);
     if (draftOf.step !== state.step) setReasonTyped(null);
     setVoteProblem(null);
   }
   const marks = draft ?? marksOf(state.ballot);
   const rankOrder = rankDraft ?? (state.ballot?.kind === "rank" ? state.ballot.order : []);
+  const scores: Scores = scoreDraft ?? (state.ballot?.kind === "score" ? state.ballot.scores : {});
+  const consent: Consent =
+    consentDraft ??
+    (state.ballot?.kind === "consent"
+      ? { answer: state.ballot.answer, reason: state.ballot.reason ?? "" }
+      : { answer: "", reason: "" });
   /** „Abgeben“ of an estimate: the number, and in the first round the reason beside it, as a note of this person's
    *  (made, changed or, emptied, taken away). Nothing is sent while the number cannot be read. */
   const submitEstimate = () => {
@@ -678,6 +737,49 @@ function OnWall({ wallId }: { wallId: string }) {
   };
   const submit = () => {
     if (estimating) return submitEstimate();
+    if (scoring && round !== null) {
+      const width = Math.max(1, criteria.length);
+      const half = round.options.find((option) => halfScored(scores[option.id]));
+      if (half !== undefined) {
+        const name =
+          half.kind === "note"
+            ? (stored.notes.find((note) => note.id === half.id)?.text ?? "")
+            : (stored.groups.find((group) => group.id === half.id)?.title ?? "");
+        setVoteProblem(t("score.problemHalf", { name: name.trim() === "" ? t("group.untitled") : name }));
+        return;
+      }
+      const full = Object.fromEntries(
+        round.options.flatMap((option) => {
+          const row = scores[option.id];
+          return scored(row, width) && row !== undefined ? [[option.id, row.map((value) => value ?? 0)]] : [];
+        }),
+      );
+      if (Object.keys(full).length === 0) {
+        setVoteProblem(t("score.problemEmpty"));
+        return;
+      }
+      setVoteProblem(null);
+      castBallot({ kind: "score", scores: full });
+      return;
+    }
+    if (consenting) {
+      if (consent.answer === "") {
+        setVoteProblem(t("consent.problemEmpty"));
+        return;
+      }
+      const reason = consent.reason.replace(/\s+/g, " ").trim().slice(0, NOTE_TEXT_MAX);
+      if (consent.answer === "object" && reason === "") {
+        setVoteProblem(t("consent.problemReason"));
+        return;
+      }
+      setVoteProblem(null);
+      castBallot(
+        consent.answer === "object"
+          ? { kind: "consent", answer: "object", reason }
+          : { kind: "consent", answer: consent.answer },
+      );
+      return;
+    }
     if (ranking) {
       if (rankOrder.length === 0) {
         setVoteProblem(t("rank.problemEmpty"));
@@ -701,7 +803,9 @@ function OnWall({ wallId }: { wallId: string }) {
     setResultsKnown(state.results.length);
     const newest = state.results.at(-1);
     if (newest?.kind === "estimate") setSaid(t("estimate.said", { summary: summarySentence(t, lang, newest) }));
-    else if (newest !== undefined) {
+    else if (newest?.kind === "consent") {
+      setSaid(t("wall.vote.saidConsent", { agree: newest.agree, live: newest.live, object: newest.object }));
+    } else if (newest !== undefined) {
       const first = newest.rows[0];
       setSaid(
         newest.voters === 0 || first === undefined
@@ -806,7 +910,17 @@ function OnWall({ wallId }: { wallId: string }) {
     timeUp: time?.is === "over",
     arrangeable: Number(open),
     arranged: state.arrangeRun === null ? null : undoAsksFirst ? ("changed" as const) : ("fresh" as const),
-    vote: voting ? { cast: state.ballot !== null, counted, estimate: estimating, rank: ranking } : null,
+    vote: voting
+      ? {
+          cast: state.ballot !== null,
+          counted,
+          estimate: estimating,
+          rank: ranking,
+          score: scoring,
+          consent: consenting,
+        }
+      : null,
+    records: deciding ? recordKind : undefined,
     turn: turning ? { left: turnLeft } : null,
     estimates: estimateStage,
     // pairs merged into fours present their core idea („1-2-4-Alle“); other small groups what they found (stage M5);
@@ -1089,12 +1203,24 @@ function OnWall({ wallId }: { wallId: string }) {
   const compose = () => shownAs.current?.compose();
   // The actions of the method (stage M5): the notes written in a step that takes actions, those the vote on them
   // ranked first in its order, the rest in the order they were made.
-  const actionSteps = step.actionSteps;
+  const actionSteps =
+    recordKind === "decision" ? step.decisionSteps : recordKind === "result" ? step.resultSteps : step.actionSteps;
+  // the goals a measurable result may belong to: what the vote on the goals chose, those with votes, the first three
+  // places
+  const goals: Goal[] = (() => {
+    if (recordKind !== "result") return [];
+    const vote = state.results
+      .filter((one): one is RankingResult => one.kind !== "estimate" && one.kind !== "consent" && one.step < state.step)
+      .at(-1);
+    return (vote?.rows ?? [])
+      .filter((row) => row.points > 0 && row.rank <= 3)
+      .map((row) => ({ id: row.id, label: row.label.trim() === "" ? t("group.untitled") : row.label }));
+  })();
   const actions = (() => {
     const listed = stored.notes.filter((note) => actionSteps.includes(note.step ?? 0));
     const ranked = new Map<string, number>();
     for (const result of state.results) {
-      if (result.kind === "estimate") continue;
+      if (result.kind === "estimate" || result.kind === "consent") continue;
       for (const row of result.rows) if (row.kind === "note" && !ranked.has(row.id)) ranked.set(row.id, row.rank);
     }
     return listed
@@ -1197,7 +1323,17 @@ function OnWall({ wallId }: { wallId: string }) {
             hint={
               counted
                 ? t("wall.exportHint")
-                : t(estimating ? "estimate.hint" : ranking ? "rank.hint" : "wall.vote.hint")
+                : t(
+                    estimating
+                      ? "estimate.hint"
+                      : ranking
+                        ? "rank.hint"
+                        : scoring
+                          ? "score.hint"
+                          : consenting
+                            ? "consent.hint"
+                            : "wall.vote.hint",
+                  )
             }
           >
             {!counted ? (
@@ -1236,7 +1372,15 @@ function OnWall({ wallId }: { wallId: string }) {
           </ActionZone>
         ) : deciding ? (
           // a step that decides: „Weiter“ for the moderation where a step follows, else keeping the result
-          <ActionZone hint={t("actions.hint")}>
+          <ActionZone
+            hint={t(
+              recordKind === "action"
+                ? "actions.hint"
+                : recordKind === "decision"
+                  ? "records.decision.hint"
+                  : "records.result.hint",
+            )}
+          >
             {admin && nextStep !== null ? (
               <button className="sb-primary-action" type="button" onClick={goNext}>
                 <Icon name="arrow-right" />
@@ -1404,6 +1548,12 @@ function OnWall({ wallId }: { wallId: string }) {
               {ownTeam !== null && <> {t("wall.team.room", { n: ownTeam + 1 })}</>}
             </p>
           )}
+          {/* in a step whose teams have roles (stage M6): the team's role, and what it does */}
+          {ownRole !== null && (
+            <p className="app-state__team" data-testid="role">
+              {t("wall.team.role", { role: ownRole.name, hint: ownRole.hint })}
+            </p>
+          )}
           {stood !== "outdated" && (
             <>
               {/* the clock of the writing, as large as the state: said when the minute turns. The region is there
@@ -1520,8 +1670,10 @@ function OnWall({ wallId }: { wallId: string }) {
             counted ? (
               result.kind === "estimate" ? (
                 <EstimateResults results={estimatesUpTo(state.results, state.step)} />
+              ) : result.kind === "consent" ? (
+                <ConsentResults result={result} />
               ) : (
-                <Results result={result} notes={stored.notes} />
+                rankingResults(result)
               )
             ) : estimating ? (
               <EstimatePanel
@@ -1541,6 +1693,38 @@ function OnWall({ wallId }: { wallId: string }) {
                 }}
                 onReason={setReasonTyped}
                 onSubmit={submit}
+              />
+            ) : scoring ? (
+              <ScorePanel
+                round={round}
+                criteria={criteria}
+                scores={scores}
+                notes={stored.notes}
+                groups={stored.groups}
+                problem={voteProblem ?? problem}
+                onDismiss={() => {
+                  setVoteProblem(null);
+                  dismissRejected();
+                }}
+                onChange={(next) => {
+                  setVoteProblem(null);
+                  setScoreDraft(next);
+                }}
+              />
+            ) : consenting ? (
+              <ConsentPanel
+                round={round}
+                consent={consent}
+                notes={stored.notes}
+                problem={voteProblem ?? problem}
+                onDismiss={() => {
+                  setVoteProblem(null);
+                  dismissRejected();
+                }}
+                onChange={(next) => {
+                  setVoteProblem(null);
+                  setConsentDraft(next);
+                }}
               />
             ) : ranking ? (
               <RankPanel
@@ -1579,6 +1763,8 @@ function OnWall({ wallId }: { wallId: string }) {
             ) : null
           ) : deciding ? (
             <ActionsPanel
+              kind={recordKind}
+              goals={goals}
               actions={actions}
               admin={admin}
               canWrite={step.can.write}
@@ -1610,7 +1796,11 @@ function OnWall({ wallId }: { wallId: string }) {
           {/* in the steps after a vote, its result beside the surface: what „Ergebnis besprechen“ talks about */}
           {!voting &&
             state.results.map((one) =>
-              one.kind === "estimate" ? null : <Results key={one.step} result={one} notes={stored.notes} compact />,
+              one.kind === "estimate" ? null : one.kind === "consent" ? (
+                <ConsentResults key={one.step} result={one} compact />
+              ) : (
+                rankingResults(one, true)
+              ),
             )}
           {/* the rounds of the estimates, together, beside the surface in the steps after them */}
           {!voting && estimatesUpTo(state.results, state.step).length > 0 && (

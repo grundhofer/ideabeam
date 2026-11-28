@@ -159,10 +159,24 @@ export function PrivacyDe() {
           festgelegten Aktionen. Wer eine Aktion festgelegt hat, wird nicht gespeichert.
         </li>
         <li>
+          <strong>Entscheidungen und messbare Ergebnisse:</strong> in einer Methode, die Entscheidungen festhält (etwa
+          „Entscheidungsprotokoll mit Zustimmungsrunde“), oder messbare Ergebnisse festlegt („Ziele mit messbaren
+          Ergebnissen“), sind sie Zettel wie jeder andere (oben). Hält die Moderation eine Entscheidung fest, speichert
+          die Wand beim Zettel die <strong>Begründung, die offenen Einwände und den Prüftermin</strong>; legt sie ein
+          Ergebnis fest,{" "}
+          <strong>das Ziel, zu dem es gehört, den Zielwert, wer es verantwortet und den Prüftermin</strong>, jeweils
+          freier Text, so wie das Team ihn eintippt (höchstens 300, 60 und 40 Zeichen). Wer entschieden hat, steht nicht
+          im Speicher: Es ist in dieser Fassung immer die Moderation, und das sagt die Anwendung. Alles bleibt
+          gespeichert, solange die Wand besteht (Abschnitt 3.3), alle auf der Wand sehen es, und die Datei von „Als
+          Markdown sichern“ enthält es.
+        </li>
+        <li>
           <strong>Gruppen:</strong> bis zu 80 je Wand, jeweils der Titel (höchstens 60 Zeichen, er darf fehlen), Ort und
           Größe des Rahmens, die Stelle in der Reihenfolge der Gruppen und zwei Angaben für das Ordnen (Abschnitt 3.4):
           ob der Titel von einer Person oder von der KI stammt und ob das Ordnen die Gruppe unberührt lässt. Wer eine
-          Gruppe angelegt oder geändert hat, wird nicht gespeichert.
+          Gruppe angelegt oder geändert hat, wird nicht gespeichert. Eine Wand der Methode „Annahmen prüfen“ beginnt mit
+          fünf solchen Gruppen (den Feldern); ihre Titel stehen in der Sprache des Browsers, der die Wand anlegt, die
+          Sprache selbst wird nicht gespeichert.
         </li>
         <li>
           <strong>Stimmen:</strong> in einem Schritt, in dem gewählt wird, je Person ein Stimmzettel: welche Optionen
@@ -170,6 +184,20 @@ export function PrivacyDe() {
           Wer neu abgibt, überschreibt den eigenen Stimmzettel. Beim Auszählen speichert die Wand das Ergebnis: je
           Option ihren Titel oder Text, ihre Punkte, ihren Platz und wie viele Stimmzettel ihr etwas gaben, dazu die
           Zahl der Stimmzettel, ohne Kennungen. Was zur Wahl steht, hält die Wand beim Beginn des Schritts fest.
+        </li>
+        <li>
+          <strong>Bewertungen:</strong> in einem Schritt, in dem bewertet wird (etwa „Kriterienbewertung“), je Person
+          ein Stimmzettel mit einer Zahl von 1 bis 5 je Option und Kriterium, wie oben. Sind die Kriterien Zettel, hält
+          die Wand beim Beginn des Schritts ihre Texte fest. Beim Auszählen speichert sie nur die Mittelwerte je Option
+          und Kriterium, den Gesamtwert und wie viele bewertet haben, ohne Kennungen.
+        </li>
+        <li>
+          <strong>Zustimmungsrunde:</strong> in „Entscheidungsprotokoll mit Zustimmungsrunde“ je Person eine Antwort
+          („Zustimmung“, „Kann damit leben“ oder „Einwand“), bei einem Einwand mit seiner <strong>Begründung</strong>
+          (höchstens 300 Zeichen), wie ein Stimmzettel: mit der Kennung der Person und der laufenden Nummer der
+          Änderung. Beim Auszählen speichert die Wand, wie viele welche Antwort gaben, und die Begründungen der
+          Einwände, alphabetisch geordnet und ohne Kennungen; diese Begründungen sehen dann alle auf der Wand, und die
+          Datei von „Als Markdown sichern“ enthält sie.
         </li>
         <li>
           <strong>Schätzungen:</strong> in einem Schritt, in dem geschätzt wird, je Person eine Zahl, wie ein
@@ -186,11 +214,12 @@ export function PrivacyDe() {
           einem Zusammenlegen oder einem Tausch durch die Moderation). Die Anwendung bildet die Teams zufällig aus
           allen, die beim Beginn des Schritts verbunden sind; wer später kommt, kommt ins kleinste Team.{" "}
           <strong>Die Zuordnung zu den Teams bleibt gespeichert, solange die Wand besteht</strong> (Abschnitt 3.3), auch
-          nach dem Schritt mit den Teams. In einem Schritt mit Teams sieht jede Person die Zettel ihres Teams, ohne
-          Namen; die Moderation sieht, wer in welchem Team ist, alle anderen nur ihr eigenes Team mit den Namen darin.
-          In einem Paar ist leicht zu erraten, wer welchen Zettel schrieb. Die Datei von „Als Markdown sichern“ nennt
-          nur, wie viele Teams es gab, nie wer darin war. In einer Methode mit mehreren Runden (etwa „Was? Na und? Was
-          nun?“) bleiben die Kleingruppen von Runde zu Runde dieselben.
+          nach dem Schritt mit den Teams. In „Gegenposition prüfen“ hat jedes Team eine Rolle; welche, folgt aus seiner
+          Nummer und wird nicht eigens gespeichert. In einem Schritt mit Teams sieht jede Person die Zettel ihres Teams,
+          ohne Namen; die Moderation sieht, wer in welchem Team ist, alle anderen nur ihr eigenes Team mit den Namen
+          darin. In einem Paar ist leicht zu erraten, wer welchen Zettel schrieb. Die Datei von „Als Markdown sichern“
+          nennt nur, wie viele Teams es gab, nie wer darin war. In einer Methode mit mehreren Runden (etwa „Was? Na und?
+          Was nun?“) bleiben die Kleingruppen von Runde zu Runde dieselben.
         </li>
       </ul>
       <p>
@@ -220,7 +249,9 @@ export function PrivacyDe() {
         zugleich nur das Ergebnis. Auch die Datei von „Als Markdown sichern“ enthält nur das Ergebnis. Für Schätzungen
         gilt dasselbe: Das Ergebnis ist die Zusammenfassung der Runde. Die kleinste und die größte Zahl stehen darin;
         wer sie geschätzt hat, nicht. In einer kleinen Gruppe lässt sich aus ihnen dennoch mehr erraten als aus einem
-        Median.
+        Median. Bei Bewertungen stehen nur Mittelwerte im Ergebnis. In der Zustimmungsrunde sieht die Begründung eines
+        Einwands vor dem Auszählen niemand außer der Person, die ihn erhebt; danach sehen sie alle, ohne Namen. In einer
+        kleinen Gruppe lässt sich aus einer Begründung erraten, von wem sie stammt.
       </p>
       <p>
         <strong>Wer was tun kann.</strong> Jede Person, die der Wand beigetreten ist, kann Zettel schreiben. Solange
@@ -280,9 +311,10 @@ export function PrivacyDe() {
           Beitritt zählt auch das Wiederkommen und jede automatische Neuverbindung. Die Frist rückt höchstens einmal am
           Tag weiter; die Löschung liegt deshalb 29 bis 30 Tage nach dem letzten Beitritt. Tritt niemand bei, löscht
           sich die Wand 30 Tage nach dem Anlegen. Die Anwendung löscht dabei den gesamten Speicher der Wand, mit allen
-          Zetteln, Gruppen, Stimmzetteln, Teams, Aktionen und Ergebnissen. Bis dahin bleiben die Stimmzettel je Person,
-          die Zuordnung zu den Teams und bei den Aktionen „Wer“ und „Bis wann“ gespeichert. Der Link führt danach zu
-          „Unbekannte Wand“, wie bei einer Wand, die es nie gab.
+          Zetteln, Gruppen, Stimmzetteln, Teams, Aktionen und Ergebnissen. Bis dahin bleiben die Stimmzettel je Person
+          (auch die Antworten und Begründungen der Zustimmungsrunde), die Zuordnung zu den Teams, bei den Aktionen „Wer“
+          und „Bis wann“ und bei Entscheidungen und messbaren Ergebnissen ihre Felder gespeichert. Der Link führt danach
+          zu „Unbekannte Wand“, wie bei einer Wand, die es nie gab.
         </li>
         <li>
           Die Moderation kann die Wand <strong>jederzeit löschen</strong> („Wand löschen“): sofort und vollständig, mit

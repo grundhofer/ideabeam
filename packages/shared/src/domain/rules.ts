@@ -9,6 +9,7 @@ import {
   type ContentCommand,
   type Group,
   type Note,
+  type NoteAction,
   type NoteMove,
   type Participant,
   type RejectCode,
@@ -42,7 +43,10 @@ import { maySeeNote } from "./visibility.js";
 //
 // A note is written in the step the wall is in (`Note.step`, stage M5). In a step of type `decide` the moderation
 // agrees on an action (a note written in a step that takes actions) with who does it and by when (`note.action`), or
-// takes that back; nobody else does, and nothing else is an action.
+// takes that back; nobody else does, and nothing else is an action. Stage M6: in the same way it records a decision
+// (with its reasons, the objections still open and a date to look at it again: `why`, `open`, `due`) and a measurable
+// result (who answers for it, its target, its goal and the date to check it: `who`, `target`, `goal`, `due`); each
+// kind of note takes its own fields of the record and no other.
 
 /** Who sent the command. */
 export type Actor = Pick<Participant, "id" | "role">;
@@ -99,6 +103,23 @@ export function mayDeleteNote(note: Pick<Note, "mine">, by: Pick<Actor, "role">)
   return note.mine || by.role === "admin";
 }
 
+/** The fields each kind of record takes (stage M6): an action who and by when; a decision its reasons, the objections
+ *  still open and the date to look at it again (by whom is the moderation's, in v1: no `who`); a measurable result who
+ *  answers for it, its target, its goal and the date to check it. */
+function fitsRecord(kind: "action" | "decision" | "result", record: NoteAction): boolean {
+  const said = (value: string | undefined) => value !== undefined && value !== "";
+  if (kind !== "decision" && (said(record.why) || said(record.open))) return false;
+  if (kind !== "result" && (said(record.target) || record.goal !== undefined)) return false;
+  return kind !== "decision" || !said(record.who);
+}
+
+/** Whether two records say the same. */
+function sameRecord(a: NoteAction, b: NoteAction): boolean {
+  return (["who", "due", "why", "open", "target", "goal"] as const).every(
+    (field) => (a[field] ?? "") === (b[field] ?? ""),
+  );
+}
+
 /** What the command of `by` makes of the wall in the step it is in. `now` is the clock of whoever asks: the
  *  worker's when it stores, the browser's for what it shows meanwhile. */
 export function decide(wall: WallReader, command: ContentCommand, by: Actor, now: number, ctx: StepContext): Decision {
@@ -152,13 +173,20 @@ export function decide(wall: WallReader, command: ContentCommand, by: Actor, now
       if (by.role !== "admin") return refused("NOT_ADMIN");
       const existing = seen(wall.note(command.noteId));
       if (existing === null) return refused("NOT_FOUND");
-      // only a note written in a step that takes actions is one
-      if (!ctx.actionSteps.includes(existing.step ?? 0)) return refused("INVALID");
-      const before = existing.action ?? null;
+      // only a note written in a step that takes actions, decisions or results is one, and each takes its own fields
+      const at = existing.step ?? 0;
+      const kind = ctx.actionSteps.includes(at)
+        ? "action"
+        : ctx.decisionSteps.includes(at)
+          ? "decision"
+          : ctx.resultSteps.includes(at)
+            ? "result"
+            : null;
+      if (kind === null) return refused("INVALID");
       const after = command.action;
-      if (before === null ? after === null : after !== null && before.who === after.who && before.due === after.due) {
-        return UNCHANGED;
-      }
+      if (after !== null && !fitsRecord(kind, after)) return refused("INVALID");
+      const before = existing.action ?? null;
+      if (before === null ? after === null : after !== null && sameRecord(before, after)) return UNCHANGED;
       return changed({ type: "note.action", noteId: command.noteId, action: after });
     }
     case "notes.move": {

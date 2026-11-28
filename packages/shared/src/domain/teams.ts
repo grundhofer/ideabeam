@@ -4,7 +4,7 @@
 import * as z from "zod/mini";
 import { hexIdSchema } from "../ids.js";
 import type { RejectCode, TeamsCommand } from "../protocol.js";
-import type { Step } from "./method.js";
+import { TEAM_MAX_SIZE, type Step } from "./method.js";
 import { estimateNoteHeight, NOTE_WIDTH } from "./note-size.js";
 
 // Pairs and small groups (stage M4, PLAN-METHODEN.md 4, docs/architektur-methoden.md 3.2). A step in pairs or small
@@ -106,10 +106,27 @@ export function teamCount(people: number, size: number): number {
   return count;
 }
 
+/** How many teams a step with roles makes (stage M6, „Gegenposition prüfen“): one for each role, more only where a
+ *  team would grow past TEAM_MAX_SIZE (then a multiple of the roles, so every role has as many teams), fewer only
+ *  where there are not two people for each role. */
+export function roleTeamCount(people: number, roles: number): number {
+  if (people <= 0) return 0;
+  if (people < 2 * roles) return Math.max(1, Math.floor(people / 2));
+  let count = roles;
+  while (Math.ceil(people / count) > TEAM_MAX_SIZE && Math.floor(people / (count + roles)) >= 2) count += roles;
+  return count;
+}
+
+/** The role of a team (stage M6): the step's roles in turn, the first team the first; null without roles. */
+export function roleOf(step: Pick<Step, "team">, team: number): string | null {
+  const roles = step.team?.roles;
+  return roles === undefined || roles.length === 0 ? null : (roles[team % roles.length] ?? null);
+}
+
 /** Teams of about `size` from the people present, at random by `seed`. The people are dealt round by round into
  *  the teams, so the sizes differ by one at most. Never a team of 1 where two or more are present; nobody present,
- *  no team. The order of `present` does not matter. */
-export function formTeams(present: readonly string[], size: number, seed: number): string[][] {
+ *  no team. The order of `present` does not matter. `count` (stage M6, a step with roles): exactly so many teams. */
+export function formTeams(present: readonly string[], size: number, seed: number, count?: number): string[][] {
   const people = [...new Set(present)].sort();
   const next = random(seed);
   // Fisher–Yates
@@ -117,9 +134,9 @@ export function formTeams(present: readonly string[], size: number, seed: number
     const other = Math.floor(next() * (at + 1));
     [people[at], people[other]] = [people[other] as string, people[at] as string];
   }
-  const count = teamCount(people.length, size);
-  const teams: string[][] = Array.from({ length: count }, () => []);
-  people.forEach((person, at) => teams[at % count]?.push(person));
+  const many = count ?? teamCount(people.length, size);
+  const teams: string[][] = Array.from({ length: many }, () => []);
+  people.forEach((person, at) => teams[at % many]?.push(person));
   return teams;
 }
 
@@ -233,7 +250,13 @@ export function enterTeams(
     teams = current.teams.map((team) => [...team]);
     areas = shiftedAreas(current.areas);
   } else {
-    teams = formTeams(present, settings.size, seed);
+    const people = new Set(present).size;
+    teams = formTeams(
+      present,
+      settings.size,
+      seed,
+      settings.roles === undefined ? undefined : roleTeamCount(people, settings.roles.length),
+    );
     areas = freshAreas(teams.length);
     usedSeed = seed;
   }

@@ -1,4 +1,4 @@
-// Rank.tsx: a step that ranks (stage M5, „Stille Ideenrunde mit Rangfolge“: „Die fünf wichtigsten ranken“), in the
+// Rank.tsx: a step that ranks (stage M5, „Stille Ideenrunde mit Rangfolge“: „Die wichtigsten ranken“), in the
 // place of the surface. The rank vote has stood in the rules and the Worker since stage M2 (domain/vote.ts, Borda over
 // the first N); this is its panel. Two lists: „Deine Rangfolge“, the options chosen so far in their order, each with
 // „Nach oben“, „Nach unten“ and „Entfernen“; and „Zur Auswahl“, the rest, each with „Wählen“, which puts it last in the

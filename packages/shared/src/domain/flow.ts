@@ -8,6 +8,7 @@ import {
   keepsSteps,
   noteLevel,
   startsWriting,
+  stepsOfKind,
   writingFrom,
   type Capabilities,
   type NoteLevel,
@@ -123,6 +124,10 @@ export interface StepContext {
   at: number;
   /** The steps whose notes are actions (`noteKind: "action"`, stage M5). */
   actionSteps: readonly number[];
+  /** The steps whose notes are decisions and measurable results (`noteKind: "decision"`, `"result"`, stage M6): the
+   *  moderation records them in a step of type `decide`, as it agrees on actions. */
+  decisionSteps: readonly number[];
+  resultSteps: readonly number[];
   /** Whether a note keeps the step it is written in (`keepsSteps`, domain/agenda.ts). */
   keepsSteps: boolean;
   /** What may be done in the step. */
@@ -136,6 +141,8 @@ export const NO_STEP: StepContext = {
   seen: "hidden",
   at: 0,
   actionSteps: [],
+  decisionSteps: [],
+  resultSteps: [],
   keepsSteps: false,
   can: {
     write: false,
@@ -163,7 +170,9 @@ export function stepContext(
     writes: noteLevel(agenda.steps, flow.reach, writingFrom(agenda.steps, flow.step)),
     seen,
     at: flow.step,
-    actionSteps: agenda.steps.flatMap((one, at) => (one.noteKind === "action" ? [at] : [])),
+    actionSteps: stepsOfKind(agenda.steps, "action"),
+    decisionSteps: stepsOfKind(agenda.steps, "decision"),
+    resultSteps: stepsOfKind(agenda.steps, "result"),
     keepsSteps: keepsSteps(agenda.steps),
     // „Ordnen“ hands every note to the AI and moves any of them: not while some notes are hidden from somebody (a
     // step that sorts, gone back to from a later round of hidden writing)

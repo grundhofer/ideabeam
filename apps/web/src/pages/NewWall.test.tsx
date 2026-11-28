@@ -109,19 +109,25 @@ test("the method: „Still sammeln“ is chosen at first, „Freie Wand“ is th
     "still-sammeln",
     "eins-zwei-vier",
     "ideenrunde",
+    "kriterien",
+    "nutzen-aufwand",
     "schaetzen",
+    "gegenposition",
+    "entscheidung",
+    "ziele",
+    "annahmen",
     "rueckblick",
     "was-na-und",
     "scheitern",
     "free",
   ]);
-  expect(options.map((option) => option.checked)).toEqual([true, false, false, false, false, false, false, false]);
+  expect(options.map((option) => option.checked)).toEqual(options.map((_, at) => at === 0));
   // under headings by purpose
   expect(
     within(group)
       .getAllByRole("heading", { level: 2 })
       .map((heading) => heading.textContent),
-  ).toEqual(["Ideen sammeln", "Entscheiden", "Rückblick", "Risiken", "Ohne festen Ablauf"]);
+  ).toEqual(["Ideen sammeln", "Entscheiden", "Planen und Ziele", "Rückblick", "Risiken", "Ohne festen Ablauf"]);
   fireEvent.click(screen.getByRole("radio", { name: "Freie Wand" }));
   type("Was hält uns auf?");
   submit();
@@ -247,4 +253,20 @@ test("„Mehr dazu“ is a key of its own: it opens the steps and the result, an
     true,
   );
   expect(free.checked).toBe(false);
+});
+
+test("a method that begins with fixed fields sends the language of their titles (stage M6)", async () => {
+  const fetched = vi
+    .spyOn(globalThis, "fetch")
+    .mockImplementation(() => Promise.resolve(new Response(JSON.stringify({ wallId: WALL, adminToken: TOKEN }))));
+  renderApp("/neu");
+  await screen.findByRole("heading", { level: 1, name: "Neue Wand" });
+  fireEvent.click(screen.getByRole("radio", { name: "Annahmen prüfen" }));
+  type("Ein Lieferdienst für Ersatzteile");
+  submit();
+  await waitFor(() => expect(useWalls.getState().walls).toHaveLength(1));
+  expect(JSON.parse(String(fetched.mock.calls[0]?.[1]?.body))).toEqual({
+    question: "Ein Lieferdienst für Ersatzteile",
+    agenda: { items: [{ methodId: "annahmen", language: "de" }] },
+  });
 });

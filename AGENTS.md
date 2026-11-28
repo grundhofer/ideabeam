@@ -16,8 +16,11 @@ without names) and stage M4 (pairs and small groups: teams formed at random, swa
 steps that move on by themselves through the one alarm, „1-2-4-Alle“) are merged into `main` and deployed (`cd154d5`,
 2026-11-27, with the evidence rating removed); stage M5 (revealing by turn, the ranking panel, actions with „Wer“ and
 „Bis wann“, rounds that hide again, and the methods „Rückblick nach Ziel und Daten“, „Scheitern vorwegdenken“,
-„Stille Ideenrunde mit Rangfolge“, „Was? Na und? Was nun?“) is built on `methoden-m5`, not committed. Each stage's
-state is under its heading there.
+„Stille Ideenrunde mit Rangfolge“, „Was? Na und? Was nun?“) is committed (`1a2b46a`, not merged); stage M6 (the
+score by criteria with its table, roles of teams, the consent round, decisions and measurable results recorded by the
+moderation, fixed fields, and the methods „Kriterienbewertung“, „Nutzen und Aufwand“, „Gegenposition prüfen“,
+„Entscheidungsprotokoll mit Zustimmungsrunde“, „Annahmen prüfen“, „Ziele mit messbaren Ergebnissen“) is built on
+`methoden-m6`, not committed. Each stage's state is under its heading there.
 
 ## Commands
 

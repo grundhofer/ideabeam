@@ -31,7 +31,7 @@ import {
 import { dailyWalls, WALL_BUDGET_KEY } from "../src/rate-limiter.js";
 import { limiterStub, newWall } from "../src/wall-stub.js";
 import { applyOf, arrangeRoute, proposed, scriptedAi, wellBehaved } from "./arrange-helpers.js";
-import { connect, type Sync, type TestSocket } from "./helpers.js";
+import { connect, resync, type Sync, type TestSocket } from "./helpers.js";
 
 const PEOPLE = ["Anna", "Ben", "Cem", "Dora", "Emil", "Finn", "Gül", "Hana"];
 /** Notes on the wall at the end. A few more are written and deleted again. */
@@ -887,6 +887,83 @@ describe("what 1-2-4-Alle costs", { timeout: 60_000 }, () => {
   });
 });
 
+/** A wall of the method with everybody on it, the rows counted from here on, by what the run does (the methods of
+ *  stages M5 and M6). */
+async function run(methodId: string) {
+  const { wallId, stub } = newWall(env);
+  const adminToken = "a".repeat(32);
+  await runInDurableObject(stub, (instance) =>
+    instance.initialize({
+      wallId,
+      question: "What do we learn from it?",
+      adminToken,
+      hidden: true,
+      agenda: { items: [{ methodId: methodId as "ideenrunde" }] },
+    }),
+  );
+  const sockets: TestSocket[] = [];
+  for (const name of PEOPLE) {
+    const socket = await connect(wallId);
+    socket.send({
+      type: "join",
+      name,
+      sessionKey: generateSessionKey(),
+      ...(name === "Anna" ? { adminToken } : {}),
+    });
+    await socket.waitFor((event) => event.type === "sync");
+    sockets.push(socket);
+  }
+  const moderation = sockets[0] as TestSocket;
+  const rows: Record<string, number> = {};
+  let into = "steps";
+  await runInDurableObject(stub, (instance, state) => {
+    counted(instance, (_read, written) => {
+      rows[into] = (rows[into] ?? 0) + written;
+    });
+    const setAlarm = state.storage.setAlarm.bind(state.storage);
+    state.storage.setAlarm = (...args: Parameters<typeof setAlarm>) => {
+      rows[into] = (rows[into] ?? 0) + 1; // an alarm that is set is a row written
+      return setAlarm(...args);
+    };
+  });
+  const said = async (socket: TestSocket, kind: string, command: Record<string, unknown>) => {
+    into = kind;
+    const opId = generateHexId();
+    socket.send({ ...command, opId });
+    const answer = await socket.waitFor(
+      (event) => (event.type === "ack" || event.type === "reject") && event.opId === opId,
+    );
+    expect(answer.type, JSON.stringify(answer)).toBe("ack");
+  };
+  let step = 0;
+  const next = () => said(moderation, "steps", { type: "admin.step.go", from: step, to: (step += 1) });
+  /** A note of each of the first `count` people, in turn, as long as `notes` says; the note ids. */
+  const notes = async (stage: string, count: number) => {
+    const ids: string[] = [];
+    for (let n = 0; n < count; n++) {
+      const noteId = generateHexId();
+      ids.push(noteId);
+      await said(sockets[n % sockets.length] as TestSocket, "notes", {
+        type: "note.create",
+        noteId,
+        text: `${stage} ${n}`,
+        x: (n % 8) * 260,
+        y: 1300,
+      });
+    }
+    return ids;
+  };
+  const total = () => Object.values(rows).reduce((sum, value) => sum + value, 0);
+  const done = async (line: string) => {
+    expect(await runInDurableObject(stub, isCounted), "the wall's object was replaced on the way").toBe(true);
+    const parts = Object.entries(rows).map(([kind, value]) => `${kind} ${value}`);
+    // eslint-disable-next-line no-console -- the one test whose job is to say what it measured
+    console.log(`${line}:\n  ${parts.join(", ")}: ${total()} rows written`);
+    return total();
+  };
+  return { moderation, sockets, said, next, notes, rows, done };
+}
+
 // The methods of stage M5 (PLAN-METHODEN.md 5, „Paket A“), each with 8 people from its first step to its last.
 // Counted are the rows of the method after everybody has joined, the alarms that are set among them included (a set
 // alarm is a row written; these methods start no clock of their own). The lead's bound for M5: about 60 rows each
@@ -895,82 +972,6 @@ describe("what 1-2-4-Alle costs", { timeout: 60_000 }, () => {
 describe("what the methods of stage M5 cost", { timeout: 60_000 }, () => {
   /** The lead's bound for M5: rows written by one run of a method with 8 people. */
   const METHOD_ROWS = 60;
-
-  /** A wall of the method with everybody on it, the rows counted from here on, by what the run does. */
-  async function run(methodId: string) {
-    const { wallId, stub } = newWall(env);
-    const adminToken = "a".repeat(32);
-    await runInDurableObject(stub, (instance) =>
-      instance.initialize({
-        wallId,
-        question: "What do we learn from it?",
-        adminToken,
-        hidden: true,
-        agenda: { items: [{ methodId: methodId as "ideenrunde" }] },
-      }),
-    );
-    const sockets: TestSocket[] = [];
-    for (const name of PEOPLE) {
-      const socket = await connect(wallId);
-      socket.send({
-        type: "join",
-        name,
-        sessionKey: generateSessionKey(),
-        ...(name === "Anna" ? { adminToken } : {}),
-      });
-      await socket.waitFor((event) => event.type === "sync");
-      sockets.push(socket);
-    }
-    const moderation = sockets[0] as TestSocket;
-    const rows: Record<string, number> = {};
-    let into = "steps";
-    await runInDurableObject(stub, (instance, state) => {
-      counted(instance, (_read, written) => {
-        rows[into] = (rows[into] ?? 0) + written;
-      });
-      const setAlarm = state.storage.setAlarm.bind(state.storage);
-      state.storage.setAlarm = (...args: Parameters<typeof setAlarm>) => {
-        rows[into] = (rows[into] ?? 0) + 1; // an alarm that is set is a row written
-        return setAlarm(...args);
-      };
-    });
-    const said = async (socket: TestSocket, kind: string, command: Record<string, unknown>) => {
-      into = kind;
-      const opId = generateHexId();
-      socket.send({ ...command, opId });
-      const answer = await socket.waitFor(
-        (event) => (event.type === "ack" || event.type === "reject") && event.opId === opId,
-      );
-      expect(answer.type, JSON.stringify(answer)).toBe("ack");
-    };
-    let step = 0;
-    const next = () => said(moderation, "steps", { type: "admin.step.go", from: step, to: (step += 1) });
-    /** A note of each of the first `count` people, in turn, as long as `notes` says; the note ids. */
-    const notes = async (stage: string, count: number) => {
-      const ids: string[] = [];
-      for (let n = 0; n < count; n++) {
-        const noteId = generateHexId();
-        ids.push(noteId);
-        await said(sockets[n % sockets.length] as TestSocket, "notes", {
-          type: "note.create",
-          noteId,
-          text: `${stage} ${n}`,
-          x: (n % 8) * 260,
-          y: 1300,
-        });
-      }
-      return ids;
-    };
-    const total = () => Object.values(rows).reduce((sum, value) => sum + value, 0);
-    const done = async (line: string) => {
-      expect(await runInDurableObject(stub, isCounted), "the wall's object was replaced on the way").toBe(true);
-      const parts = Object.entries(rows).map(([kind, value]) => `${kind} ${value}`);
-      // eslint-disable-next-line no-console -- the one test whose job is to say what it measured
-      console.log(`${line}:\n  ${parts.join(", ")}: ${total()} rows written`);
-      return total();
-    };
-    return { moderation, sockets, said, next, notes, rows, done };
-  }
 
   it(`„Stille Ideenrunde mit Rangfolge“ with ${PEOPLE.length} people writes at most ${METHOD_ROWS} rows`, async () => {
     const { moderation, sockets, said, next, notes, rows, done } = await run("ideenrunde");
@@ -1093,6 +1094,244 @@ describe("what the methods of stage M5 cost", { timeout: 60_000 }, () => {
     expect(rows.notes).toBe(3 * (PEOPLE.length + 2) + 1);
     // eight step moves; into each round's small groups the teams and the layout row beside the flow
     expect(rows.steps).toBe(8 + 3 * 2);
+    expect(total).toBeLessThanOrEqual(METHOD_ROWS);
+  });
+});
+
+// The methods of stage M6 (PLAN-METHODEN.md 5, „Paket B“), each with 8 people from its first step to its last, counted
+// as those of stage M5 are. The lead's bound: about 60 rows each for 8 people. A note, a ballot, a step move, a group,
+// a movement and a record of the moderation cost a row each; each line says how many of them it plays.
+describe("what the methods of stage M6 cost", { timeout: 60_000 }, () => {
+  /** The lead's bound for M6: rows written by one run of a method with 8 people. */
+  const METHOD_ROWS = 60;
+
+  /** Everybody scores the options of step `step` on `width` criteria, and the moderation counts. */
+  async function scoreAll(
+    { sockets, said, moderation }: Awaited<ReturnType<typeof run>>,
+    step: number,
+    options: string[],
+    width: number,
+  ) {
+    for (const [n, socket] of sockets.entries()) {
+      const scores = Object.fromEntries(
+        options.map((id, at) => [id, Array.from({ length: width }, () => 1 + ((n + at) % 5))]),
+      );
+      await said(socket, "ballots", { type: "ballot.cast", step, ballot: { kind: "score", scores } });
+    }
+    await said(moderation, "count", { type: "admin.step.count", step });
+  }
+
+  it(`„Kriterienbewertung“ with ${PEOPLE.length} people writes at most ${METHOD_ROWS} rows`, async () => {
+    const played = await run("kriterien");
+    const { moderation, said, next, notes, rows, done } = played;
+    await notes("criterion", PEOPLE.length);
+    await next(); // agree on the criteria
+    await next(); // the options
+    const options = await notes("option", 4);
+    await next(); // score
+    await scoreAll(played, 3, options, 5);
+    await next(); // discuss
+    await next(); // the overall judgement
+    const [judgement] = await notes("judgement", 1);
+    await said(moderation, "records", {
+      type: "note.action",
+      noteId: judgement,
+      action: { who: "", due: "", why: "The best total" },
+    });
+    const total = await done(
+      `„Kriterienbewertung“ with ${PEOPLE.length} people (8 criteria, 4 options, 8 scores, 1 decision recorded)`,
+    );
+    expect(rows.notes).toBe(PEOPLE.length + 4 + 1 + 1);
+    expect(rows.steps).toBe(5);
+    expect(rows.ballots).toBe(PEOPLE.length + 2);
+    expect(rows.count).toBe(2);
+    expect(rows.records).toBe(1);
+    expect(total).toBeLessThanOrEqual(METHOD_ROWS);
+  });
+
+  it(`„Nutzen und Aufwand“ with ${PEOPLE.length} people writes at most ${METHOD_ROWS} rows`, async () => {
+    const played = await run("nutzen-aufwand");
+    const { moderation, said, next, notes, rows, done } = played;
+    const options = await notes("option", 6);
+    await next(); // score
+    await scoreAll(played, 1, options, 2);
+    await next(); // discuss
+    await next(); // the overall judgement
+    const [judgement] = await notes("judgement", 1);
+    await said(moderation, "records", { type: "note.action", noteId: judgement, action: { who: "", due: "" } });
+    const total = await done(`„Nutzen und Aufwand“ with ${PEOPLE.length} people (6 options, 8 scores, 1 decision)`);
+    expect(rows.notes).toBe(6 + 1 + 1);
+    expect(rows.steps).toBe(3);
+    expect(rows.ballots).toBe(PEOPLE.length + 2);
+    expect(total).toBeLessThanOrEqual(METHOD_ROWS);
+  });
+
+  it(`„Gegenposition prüfen“ with ${PEOPLE.length} people writes at most ${METHOD_ROWS} rows`, async () => {
+    const { moderation, said, next, notes, rows, done } = await run("gegenposition");
+    await next(); // the doubts
+    await notes("doubt", PEOPLE.length);
+    await next(); // the two teams with their roles
+    await notes("role", 6);
+    await next(); // present
+    await next(); // bring together
+    const decisions = await notes("decision", 3);
+    for (const noteId of decisions) {
+      await said(moderation, "records", { type: "note.action", noteId, action: { who: "", due: "", why: "Holds" } });
+    }
+    const total = await done(
+      `„Gegenposition prüfen“ with ${PEOPLE.length} people (8 doubts, 6 notes in the teams, 3 decisions recorded)`,
+    );
+    expect(rows.notes).toBe(PEOPLE.length + 6 + 3 + 1);
+    // four step moves; into the teams the teams and the layout row (the doubts move into the areas) beside the flow
+    expect(rows.steps).toBe(4 + 2);
+    expect(rows.records).toBe(3);
+    expect(total).toBeLessThanOrEqual(METHOD_ROWS);
+  });
+
+  it(`„Entscheidungsprotokoll mit Zustimmungsrunde“ with ${PEOPLE.length} people writes at most ${METHOD_ROWS} rows`, async () => {
+    const { moderation, sockets, said, next, notes, rows, done } = await run("entscheidung");
+    await next(); // the proposal
+    await notes("proposal", 1);
+    await next(); // questions
+    await next(); // reactions
+    await notes("reaction", PEOPLE.length);
+    await next(); // the consent round
+    for (const [n, socket] of sockets.entries()) {
+      const ballot =
+        n === 1
+          ? { kind: "consent", answer: "object", reason: "Too expensive" }
+          : { kind: "consent", answer: n % 2 === 0 ? "agree" : "live" };
+      await said(socket, "ballots", { type: "ballot.cast", step: 4, ballot });
+    }
+    await said(moderation, "count", { type: "admin.step.count", step: 4 });
+    await next(); // work in the objections
+    await next(); // record the decision
+    const [decision] = await notes("decision", 1);
+    await said(moderation, "records", {
+      type: "note.action",
+      noteId: decision,
+      action: { who: "", due: "1 June", why: "Safe enough", open: "The price" },
+    });
+    const total = await done(
+      `„Entscheidungsprotokoll“ with ${PEOPLE.length} people (1 proposal, 8 reactions, 8 answers, 1 decision recorded)`,
+    );
+    expect(rows.notes).toBe(1 + PEOPLE.length + 1 + 1);
+    expect(rows.steps).toBe(6);
+    expect(rows.ballots).toBe(PEOPLE.length + 2);
+    expect(rows.count).toBe(2);
+    expect(rows.records).toBe(1);
+    expect(total).toBeLessThanOrEqual(METHOD_ROWS);
+  });
+
+  it(`„Annahmen prüfen“ with ${PEOPLE.length} people writes at most ${METHOD_ROWS} rows, the five fields made with the wall included`, async () => {
+    const played = await run("annahmen");
+    const { moderation, sockets, said, next, rows, done } = played;
+    const fields = (await resync(moderation)).groups.map((group) => group.id);
+    // two assumptions a person, each put into a field with one movement of the person's own notes
+    const assumptions: string[] = [];
+    for (const [n, socket] of sockets.entries()) {
+      const own: string[] = [];
+      for (const k of [0, 1]) {
+        const noteId = generateHexId();
+        own.push(noteId);
+        await said(socket, "notes", { type: "note.create", noteId, text: `assumption ${n} ${k}`, x: 0, y: 3000 });
+      }
+      await said(socket, "fields", {
+        type: "notes.move",
+        moves: own.map((noteId, k) => ({ noteId, x: 16 + k * 260, y: 40, groupId: fields[(n + k) % fields.length] })),
+      });
+      assumptions.push(...own);
+    }
+    await next(); // reveal and bundle
+    await next(); // rate
+    await scoreAll(played, 2, assumptions, 2);
+    await next(); // discuss the riskiest
+    await next(); // tests in small groups
+    const tests: string[] = [];
+    for (let n = 0; n < 3; n++) {
+      const noteId = generateHexId();
+      tests.push(noteId);
+      await said(sockets[n * 3] as TestSocket, "notes", {
+        type: "note.create",
+        noteId,
+        text: `test ${n}`,
+        x: 16,
+        y: 1300,
+      });
+    }
+    await next(); // present and agree on the tests
+    for (const noteId of tests) {
+      await said(moderation, "records", { type: "note.action", noteId, action: { who: "Ben", due: "Friday" } });
+    }
+    const counted = await done(
+      `„Annahmen prüfen“ with ${PEOPLE.length} people (16 assumptions, 8 movements into the fields, 8 scores, 3 tests agreed)`,
+    );
+    // the five fields are written when the wall is made, before the count above begins: one row each
+    const total = counted + fields.length;
+    // eslint-disable-next-line no-console -- the one test whose job is to say what it measured
+    console.log(`  and ${fields.length} rows for the fields when the wall is made: ${total} rows written`);
+    expect(fields).toHaveLength(5);
+    expect(rows.notes).toBe(2 * PEOPLE.length + 3 + 1);
+    expect(rows.fields).toBe(PEOPLE.length);
+    // five step moves; into the small groups the teams beside the flow (the assumptions are seen by everybody, none
+    // moves into an area)
+    expect(rows.steps).toBe(5 + 1);
+    expect(rows.records).toBe(3);
+    expect(total).toBeLessThanOrEqual(METHOD_ROWS);
+  });
+
+  it(`„Ziele mit messbaren Ergebnissen“ with ${PEOPLE.length} people writes at most ${METHOD_ROWS} rows`, async () => {
+    const { moderation, sockets, said, next, notes, rows, done } = await run("ziele");
+    await next(); // the goals
+    const goals = await notes("goal", PEOPLE.length);
+    await next(); // reveal and bundle into three
+    const groups: string[] = [];
+    for (let n = 0; n < 3; n++) {
+      const groupId = generateHexId();
+      groups.push(groupId);
+      await said(moderation, "bundles", {
+        type: "group.create",
+        groupId,
+        title: `Goal ${n + 1}`,
+        x: n * 600,
+        y: 0,
+        w: 528,
+        h: 400,
+      });
+    }
+    await said(moderation, "bundles", {
+      type: "notes.move",
+      moves: goals.map((noteId, n) => ({ noteId, x: (n % 3) * 600 + 16, y: 40, groupId: groups[n % 3] })),
+    });
+    await next(); // pick up to three
+    for (const [n, socket] of sockets.entries()) {
+      await said(socket, "ballots", {
+        type: "ballot.cast",
+        step: 3,
+        ballot: { kind: "approval", chosen: [groups[n % 3] as string, groups[(n + 1) % 3] as string] },
+      });
+    }
+    await said(moderation, "count", { type: "admin.step.count", step: 3 });
+    await next(); // results in small groups
+    const results = await notes("result", 6);
+    await next(); // present
+    await next(); // agree
+    for (const [n, noteId] of results.entries()) {
+      await said(moderation, "records", {
+        type: "note.action",
+        noteId,
+        action: { who: "Cem", due: "March", target: "from 3 to 1", goal: groups[n % 3] },
+      });
+    }
+    const total = await done(
+      `„Ziele mit messbaren Ergebnissen“ with ${PEOPLE.length} people (8 goals, 3 bundles, 8 ballots, 6 results recorded)`,
+    );
+    expect(rows.notes).toBe(PEOPLE.length + 6 + 1);
+    expect(rows.bundles).toBe(3 + 1);
+    // six step moves; into the small groups the teams beside the flow
+    expect(rows.steps).toBe(6 + 1);
+    expect(rows.ballots).toBe(PEOPLE.length + 2);
+    expect(rows.records).toBe(6);
     expect(total).toBeLessThanOrEqual(METHOD_ROWS);
   });
 });
