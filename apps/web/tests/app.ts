@@ -662,3 +662,30 @@ export async function enterGoals(page: Page, options: { admin?: boolean } = {}) 
   await page.locator(".app-actions").waitFor();
   return wall;
 }
+
+/** An agenda of three methods (stage M7): „Still sammeln“, „Nutzen und Aufwand“ with a prompt of its own, „Scheitern
+ *  vorwegdenken“. */
+export const AGENDA_THREE = {
+  items: [
+    { methodId: "still-sammeln" },
+    { methodId: "nutzen-aufwand", prompt: "Was packen wir zuerst an?" },
+    { methodId: "scheitern" },
+  ],
+};
+/** A wall of AGENDA_THREE in the first step of its second method, as its moderation: Ben (who moderates too) wrote a
+ *  note, counted the vote and moved the wall on; he stays on it. */
+export async function enterAgenda(page: Page) {
+  const wall = await makeWall(page, QUESTION, { agenda: AGENDA_THREE });
+  await know(page, [{ id: wall.wallId, question: QUESTION, as: "Anna", adminToken: wall.adminToken }]);
+  await lookAt(page, "surface");
+  await page.goto(`/w/${wall.wallId}`);
+  await page.locator(".app-surface__ground, .app-list").waitFor();
+  const ben = await join(wall.wallId, "Ben", wall.adminToken);
+  await ben.write("Zu viele Termine ohne Ergebnis", 0, 0);
+  for (let step = 0; step < 5; step += 1) {
+    if (step === 3) await ben.count(3);
+    await ben.go(step, step + 1);
+  }
+  await expect(page.getByTestId("position")).toContainText("Methode 2 von 3 · Nutzen und Aufwand");
+  return { ...wall, guests: [ben] };
+}

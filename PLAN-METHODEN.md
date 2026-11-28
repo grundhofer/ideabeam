@@ -494,6 +494,62 @@ Barrierefreiheits-Erklärung angepasst.
 
 Abnahme: Eine Agenda aus drei Methoden läuft durch. Was eine Methode erzeugt, kommt in der nächsten an.
 
+**Stand M7 (28.11.2026, Branch `methoden-m7` auf M6 `3a14f30`, nicht committet):** gebaut, von dir nicht abgenommen,
+nicht deployt.
+
+- Agenda aus bis zu acht Methoden (`domain/agenda.ts`): Jeder Eintrag der Anfrage hat eine optionale eigene Frage
+  (`prompt`, wie die Frage höchstens 140 Zeichen; leer gilt die Frage der Wand); die Wand speichert sie in ihrer
+  Kopie der Agenda. Die Wand läuft die Methoden Schritt für Schritt nacheinander durch. Neue reine Funktionen:
+  `itemSpan`, `itemOfStep`, `promptOf`, `reachedItems`, `requestOf`, `decideAgendaSet`, `fieldsTop`. Ein Test prüft,
+  dass jede der 14 × 14 Methodenpaare `checkAgenda` besteht und acht der längsten Methoden in die Agenda passen.
+- **Was weitergeht:** Zettel, Gruppen und gezählte Ergebnisse bleiben auf der Wand und sichtbar (die Ergebnisse in der
+  Spalte der Personen). Eine Abstimmung ohne `optionsFrom` bietet alle Gruppen mit Zetteln und alle Zettel ohne Gruppe
+  an, die alle sehen, also auch die der Methoden davor: Das verkettet Ideen → Wahl, Rangfolge oder Bewertung in
+  „Still sammeln“, „Stille Ideenrunde mit Rangfolge“, „Nutzen und Aufwand“ und „Ziele mit messbaren Ergebnissen“.
+  Methoden, die Optionen oder Kriterien aus eigenen Schritten nehmen („Kriterienbewertung“, „Entscheidungsprotokoll“,
+  „Rückblick nach Ziel und Daten“, „Annahmen prüfen“), beginnen neu auf derselben Wand; „Schätzen“ fragt eine Zahl
+  und nimmt nichts. Die nächste Methode schreibt wieder verdeckt (eine Agenda aus mehreren Methoden merkt sich den
+  Schritt jedes Zettels, `keepsSteps`), was gezeigt war, bleibt gezeigt. Aktionen, Entscheidungen und Ergebnisse hält
+  jede Methode nur für ihre eigenen Zettel fest (`stepContext`). Teams einer späteren Methode bekommen Bereiche neben
+  allen bisherigen. „Annahmen prüfen“ als spätere Methode bekommt ihre fünf Felder, wenn die Wand ihren ersten Schritt
+  erreicht, unter allem, was auf der Wand liegt (fünf Zeilen, `group.created` an alle).
+- **`admin.agenda.set`** (Protokoll 12, Ereignis `agenda.changed`): die ganze Agenda, wie die Moderation sie will. Die
+  Methoden, deren ersten Schritt die Wand erreicht hat, müssen unverändert vorn stehen (Methode, Frage, Einheit),
+  sonst `STALE`; die übrigen werden gegen den Katalog neu aufgelöst, die Agenda muss `checkAgenda` bestehen und passen,
+  sonst `INVALID`. Dieselbe Liste noch einmal ändert nichts. Eine Zeile für die Agenda und eine für den Ablauf (mit der
+  Nummer der Änderung); die Bremse hält sie wie jeden Schritt der Moderation nicht auf.
+- App: `/neu` mit „Weitere Methode anhängen“ (`components/AgendaBuilder.tsx`): Die Auswahl der Methode wählt für die
+  Methode, die gerade gewählt wird; ab zwei Methoden steht darüber „Ablauf“ als nummerierte Liste mit Name,
+  Kurzbeschreibung, Frage, Einheit und den Tasten „Methode wählen“, „Nach oben“, „Nach unten“, „Entfernen“; kein
+  Ziehen, der Fokus folgt der Taste. Die Wand: „Methode 2 von 3 · Nutzen und Aufwand · Schritt 1 von 4: Optionen
+  vorstellen · danach …“, „Frage dieser Methode: …“, „Weiter: Methode 2: Nutzen und Aufwand“, beim Eintritt sagt die
+  Live-Region Methode, Kurzbeschreibung und Schritt; „Mehr“ → „Ablauf“ (`components/AgendaDialog.tsx`). Export: je
+  Methode ein Abschnitt mit Name, Kurzbeschreibung, Namensnennung, Frage und ihren Ergebnissen. Startseite: der
+  Abschnitt „Geführte Methoden“ (`components/LandingMethods.tsx`, nachgeladen) mit allen 14 Methoden nach Zweck, je
+  Name und Kurzbeschreibung, und der Namensnennung von Liberating Structures; der erste Absatz, die Beschreibung und
+  der zweite Schritt nennen die geführten Methoden, „So läuft ein Brainstorming“ heißt „So läuft ein Workshop“.
+  Datenschutzerklärung 3.1, 3.4, 3.5 und 6 und Erklärung zur Barrierefreiheit in beiden Sprachen.
+- Abweichungen: (1) „Nicht erreicht“ gilt je Methode: Ist der erste Schritt einer Methode erreicht, bleibt die ganze
+  Methode fest, auch ihre späteren Schritte (die Schritte einer Methode lassen sich nicht einzeln ändern; der
+  Architekturvorschlag sprach von Schritten). (2) Methoden, die noch nicht erreicht sind, löst eine Änderung gegen den
+  Katalog von heute neu auf; ihre gespeicherte Kopie bleibt nicht erhalten. (3) `MAX_STEPS` 60 → 80: acht Methoden zu
+  neun Schritten sind 72. (4) Eine Abstimmung bietet nur an, was alle sehen (eine Prüfung mehr im Worker; für eine
+  einzelne Methode ändert sie nichts). (5) „Ordnen“ fragt mit der Frage der Methode, in der die Wand steht, wo sie eine
+  eigene hat, über Cloudflare und mit eigenem Schlüssel. (6) Die Startseite zeigt alle 14 Methoden des Codes, auch
+  „Nutzen und Aufwand“ und „Freie Wand“ (der Entwurf im Katalog nennt zwölf), und ohne den Satz zur Evidenz aus dem
+  Entwurf. (7) „Übernehmen“ im Dialog ist eine Aktion mit Umriss, wie in jedem Dialog der App.
+- `CI=1 pnpm checks` grün: 458 Tests im geteilten Paket, 126 in `packages/arrange`, 281 im Worker, 307 in der App,
+  396 Ende-zu-Ende, keiner übersprungen.
+- Kosten mit 8 Personen: eine Agenda aus „Still sammeln“, „Nutzen und Aufwand“ (von der Moderation um „Scheitern
+  vorwegdenken“ ergänzt) und „Scheitern vorwegdenken“ schreibt 86 Zeilen (16 Ideen, 3 Bündel, 8 Stimmzettel; 4
+  Optionen, 8 Bewertungen über die Bündel und Optionen, 1 Entscheidung; 8 Gründe, 8 Mal „Nächster Zettel“, 3
+  Änderungen; 13 Schrittwechsel; die Änderung der Agenda 2). Die Agenda selbst kostet nur ihre Änderung.
+- Nicht geprüft: kein Bildschirmleser, nicht bei 2000 px angesehen; zwei Schätzmethoden in einer Agenda (ihre Runden
+  zählten in der Spalte der Personen zusammen; der Export zählt je Methode); eine Agenda mit Teams nach einer anderen
+  Methode im Browser (die Regeln und der Worker setzen die Bereiche daneben, gesehen hat es niemand); „Annahmen
+  prüfen“ als spätere Methode im Browser (der Worker-Test macht die Felder); der Dialog „Ablauf“, während ein anderer
+  Tab der Moderation die Agenda ändert („Übernehmen“ schreibt darüber); Firefox und Safari.
+
 ## 6 Risiken
 
 | Risiko | Gegenmittel |

@@ -76,14 +76,19 @@
   "landing": {
     "tab": "Everyone writes notes, an AI groups them",
     "claim": "Everyone writes notes, an AI groups them.",
-    "lede": "One person creates a wall with a question and shares the link. Everyone writes their ideas on notes, hidden at first, then visible to all. At the press of a button an AI proposes groups with headings. Free, no account.",
+    "lede": "One person creates a wall with a question, picks a guided method or several in a row, and shares the link. Everyone writes hidden at first, then visible to all, and the app leads through the steps to a result. At the press of a button an AI proposes groups with headings. Free, no account.",
     "ctaHint": "No account needed. You ask a question and share the link.",
-    "description": "A wall is a question and a surface for notes. First everyone writes on their own, without reading the others’ notes. Then the facilitator reveals them and has the AI propose groups. The facilitator sees the proposal before it applies, and can take it back.",
+    "description": "A wall is a question and a surface for notes. A guided method gives it its sequence: first everyone writes on their own, without reading the others’ notes; then the facilitator reveals them, and you group, vote in secret or record what you decide. The AI proposes groups when asked; the facilitator sees the proposal before it applies, and can take it back.",
     "trust": {
       "account": "No account, not even for the facilitator",
       "where": "Stored in the EU",
       "ai": "According to Cloudflare, the AI stores nothing and does not learn from it",
       "tracking": "No analytics scripts, no cookies"
+    },
+    "methods": {
+      "title": "Guided methods",
+      "intro": "A method gives the wall a sequence: timed steps, who works with whom, and what becomes visible when. First everyone writes alone and in private, then you work together, so the first opinion in the room does not steer the rest. Several methods can run one after the other on one wall.",
+      "attribution": "{{methods}}: {{credit}}"
     },
     "preview": {
       "label": "Example: a wall that has been grouped",
@@ -97,7 +102,7 @@
       "note3": "The build takes too long",
       "note4": "Two ticket systems side by side"
     },
-    "howTitle": "How a brainstorming goes",
+    "howTitle": "How a workshop goes",
     "howRoles": "One person facilitates, everyone else comes in through the link.",
     "steps": {
       "open": {
@@ -105,8 +110,8 @@
         "text": "You create a wall with your question and share the link or its QR code. Whoever opens it types a first name or a pseudonym."
       },
       "write": {
-        "title": "2. Write, then reveal",
-        "text": "Everyone writes their notes, hidden at first: nobody reads along until the facilitator reveals them."
+        "title": "2. Follow the method",
+        "text": "The app leads step by step: write alone and hidden, reveal, work in pairs or small groups, vote in secret. Nobody reads along until the facilitator reveals."
       },
       "arrange": {
         "title": "3. Let it group",
@@ -223,6 +228,28 @@
     "source": "Source: liberatingstructures.com",
     "licence": "Licence CC BY-SA 4.0"
   },
+  "agenda": {
+    "heading": "Agenda",
+    "method": "Method {{n}} of {{of}}",
+    "begun": "Begun: it cannot change any more.",
+    "begunPrompt": "Begun, asking “{{prompt}}”: it cannot change any more.",
+    "choosing": "Being chosen below.",
+    "prompt": "Question for method {{n}}",
+    "promptLabel": "The method’s question",
+    "promptHelp": "Leave it empty to ask the wall’s question.",
+    "unit": "Unit of the estimate, method {{n}}",
+    "choose": "Choose method {{n}}: {{name}}",
+    "chooseWord": "Choose method",
+    "up": "Move up: {{n}}. {{name}}",
+    "down": "Move down: {{n}}. {{name}}",
+    "remove": "Remove: {{n}}. {{name}}",
+    "add": "Add another method",
+    "addHint": "Up to {{max}} methods run one after the other on the same wall.",
+    "full": "{{max}} methods at most: remove one to add another.",
+    "saidMoved": "{{name}} is now method {{n}} of {{of}}.",
+    "saidRemoved": "{{name}} is removed.",
+    "saidAdded": "Method {{n}} is added. Choose it below."
+  },
   "join": {
     "title": "Join",
     "joining": "Joining …",
@@ -310,7 +337,12 @@
       "said": "Step {{n}} of {{of}}: {{name}}.",
       "forward": "Next: {{name}}",
       "back": "Back: {{name}}",
-      "method": "{{name}}: {{short}}"
+      "method": "{{name}}: {{short}}",
+      "itemNext": "Method {{item}} of {{items}} · {{method}} · step {{n}} of {{of}}: {{name}} · then {{next}}",
+      "itemLast": "Method {{item}} of {{items}} · {{method}} · step {{n}} of {{of}}: {{name}} · the last step",
+      "nextMethod": "method {{n}}: {{name}}",
+      "saidItem": "Method {{item}} of {{items}}: {{method}}. {{short}} Step {{n}} of {{of}}: {{name}}.",
+      "prompt": "This method asks: {{prompt}}"
     },
     "revealFinal": "This cannot be undone.",
     "revealedNone": "Revealed. There is no note on the wall yet.",
@@ -453,6 +485,13 @@
       "role": "Your role: {{role}}. {{hint}}",
       "areaRole": "Team {{n}} · {{role}}",
       "areaOwnRole": "Team {{n}} · {{role}} · your team"
+    },
+    "agenda": {
+      "open": "Agenda",
+      "title": "Agenda",
+      "text": "Methods that have not begun can be added, removed and moved. Those that have begun stay as they are.",
+      "save": "Apply",
+      "saved": "The agenda has changed."
     },
     "teams": {
       "open": "Teams",
@@ -703,6 +742,8 @@
     "limitGroups": "A wall holds no more than {{max}} groups. Delete one to make room.",
     "conflict": "The note could not be added. Write it again.",
     "invalid": "The wall did not take the change. Try again.",
+    "invalidAgenda": "The wall does not take this agenda: 8 methods at most. Try again.",
+    "staleAgenda": "The wall began a method at the same moment, or the agenda had changed already: your change was not taken. “Agenda” shows it as it is now.",
     "phaseGroups": "Groups come once the notes are revealed.",
     "phaseClock": "The notes are revealed already: the clock is there only while writing is hidden.",
     "staleClock": "The clock was changed at the same moment: your step was not taken. It shows what holds now.",

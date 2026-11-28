@@ -14,6 +14,7 @@ import {
   ARRANGE_MIN_NOTES,
   dropPending,
   generateHexId,
+  promptOf,
   shown,
   type ArrangeLanguage,
   type ArrangeSource,
@@ -151,7 +152,11 @@ export const useArrange = create<Arrange>()((set, get) => {
       if (get().arranging.is !== "idle" || wall.wallId !== wallId) return;
       // what the Worker reads from the wall for a run of its own, read here from the wall as this browser shows it
       const notes = arrangeNotes(shown(wall.state));
-      const question = wall.state.wall?.question ?? "";
+      // the question of the method the wall is in: its prompt where it has one (stage M7), as the Worker reads it
+      const question =
+        wall.state.agenda === null
+          ? (wall.state.wall?.question ?? "")
+          : promptOf(wall.state.agenda, wall.state.step, wall.state.wall?.question ?? "");
       // too few notes: said as the Worker says it, and nobody is asked
       if (notes.length < ARRANGE_MIN_NOTES) {
         wall.dismissRejected();

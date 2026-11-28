@@ -26,6 +26,8 @@ export type RejectKey =
   | "phaseTeams"
   | "staleTeams"
   | "invalidTeams"
+  | "invalidAgenda"
+  | "staleAgenda"
   | "daySpent"
   | "notAdmin"
   | "rateLimit"
@@ -80,6 +82,7 @@ export function rejectKey(rejected: Rejected): RejectKey {
       return applying ? "applyChanged" : "conflict";
     case "INVALID":
       // teams that are not the same people (the moderation's view was behind)
+      if (command === "admin.agenda.set") return "invalidAgenda";
       return command === "admin.teams.set" ? "invalidTeams" : "invalid";
     case "PHASE":
       // The step does not take it: a group or an arrangement while the notes are hidden (the wall offers neither
@@ -102,6 +105,8 @@ export function rejectKey(rejected: Rejected): RejectKey {
       if (command === "ballot.cast") return "staleBallot";
       // teams made for teams that changed meanwhile (somebody came late, another tab of the moderation swapped)
       if (command === "admin.teams.set") return "staleTeams";
+      // an agenda made for one the wall has left: it began a method meanwhile, or another tab changed it (stage M7)
+      if (command === "admin.agenda.set") return "staleAgenda";
       if (command === "admin.step.count" || command === "admin.turn.next") return "staleStep";
       return command === "admin.step.go" ? "staleStep" : "staleClock";
     case "DAY_SPENT":

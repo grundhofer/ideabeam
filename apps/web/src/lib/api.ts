@@ -9,6 +9,7 @@ import {
   createWallResponseSchema,
   EXPORT_SESSION_SCHEME,
   wallInfoSchema,
+  type AgendaItemRequest,
   type ArrangeErrorCode,
   type ArrangeLanguage,
   type ArrangeResponse,
@@ -31,26 +32,28 @@ export type Made =
  *  `language`: for a method that begins with fixed fields (stage M6), the language of their titles. */
 export async function createWall(
   question: string,
-  method: MethodId,
+  method: MethodId | AgendaItemRequest[],
   unit?: string,
   language?: "de" | "en",
 ): Promise<Made> {
+  // an agenda of several methods (stage M7): the items as the form has them
+  const items: AgendaItemRequest[] = Array.isArray(method)
+    ? method
+    : [
+        {
+          methodId: method,
+          ...(unit === undefined ? {} : { unit }),
+          // the titles of the fields a method begins with (stage M6), in this browser's language
+          ...(language === undefined ? {} : { language }),
+        },
+      ];
   try {
     const response = await fetch("/api/walls", {
       method: "POST",
       headers: { "content-type": "application/json" },
       body: JSON.stringify({
         question,
-        agenda: {
-          items: [
-            {
-              methodId: method,
-              ...(unit === undefined ? {} : { unit }),
-              // the titles of the fields a method begins with (stage M6), in this browser's language
-              ...(language === undefined ? {} : { language }),
-            },
-          ],
-        },
+        agenda: { items },
       }),
     });
     if (response.status === 429) {

@@ -44,15 +44,23 @@ describe("a wall's agenda", () => {
     expect(JSON.stringify(HIDDEN_AGENDA).length).toBeLessThan(1024);
   });
 
-  it("the request names a method of the catalogue, one in M1, and nothing else", () => {
+  it("the request names methods of the catalogue, up to eight since M7, each with a prompt of its own, and nothing else", () => {
     const parse = (body: unknown) => createWallRequestSchema.safeParse(body);
     expect(parse({ question: "Q", agenda: { items: [{ methodId: "free" }] } }).success).toBe(true);
     expect(parse({ question: "Q" }).data).toEqual({ question: "Q", hidden: true });
+    const eight = Array.from({ length: 8 }, () => ({ methodId: "still-sammeln", prompt: "What else?" }));
+    expect(parse({ question: "Q", agenda: { items: eight } }).success).toBe(true);
+    // the prompt is trimmed, as the question is
+    expect(parse({ question: "Q", agenda: { items: [{ methodId: "free", prompt: "  x " }] } }).data?.agenda).toEqual({
+      items: [{ methodId: "free", prompt: "x" }],
+    });
     for (const agenda of [
       { items: [] },
       { items: [{ methodId: "brainstorm" }] },
-      { items: [{ methodId: "free" }, { methodId: "free" }] },
-      { items: [{ methodId: "free", prompt: "x" }] },
+      { items: [...eight, { methodId: "free" }] },
+      { items: [{ methodId: "free", prompt: "   " }] },
+      { items: [{ methodId: "free", prompt: "x".repeat(141) }] },
+      { items: [{ methodId: "free", question: "x" }] },
       { items: [{ methodId: "free" }], more: 1 },
       "free",
     ]) {

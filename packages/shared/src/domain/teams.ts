@@ -257,7 +257,12 @@ export function enterTeams(
       seed,
       settings.roles === undefined ? undefined : roleTeamCount(people, settings.roles.length),
     );
-    areas = freshAreas(teams.length);
+    // stage M7: teams formed anew after the teams of an earlier method get areas beside all of those, so the notes
+    // of this method do not land on the notes of that one (within one method a step that forms teams at random is
+    // never entered while teams of another step are in force, unless it is entered again: then `known` holds)
+    const used = current === null ? [] : [current.areas, ...current.history.map((entry) => entry.areas)].flat();
+    const end = Math.max(0, ...used.map((area) => area.first + area.count));
+    areas = freshAreas(teams.length).map((area) => ({ first: area.first + end, count: area.count }));
     usedSeed = seed;
   }
   for (const person of [...present].sort()) {

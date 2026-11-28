@@ -26,6 +26,7 @@ import {
   generateSessionKey,
   parseServerEvent,
   WALL_DAILY_ROWS,
+  type AgendaItemRequest,
   type ServerEvent,
 } from "@ideabeam/shared";
 import { dailyWalls, WALL_BUDGET_KEY } from "../src/rate-limiter.js";
@@ -889,7 +890,7 @@ describe("what 1-2-4-Alle costs", { timeout: 60_000 }, () => {
 
 /** A wall of the method with everybody on it, the rows counted from here on, by what the run does (the methods of
  *  stages M5 and M6). */
-async function run(methodId: string) {
+async function run(methodId: string | AgendaItemRequest[]) {
   const { wallId, stub } = newWall(env);
   const adminToken = "a".repeat(32);
   await runInDurableObject(stub, (instance) =>
@@ -898,7 +899,7 @@ async function run(methodId: string) {
       question: "What do we learn from it?",
       adminToken,
       hidden: true,
-      agenda: { items: [{ methodId: methodId as "ideenrunde" }] },
+      agenda: { items: typeof methodId === "string" ? [{ methodId: methodId as "ideenrunde" }] : methodId },
     }),
   );
   const sockets: TestSocket[] = [];
@@ -1333,5 +1334,101 @@ describe("what the methods of stage M6 cost", { timeout: 60_000 }, () => {
     expect(rows.ballots).toBe(PEOPLE.length + 2);
     expect(rows.records).toBe(6);
     expect(total).toBeLessThanOrEqual(METHOD_ROWS);
+  });
+});
+
+// Stage M7: an agenda of three methods on one wall, with 8 people from the first step to the last, counted as the
+// methods of M5 and M6 are: „Still sammeln“ (16 ideas, 3 groups, 8 ballots), then „Nutzen und Aufwand“ appended to by
+// the moderation with „Scheitern vorwegdenken“ while the first runs (4 options, 8 scores over the first method's
+// groups and the options, 1 decision), then „Scheitern vorwegdenken“ (8 reasons, 8 turns, 3 changes agreed). An agenda
+// adds nothing to what its methods cost but the moderation's change of it: the agenda row and the flow.
+describe("what an agenda of three methods costs", { timeout: 60_000 }, () => {
+  /** About what three methods of M5 and M6 cost one after the other. */
+  const AGENDA_ROWS = 100;
+
+  it(`„Still sammeln“, „Nutzen und Aufwand“ and „Scheitern vorwegdenken“ with ${PEOPLE.length} people write at most ${AGENDA_ROWS} rows`, async () => {
+    const { moderation, sockets, said, next, notes, rows, done } = await run([
+      { methodId: "still-sammeln" },
+      { methodId: "nutzen-aufwand" },
+    ]);
+    await said(moderation, "agenda", {
+      type: "admin.agenda.set",
+      items: [{ methodId: "still-sammeln" }, { methodId: "nutzen-aufwand" }, { methodId: "scheitern" }],
+    });
+    // 1. „Still sammeln“
+    const ideas = await notes("idea", 2 * PEOPLE.length);
+    await next(); // reveal
+    await next(); // bundle into three
+    const groups: string[] = [];
+    for (let n = 0; n < 3; n++) {
+      const groupId = generateHexId();
+      groups.push(groupId);
+      await said(moderation, "bundles", {
+        type: "group.create",
+        groupId,
+        title: `Bundle ${n + 1}`,
+        x: n * 600,
+        y: 0,
+        w: 528,
+        h: 400,
+      });
+    }
+    await said(moderation, "bundles", {
+      type: "notes.move",
+      moves: ideas.map((noteId, n) => ({ noteId, x: (n % 3) * 600 + 16, y: 40, groupId: groups[n % 3] })),
+    });
+    await next(); // vote
+    for (const [n, socket] of sockets.entries()) {
+      await said(socket, "ballots", {
+        type: "ballot.cast",
+        step: 3,
+        ballot: { kind: "dots", points: { [groups[n % 3] as string]: 2 } },
+      });
+    }
+    await said(moderation, "count", { type: "admin.step.count", step: 3 });
+    await next(); // discuss
+    // 2. „Nutzen und Aufwand“
+    await next(); // options
+    const options = await notes("option", 4);
+    await next(); // score: the three bundles of the first method and the four options
+    for (const socket of sockets) {
+      const scores = Object.fromEntries([...groups, ...options].map((id) => [id, [3, 4]]));
+      await said(socket, "ballots", { type: "ballot.cast", step: 6, ballot: { kind: "score", scores } });
+    }
+    await said(moderation, "count", { type: "admin.step.count", step: 6 });
+    await next(); // discuss
+    await next(); // decide
+    const [decision] = await notes("decision", 1);
+    await said(moderation, "records", {
+      type: "note.action",
+      noteId: decision,
+      action: { who: "", due: "", why: "Most value for the effort" },
+    });
+    // 3. „Scheitern vorwegdenken“
+    await next(); // plan
+    await next(); // reasons
+    const reasons = await notes("reason", PEOPLE.length);
+    await next(); // reveal by turn
+    for (let shown = 0; shown < reasons.length; shown++) {
+      await said(moderation, "turns", { type: "admin.turn.next", step: 11, shown });
+    }
+    await next(); // risks
+    await next(); // adjust the plan
+    const changes = await notes("change", 3);
+    for (const noteId of changes) {
+      await said(moderation, "records", { type: "note.action", noteId, action: { who: "Anna", due: "Friday" } });
+    }
+    const total = await done(
+      `an agenda of three methods with ${PEOPLE.length} people (16 ideas, 3 bundles, 8 ballots; 4 options, 8 scores, 1 decision; 8 reasons, 8 turns, 3 changes)`,
+    );
+    // the moderation's change of the agenda: the agenda row and the flow with the number of the change
+    expect(rows.agenda).toBe(2);
+    expect(rows.notes).toBe(2 * PEOPLE.length + 4 + 1 + PEOPLE.length + 3 + 1);
+    expect(rows.steps).toBe(13);
+    expect(rows.ballots).toBe(2 * PEOPLE.length + 2);
+    expect(rows.count).toBe(4);
+    expect(rows.turns).toBe(PEOPLE.length);
+    expect(rows.records).toBe(4);
+    expect(total).toBeLessThanOrEqual(AGENDA_ROWS);
   });
 });

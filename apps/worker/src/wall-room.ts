@@ -10,6 +10,7 @@ import {
   criteriaSteps,
   countedRounds,
   decide,
+  decideAgendaSet,
   decideAuto,
   decideAutoSwitch,
   decideBallot,
@@ -19,8 +20,11 @@ import {
   decideTeamsSet,
   decideTurn,
   enterTeams,
+  estimateNoteHeight,
   fieldBoxes,
   fieldName,
+  fieldsTop,
+  itemSpan,
   displayNameKey,
   eventFor,
   exportFileName,
@@ -41,6 +45,7 @@ import {
   optionsSteps,
   placeLatecomer,
   planJoin,
+  promptOf,
   PROTOCOL_VERSION,
   readClientFrame,
   readStoredFlow,
@@ -58,6 +63,7 @@ import {
   wallBrake,
   wallMarkdown,
   withTurnRound,
+  type AgendaCommand,
   type AgendaRequest,
   type ArrangeLanguage,
   type ArrangeRecord,
@@ -416,7 +422,9 @@ export class WallRoom extends DurableObject<Env> {
         const groupId = positions[note.id]?.[2] ?? null;
         return groupId === null || !locked.has(groupId);
       });
-    return { kind: "notes", question: this.getMeta("question") ?? "", notes };
+    // the question of the method the wall is in: its prompt where it has one (stage M7)
+    const { flow, agenda } = this.readFlow();
+    return { kind: "notes", question: promptOf(agenda, flow.step, this.getMeta("question") ?? ""), notes };
   }
 
   /** The wall as Markdown for the person behind a session key (PLAN.md 3.2, `GET /api/walls/:id/export`): through
@@ -438,6 +446,8 @@ export class WallRoom extends DurableObject<Env> {
       methodId: methodOfStep(agenda, flow.step),
       sight: sightOf(agenda, flow),
       steps: agenda.steps,
+      // a section for each method of an agenda of several (stage M7)
+      items: agenda.items,
       notes: content.notes,
       groups: content.groups,
       // the counted votes' rankings, never a ballot
@@ -556,6 +566,9 @@ export class WallRoom extends DurableObject<Env> {
         return;
       case "admin.step.auto":
         await this.handleAuto(ws, participant, command);
+        return;
+      case "admin.agenda.set":
+        await this.handleAgenda(ws, participant, command);
         return;
       case "admin.teams.set":
         this.handleTeams(ws, participant, command);
@@ -1119,9 +1132,12 @@ export class WallRoom extends DurableObject<Env> {
       const sight = stepContext(state.agenda, decision.flow).sight;
       // a vote over the notes of certain steps (stage M5, `optionsFrom`): those notes, and no groups
       const froms = optionsSteps(state.agenda.steps, to);
+      // otherwise the wall's groups and notes, of every method before it too (stage M7: the ideas of an earlier
+      // method are what a later one votes on), as far as everybody sees them
+      const shownNow = sightOf(state.agenda, { reach: decision.flow.reach, turns: state.flow.turns ?? [] });
       const offered =
         froms === null
-          ? content
+          ? { ...content, notes: content.notes.filter((note) => levelFor(shownNow, note) === "all") }
           : { notes: content.notes.filter((note) => froms.includes(note.step ?? 0)), groups: [] as Group[] };
       // a score whose criteria are notes (stage M6, `criteriaFrom`): their words, frozen with the options
       const fromCriteria = criteriaSteps(state.agenda.steps, to);
@@ -1203,7 +1219,7 @@ export class WallRoom extends DurableObject<Env> {
     };
     if (!widens || content === null) {
       this.deliver(changedSeq, (viewer) => ({ frames: [changed(viewer)] }));
-      return changedSeq;
+      return this.fieldsReached(state, decision.flow.reach, changedSeq);
     }
     const { notes } = content;
     // one text per person, however many tabs they have open
@@ -1223,7 +1239,81 @@ export class WallRoom extends DurableObject<Env> {
       }
       return { frames: [told.frame, changed(viewer)], hidden: told.hidden };
     });
-    return changedSeq;
+    return this.fieldsReached(state, decision.flow.reach, changedSeq);
+  }
+
+  /** The fixed fields of a method after the agenda's first (stage M7, „Annahmen prüfen“ as a later method), made when
+   *  the wall reaches the method's first step for the first time: groups like any other, below what the wall holds
+   *  (`fieldsTop`), titled in the language the moderation's browser named for the method. One row each, written in
+   *  one transaction after the step move, and told to everybody, each group under its own number, as if the
+   *  moderation had made them. Returns the wall's number after them. */
+  private fieldsReached(state: FlowState, reach: number, seq: number): number {
+    const made: Group[] = [];
+    state.agenda.items.forEach((item, at) => {
+      const fields = CATALOGUE[item.methodId].fields;
+      const { from } = itemSpan(state.agenda, at);
+      if (at === 0 || fields === undefined || from <= state.flow.reach || from > reach) return;
+      const content = this.readContent();
+      const top = fieldsTop(
+        [...content.groups, ...made],
+        content.notes.map((note) => ({ y: note.y + estimateNoteHeight(note.text) })),
+        0,
+      );
+      const boxes = fieldBoxes(fields.length, top);
+      const ord = Math.max(0, ...content.groups.map((group) => group.ord), ...made.map((group) => group.ord));
+      fields.forEach((key, n) => {
+        made.push({
+          id: generateSecret(),
+          title: fieldName(item.language ?? "de", item.methodId, key),
+          titleSource: "person",
+          locked: true,
+          ...(boxes[n] ?? { x: 0, y: top, w: 832, h: 720 }),
+          ord: ord + n + 1,
+        });
+      });
+    });
+    if (made.length === 0) return seq;
+    this.ctx.storage.transactionSync(() => made.forEach((group, n) => this.writeGroup(group, seq + n + 1)));
+    const frames = made.map((group, n) =>
+      JSON.stringify({ type: "group.created", seq: seq + n + 1, group } satisfies ServerEvent),
+    );
+    this.deliver(seq + made.length, () => ({ frames }));
+    return seq + made.length;
+  }
+
+  /** The moderation changes the methods the wall has not reached (`admin.agenda.set`, stage M7): the rules decide
+   *  (domain/agenda.ts, `decideAgendaSet`), this stores the agenda (one row, and the flow beside it where a step whose
+   *  moving on was switched off goes away) and tells everyone the agenda as it stands (`agenda.changed`). A reached
+   *  step never changes. Never refused by the brake, like every move of the moderation's. */
+  private async handleAgenda(ws: WebSocket, participant: Participant, command: AgendaCommand): Promise<void> {
+    const state = this.readFlow();
+    const decision = decideAgendaSet(state.agenda, state.flow, command.items, participant);
+    if (decision.kind === "refused") {
+      this.reject(ws, command.opId, decision.code);
+      return;
+    }
+    if (decision.kind === "unchanged") {
+      this.ack(ws, command.opId, this.currentSeq());
+      return;
+    }
+    const seq = this.currentSeq() + 1;
+    const flow: Flow = { ...state.flow, seq };
+    if (decision.manual.length === 0) delete flow.manual;
+    else flow.manual = decision.manual;
+    // the agenda row, and the flow beside it with the number of the change (a wall of schema 3 never gets here
+    // without its agenda: its first step move wrote it)
+    this.writeFlow({ ...state, agenda: decision.agenda, legacy: false }, flow, () =>
+      this.setMeta("agenda", JSON.stringify(decision.agenda)),
+    );
+    await this.armAlarm(decision.agenda, flow);
+    const frame = JSON.stringify({
+      type: "agenda.changed",
+      seq,
+      agenda: decision.agenda,
+      manual: decision.manual,
+    } satisfies ServerEvent);
+    this.deliver(seq, () => ({ frames: [frame] }));
+    this.ack(ws, command.opId, seq);
   }
 
   /** The moderation swaps or moves people between the teams of the step (`admin.teams.set`, stage M4): the rules

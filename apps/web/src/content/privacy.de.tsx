@@ -130,11 +130,13 @@ export function PrivacyDe() {
           <strong>Die Wand:</strong> ihre Frage (höchstens 140 Zeichen), der Zeitpunkt des Anlegens, der Tag ihrer
           automatischen Löschung, ein zufälliger Moderationsschlüssel, die gewählte Methode mit ihren Schritten (eine
           Kopie aus dem Katalog der Anwendung, beim Anlegen gespeichert; bei einer Methode, die schätzt, mit der
-          Einheit, die die Moderation dafür angegeben hat), in welchem Schritt die Wand steht und wie weit sie schon war
-          (daraus folgt, ob verdeckt geschrieben wird oder die Zettel aufgedeckt sind), die Uhr des Schritts (wann sie
-          abläuft oder wie viel Zeit angehalten noch bleibt, und wie oft sie gestellt wurde) und für die Bremse der Wand
-          (unten) ein Tag nach UTC mit der Nummer der ersten Änderung an diesem Tag. Diese Angaben sagen nichts über
-          Personen.
+          Einheit, die die Moderation dafür angegeben hat; bei mehreren Methoden nacheinander ihre Reihenfolge und je
+          Methode die Frage, die die Moderation ihr gegeben hat, höchstens 140 Zeichen; Methoden, die noch nicht
+          begonnen haben, kann die Moderation später ändern, dann wird die Kopie neu gespeichert), in welchem Schritt
+          die Wand steht und wie weit sie schon war (daraus folgt, ob verdeckt geschrieben wird oder die Zettel
+          aufgedeckt sind), die Uhr des Schritts (wann sie abläuft oder wie viel Zeit angehalten noch bleibt, und wie
+          oft sie gestellt wurde) und für die Bremse der Wand (unten) ein Tag nach UTC mit der Nummer der ersten
+          Änderung an diesem Tag. Diese Angaben sagen nichts über Personen.
         </li>
         <li>
           <strong>Je Person:</strong> der Anzeigename (ein Vorname oder ein Pseudonym genügt, höchstens 40 Zeichen), ob
@@ -262,9 +264,9 @@ export function PrivacyDe() {
         Moderation.
       </p>
       <p>
-        <strong>Alle auf der Wand sehen</strong> die Frage, die Namen, wer moderiert und wer gerade da ist, nach dem
-        Aufdecken alle Zettel mit ihrem Text und alle Gruppen mit ihrem Titel, vorher die eigenen Zettel und die Zahl
-        der anderen.{" "}
+        <strong>Alle auf der Wand sehen</strong> die Frage (und die Methoden mit ihren eigenen Fragen), die Namen, wer
+        moderiert und wer gerade da ist, nach dem Aufdecken alle Zettel mit ihrem Text und alle Gruppen mit ihrem Titel,
+        vorher die eigenen Zettel und die Zahl der anderen.{" "}
         <strong>Wer einen Zettel geschrieben hat, zeigt die Anwendung niemandem und sendet es an keinen Browser</strong>
         , in keiner Phase: Der Server speichert die Kennung der schreibenden Person beim Zettel, sendet sie aber nicht.
         Jeder Browser erfährt nur, ob ein Zettel der eigene ist; dort steht für die Person, die ihn geschrieben hat, das
@@ -275,12 +277,12 @@ export function PrivacyDe() {
       <p>
         <strong>Als Markdown sichern.</strong> Jede Person auf der Wand kann sie über „Als Markdown sichern“ als Datei
         auf ihr Gerät holen. Der Server stellt die Datei erst auf diese Anfrage zusammen, aus genau dem, was die Person
-        auf der Wand sehen darf: die Frage, die Gruppen mit ihren Titeln, die Texte der Zettel und das Ergebnis einer
-        ausgezählten Wahl oder Schätzung, nie einen Stimmzettel und nie eine einzelne Schätzung; solange verdeckt
-        geschrieben wird, nur ihre eigenen Zettel und die Zahl der anderen. Namen stehen nicht darin, auch nicht, wer
-        einen Zettel geschrieben hat. Ihr Browser weist sich dabei mit seinem Sitzungsschlüssel aus (Abschnitt 4). Der
-        Server speichert zu dieser Anfrage nichts und merkt sich die Datei nicht; die Datei liegt danach nur auf Ihrem
-        Gerät, und was mit ihr geschieht, entscheiden Sie.
+        auf der Wand sehen darf: die Frage, die Methoden mit ihren eigenen Fragen, die Gruppen mit ihren Titeln, die
+        Texte der Zettel und das Ergebnis einer ausgezählten Wahl oder Schätzung, nie einen Stimmzettel und nie eine
+        einzelne Schätzung; solange verdeckt geschrieben wird, nur ihre eigenen Zettel und die Zahl der anderen. Namen
+        stehen nicht darin, auch nicht, wer einen Zettel geschrieben hat. Ihr Browser weist sich dabei mit seinem
+        Sitzungsschlüssel aus (Abschnitt 4). Der Server speichert zu dieser Anfrage nichts und merkt sich die Datei
+        nicht; die Datei liegt danach nur auf Ihrem Gerät, und was mit ihr geschieht, entscheiden Sie.
       </p>
       <p>
         <strong>Die Bremse der Wand.</strong> Eine Wand speichert höchstens 1.500 Änderungen an einem Tag nach UTC
@@ -290,12 +292,12 @@ export function PrivacyDe() {
         dieselben wie beim Tagesbudget (Abschnitt 2.2).
       </p>
       <p>
-        Die Frage, der Anzeigename, die Texte der Zettel und die Titel der Gruppen sind freier Text: Schreiben Sie
-        nichts hinein, was nicht alle auf der Wand lesen sollen, und keine Angaben über Gesundheit oder andere besonders
-        schützenswerte Dinge. Der Betreiber wertet nichts davon aus; die Anwendung enthält keine Auswertung je Person
-        und, von den zwei Zählern abgesehen (Wände eines Tages, Abschnitt 2.2; Ordnen der letzten 24 Stunden, Abschnitt
-        3.4), keine Statistik über mehrere Wände. Was beim Ordnen an einen KI-Dienst geht, steht in Abschnitt 3.4, mit
-        einem eigenen Schlüssel der Moderation in Abschnitt 3.5.
+        Die Frage, die Fragen der Methoden, der Anzeigename, die Texte der Zettel und die Titel der Gruppen sind freier
+        Text: Schreiben Sie nichts hinein, was nicht alle auf der Wand lesen sollen, und keine Angaben über Gesundheit
+        oder andere besonders schützenswerte Dinge. Der Betreiber wertet nichts davon aus; die Anwendung enthält keine
+        Auswertung je Person und, von den zwei Zählern abgesehen (Wände eines Tages, Abschnitt 2.2; Ordnen der letzten
+        24 Stunden, Abschnitt 3.4), keine Statistik über mehrere Wände. Was beim Ordnen an einen KI-Dienst geht, steht
+        in Abschnitt 3.4, mit einem eigenen Schlüssel der Moderation in Abschnitt 3.5.
       </p>
 
       <h3>3.2 Wo</h3>
@@ -358,17 +360,18 @@ export function PrivacyDe() {
       </p>
       <p>
         <strong>Was an den KI-Dienst geht.</strong> Der Worker (Abschnitt 2.1) liest die Zettel aus der Wand und sendet
-        an „Cloudflare Workers AI“, einen KI-Dienst von Cloudflare, die Frage der Wand und den Text aller Zettel, die in
-        keiner Gruppe liegen, die eine Person von Hand angelegt oder umbenannt hat (unten, „Ohne KI“), dazu die Sprache,
-        in der die Überschriften geschrieben werden sollen. Das geschieht in mehreren Anfragen: einmal alle diese Zettel
-        zusammen, danach in Stapeln zu 50. Antwortet der Dienst auf eine Anfrage nicht nach wenigen Sekunden, geht
-        dieselbe Anfrage ein zweites Mal daneben hinaus, und die erste lesbare Antwort zählt; eine Anfrage ohne
-        brauchbare Antwort wird einmal wiederholt. Dieselben Texte können so bis zu viermal an den Dienst gehen.
-        Gerechnet wird mit einem Sprachmodell, das Cloudflare in diesem Dienst anbietet (derzeit „Gemma“ von Google);
-        welches, ist eine Einstellung der Anwendung und kann wechseln. <strong>Nicht mit geht</strong>, wer einen Zettel
-        geschrieben hat, kein Name, keine Kennung eines Zettels oder einer Person, nicht, wo ein Zettel liegt, und nicht
-        die Adresse der Wand: Im Text an das Modell sind die Zettel nur durchnummeriert. Ein Zettel kann aber selbst
-        etwas über Personen sagen; was darin steht, geht mit (Abschnitt 3.1, freier Text).
+        an „Cloudflare Workers AI“, einen KI-Dienst von Cloudflare, die Frage der Wand (bei mehreren Methoden die Frage
+        der Methode, in der die Wand gerade steht, wo die Moderation ihr eine eigene gegeben hat) und den Text aller
+        Zettel, die in keiner Gruppe liegen, die eine Person von Hand angelegt oder umbenannt hat (unten, „Ohne KI“),
+        dazu die Sprache, in der die Überschriften geschrieben werden sollen. Das geschieht in mehreren Anfragen: einmal
+        alle diese Zettel zusammen, danach in Stapeln zu 50. Antwortet der Dienst auf eine Anfrage nicht nach wenigen
+        Sekunden, geht dieselbe Anfrage ein zweites Mal daneben hinaus, und die erste lesbare Antwort zählt; eine
+        Anfrage ohne brauchbare Antwort wird einmal wiederholt. Dieselben Texte können so bis zu viermal an den Dienst
+        gehen. Gerechnet wird mit einem Sprachmodell, das Cloudflare in diesem Dienst anbietet (derzeit „Gemma“ von
+        Google); welches, ist eine Einstellung der Anwendung und kann wechseln. <strong>Nicht mit geht</strong>, wer
+        einen Zettel geschrieben hat, kein Name, keine Kennung eines Zettels oder einer Person, nicht, wo ein Zettel
+        liegt, und nicht die Adresse der Wand: Im Text an das Modell sind die Zettel nur durchnummeriert. Ein Zettel
+        kann aber selbst etwas über Personen sagen; was darin steht, geht mit (Abschnitt 3.1, freier Text).
       </p>
       <p>
         <strong>Wo, und was Cloudflare damit tut.</strong> Wo Workers AI rechnet, lässt sich nicht auf die EU festlegen:
@@ -436,15 +439,16 @@ export function PrivacyDe() {
       <p>
         <strong>Was jede Anfrage enthält.</strong> Den Schlüssel (in der Kopfzeile <code>Authorization</code>), den
         Namen des Modells, feste Anweisungen auf Englisch (darin die Sprache, in der die Überschriften geschrieben
-        werden sollen), die Frage der Wand und die Texte der aufgedeckten Zettel, die in keiner Gruppe liegen, die eine
-        Person angelegt oder umbenannt hat (Abschnitt 3.4, „Ohne KI“): je Zettel eine nummerierte Zeile, in der
-        Reihenfolge, in der sie geschrieben wurden. Die Anfragen, die die Zettel den Themen zuordnen, tragen dazu die
-        Themen, die der Anbieter in der ersten Antwort genannt hat. Außerdem gehen das Schema der erwarteten Antwort und
-        technische Angaben mit (etwa, wie lang die Antwort höchstens sein darf). Wie jeder Anfrage fügt der Browser
-        hinzu: die IP-Adresse des Geräts, <code>Origin</code> (die Adresse der Anwendung, nicht die der Wand), die
-        Kennung des Browsers (User-Agent), die bevorzugten Sprachen (Accept-Language) und, je nach Browser, weitere
-        Angaben über Browser und Gerät (Client Hints). Ein Referer und Cookies gehen nicht mit. Nur bei Anthropic kommen
-        Kopfzeilen der Programmbibliothek von Anthropic hinzu, die unter anderem Name und Version des Browsers nennen.
+        werden sollen), die Frage der Wand (oder die eigene Frage der Methode, in der die Wand steht, Abschnitt 3.4) und
+        die Texte der aufgedeckten Zettel, die in keiner Gruppe liegen, die eine Person angelegt oder umbenannt hat
+        (Abschnitt 3.4, „Ohne KI“): je Zettel eine nummerierte Zeile, in der Reihenfolge, in der sie geschrieben wurden.
+        Die Anfragen, die die Zettel den Themen zuordnen, tragen dazu die Themen, die der Anbieter in der ersten Antwort
+        genannt hat. Außerdem gehen das Schema der erwarteten Antwort und technische Angaben mit (etwa, wie lang die
+        Antwort höchstens sein darf). Wie jeder Anfrage fügt der Browser hinzu: die IP-Adresse des Geräts,{" "}
+        <code>Origin</code> (die Adresse der Anwendung, nicht die der Wand), die Kennung des Browsers (User-Agent), die
+        bevorzugten Sprachen (Accept-Language) und, je nach Browser, weitere Angaben über Browser und Gerät (Client
+        Hints). Ein Referer und Cookies gehen nicht mit. Nur bei Anthropic kommen Kopfzeilen der Programmbibliothek von
+        Anthropic hinzu, die unter anderem Name und Version des Browsers nennen.
       </p>
       <p>
         <strong>Nicht mit geht</strong>, wer einen Zettel geschrieben hat, kein Name, keine Kennung eines Zettels oder
@@ -640,17 +644,17 @@ export function PrivacyDe() {
       <p>
         Empfänger ist <strong>Cloudflare, Inc. (USA)</strong> als Auftragsverarbeiter: alle Daten aus den Abschnitten 2
         und 3, die Daten der Wände gespeichert in Rechenzentren in der EU, die Verbindungsdaten am nächstgelegenen
-        Standort, und beim Ordnen die Frage der Wand und die Texte der Zettel im KI-Dienst „Workers AI“, der auch
-        außerhalb der EU rechnen kann (Abschnitt 3.4). Grundlage für die Übermittlung: das EU-US Data Privacy Framework,
-        ergänzend die Standardvertragsklauseln.
+        Standort, und beim Ordnen die Frage der Wand (oder der Methode) und die Texte der Zettel im KI-Dienst „Workers
+        AI“, der auch außerhalb der EU rechnen kann (Abschnitt 3.4). Grundlage für die Übermittlung: das EU-US Data
+        Privacy Framework, ergänzend die Standardvertragsklauseln.
       </p>
       <p>
         Nur wenn die Moderation mit einem eigenen KI-Schlüssel ordnet, kommt ein zweiter Empfänger hinzu: der eine
         Anbieter, den sie gewählt hat, <strong>Mistral AI</strong> (Frankreich), <strong>OpenAI</strong> (USA) oder{" "}
-        <strong>Anthropic</strong> (USA). An ihn sendet der Browser der Moderation die Frage der Wand und die Texte der
-        Zettel unmittelbar, unter dem Vertrag der Moderation mit diesem Anbieter, nicht unter einem des Betreibers
-        (Abschnitt 3.5). Ob der Anbieter die Daten in ein Drittland übermittelt und auf welcher Grundlage, regelt dieser
-        Vertrag; der Betreiber kennt ihn nicht.
+        <strong>Anthropic</strong> (USA). An ihn sendet der Browser der Moderation die Frage der Wand (oder der Methode)
+        und die Texte der Zettel unmittelbar, unter dem Vertrag der Moderation mit diesem Anbieter, nicht unter einem
+        des Betreibers (Abschnitt 3.5). Ob der Anbieter die Daten in ein Drittland übermittelt und auf welcher
+        Grundlage, regelt dieser Vertrag; der Betreiber kennt ihn nicht.
       </p>
       <p>
         Sonst niemand. Der Betreiber gibt keine Daten an weitere Dritte weiter, verkauft nichts und gibt Inhalte einer

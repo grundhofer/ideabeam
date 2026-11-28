@@ -214,6 +214,23 @@ run the rest; their result is the run itself. Keep this file current.
   light and dark. Not seen: the role line and the fields of „Annahmen prüfen“ on the surface in a screen of their own
   (the end-to-end tests read them), any of the panels at 2000 px or with a screen reader, a score with many options
   on a phone (each option is a group of up to five selects), the decision and result fields filled without a mouse.
+- The agenda of stage M7: `tests/agenda.spec.ts` builds an agenda of three methods on `/neu` with the keyboard alone
+  (type the question; Tab to „Weitere Methode anhängen“, Enter, the focus lands in the choice, ArrowDown chooses; the
+  third with Space; Shift+Tab back to the second's prompt and type; „Nach unten“ and „Nach oben“ with Enter, the focus
+  follows the item; Tab to „Wand anlegen“, Enter) and runs it with two browsers through all fourteen steps: the first
+  method's two ideas are among the second's options (six selects), the third hides a new reason from the moderation
+  while the first's notes stay shown, and the export has a section per method with the prompt. A second test changes
+  the methods not reached under „Mehr“ → „Ablauf“ (remove one, add one), checks the other browser's state line, then
+  in the second method sees both begun methods without keys and removes the last. The Worker plays the same on the
+  frames (`apps/worker/test/agenda.test.ts`: chaining, a reached method refused as `STALE`, the fields of a later
+  „Annahmen prüfen“). The screens `start-methoden` (the guided methods on the start), `neu-ablauf` (three methods
+  with a prompt) and `wand-ablauf` (the dialog in the second method) run axe in light at 390 px, dark at 1440 px and
+  at 200 %; `start-englisch` waits for the methods in English. Not seen: the agenda builder or the dialog at 2000 px
+  or with a screen reader, a change of the agenda by another tab while the dialog is open (the dialog keeps its draft
+  until it closes, and „Übernehmen“ writes over the other change; only a method the wall reached meanwhile meets
+  `STALE`, and the sentence says so), two estimates in different methods of one
+  agenda (their rounds would count together in the people's column), and an „Annahmen prüfen“ after another method
+  in a browser (the Worker test makes its fields).
 
 ## Waivers
 

@@ -2068,3 +2068,79 @@ test("the second round shows the first round's summary, no reason; counted, both
   expect(document.querySelector(".app-state__sentence")?.textContent).toBe("Ausgezählt: 2 Schätzungen.");
   expect(screen.getByRole("button", { name: "Weiter: Ergebnis ansehen" }).className).toBe("sb-primary-action");
 });
+
+// Stage M7: a wall that runs an agenda of several methods. Its state names the method of how many, the method and the
+// step within it, and the prompt of a method that asks something other than the wall's question; the moderation's
+// „Weiter“ into the next method names that method; „Mehr“ → „Ablauf“ changes the methods not reached yet, and sends
+// the whole agenda, the methods begun exactly as they are.
+const AGENDA_THREE = agendaFor({
+  hidden: true,
+  agenda: {
+    items: [
+      { methodId: "still-sammeln" },
+      { methodId: "nutzen-aufwand", prompt: "Was zuerst?" },
+      { methodId: "scheitern" },
+    ],
+  },
+});
+
+test("an agenda of three methods: the state says which method of how many, its step and its prompt; „Ablauf“ changes the rest (stage M7)", async () => {
+  found();
+  useWalls.getState().keepToken(WALL, TOKEN);
+  const socket = await join();
+  // the last step of the first method
+  socket.tell({ ...(sync(ANNA_AND_BEN("admin")) as Sync), agenda: AGENDA_THREE, step: 4, reach: 4 });
+  const position = await screen.findByTestId("position");
+  expect(position.textContent).toBe(
+    "Methode 1 von 3 · Still sammeln, bündeln, verdeckt wählen · Schritt 5 von 5: Ergebnis besprechen · danach Methode 2: Nutzen und Aufwand",
+  );
+  const next = screen.getByRole("button", { name: "Weiter: Methode 2: Nutzen und Aufwand" });
+  fireEvent.click(next);
+  expect(flow(socket).at(-1)).toMatchObject({ type: "admin.step.go", from: 4, to: 5 });
+  socket.tell({ type: "step.changed", seq: 1, step: 5, reach: 5 });
+  await waitFor(() =>
+    expect(screen.getByTestId("position").textContent).toMatch(
+      /^Methode 2 von 3 · Nutzen und Aufwand · Schritt 1 von 4:/,
+    ),
+  );
+  // its prompt, and the method with its short description, said as it begins
+  expect(screen.getByTestId("prompt").textContent).toBe("Frage dieser Methode: Was zuerst?");
+  expect(screen.getByTestId("method").textContent).toContain("Nutzen und Aufwand: ");
+  await waitFor(() =>
+    expect(
+      [...document.querySelectorAll('.sb-visually-hidden[role="status"]')].map((one) => one.textContent),
+    ).toContainEqual(expect.stringMatching(/^Methode 2 von 3: Nutzen und Aufwand\. .+ Schritt 1 von 4: /)),
+  );
+  // „Ablauf“: the two begun stand without keys, the third may go. jsdom has no modal dialog: the dialog opens and
+  // closes by its attribute here
+  const proto = HTMLDialogElement.prototype as Partial<HTMLDialogElement>;
+  const had = { showModal: proto.showModal, close: proto.close };
+  proto.showModal = function (this: HTMLDialogElement) {
+    this.setAttribute("open", "");
+  };
+  proto.close = function (this: HTMLDialogElement) {
+    this.removeAttribute("open");
+  };
+  onTestFinished(() => {
+    Object.assign(proto, had);
+  });
+  fireEvent.click(inMore("Ablauf")!);
+  const dialog = within(document.getElementById("app-dlg-agenda")!);
+  expect(dialog.getAllByText("Begonnen: lässt sich nicht mehr ändern.")).toHaveLength(1);
+  expect(dialog.getByText("Begonnen, mit der Frage „Was zuerst?“: lässt sich nicht mehr ändern.")).toBeTruthy();
+  expect(dialog.queryByRole("button", { name: /Entfernen: 1\./ })).toBeNull();
+  fireEvent.click(dialog.getByRole("button", { name: "Entfernen: 3. Scheitern vorwegdenken" }));
+  fireEvent.click(dialog.getByRole("button", { name: "Übernehmen" }));
+  expect(flow(socket).at(-1)).toMatchObject({
+    type: "admin.agenda.set",
+    items: [{ methodId: "still-sammeln" }, { methodId: "nutzen-aufwand", prompt: "Was zuerst?" }],
+  });
+  // nothing shows before the wall has said so
+  socket.tell({
+    type: "agenda.changed",
+    seq: 2,
+    agenda: { items: AGENDA_THREE.items.slice(0, 2), steps: AGENDA_THREE.steps.filter((one) => one.item < 2) },
+    manual: [],
+  });
+  await waitFor(() => expect(screen.getByTestId("position").textContent).toMatch(/^Methode 2 von 2 · /));
+});

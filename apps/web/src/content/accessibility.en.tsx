@@ -59,6 +59,11 @@ export function AccessibilityEn() {
           opens with Ctrl+K (⌘K on a Mac).
         </li>
         <li>
+          Several methods in a row: “Add another method” puts the focus into the choice of the method, whose arrow keys
+          choose it. Every method in the agenda has the buttons “Choose method”, “Move up”, “Move down” and “Remove”;
+          after a move the focus stays on the same button. Nothing is dragged.
+        </li>
+        <li>
           Controls show the focus outline of sebaro, the design system of {app}. This has not been checked for every
           control.
         </li>
@@ -146,15 +151,17 @@ export function AccessibilityEn() {
           cuts off on purpose what lies outside its view; it is checked as it opens, with every note in view.
         </li>
         <li>
-          Text at double size (200 %) at 1440 pixels wide, light, for the start page, a wall's door and the wall in its
-          stages: no sideways scrolling, no cut text, no axe findings: passed.
+          Text at double size (200 %) at 1440 pixels wide, light, for the start page (also with the guided methods), a
+          wall's door, “New wall” with an agenda of three methods, the wall in its stages and its “Agenda” dialog: no
+          sideways scrolling, no cut text, no axe findings: passed.
         </li>
         <li>
           Tests with the keyboard only: create a wall (with the sentence at the field first) and join it at its door;
           delete the wall through the dialog, with focus back after Escape; “Light or dark” and the language in the page
           header and in the “More” menu; the command palette; on the surface write, edit, move and delete a note, move,
           resize, rename and delete groups, select several notes; in the list a row's menu and “Move to …”; group,
-          discard, apply and take back in the list: passed. This is no walk-through of all tasks.
+          discard, apply and take back in the list; put together an agenda of three methods under “New wall” (add,
+          choose, a question per method, move) and create the wall: passed. This is no walk-through of all tasks.
         </li>
         <li>
           sebaro's four fixed tasks with the keyboard only: create something (a wall) passed; delete it after a

@@ -19,8 +19,11 @@ steps that move on by themselves through the one alarm, „1-2-4-Alle“) are me
 „Stille Ideenrunde mit Rangfolge“, „Was? Na und? Was nun?“) is committed (`1a2b46a`, not merged); stage M6 (the
 score by criteria with its table, roles of teams, the consent round, decisions and measurable results recorded by the
 moderation, fixed fields, and the methods „Kriterienbewertung“, „Nutzen und Aufwand“, „Gegenposition prüfen“,
-„Entscheidungsprotokoll mit Zustimmungsrunde“, „Annahmen prüfen“, „Ziele mit messbaren Ergebnissen“) is built on
-`methoden-m6`, not committed. Each stage's state is under its heading there.
+„Entscheidungsprotokoll mit Zustimmungsrunde“, „Annahmen prüfen“, „Ziele mit messbaren Ergebnissen“) is committed
+(`3a14f30`, not merged); stage M7 (an agenda of up to eight methods on one wall, each with its own prompt, the earlier
+methods' groups and notes offered to a later vote, „Mehr“ → „Ablauf“ for the methods not reached, `admin.agenda.set`,
+protocol 12, an export section per method, and „Geführte Methoden“ on the start) is built on `methoden-m7`, not
+committed. Each stage's state is under its heading there.
 
 ## Commands
 

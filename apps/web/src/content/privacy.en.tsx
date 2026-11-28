@@ -116,10 +116,12 @@ export function PrivacyEn() {
           <strong>The wall:</strong> its question (at most 140 characters), the time it was created, the day of its
           automatic deletion, a random facilitator key, the chosen method with its steps (a copy from the app’s
           catalogue, stored when the wall is created; for a method that estimates, with the unit the facilitator gave
-          for it), which step the wall is in and how far it has got (from which follows whether notes are written hidden
-          or have been revealed), the clock of the step (when it runs out or, while paused, how much time is left, and
-          how often it was set) and, for the wall’s brake (below), a day in UTC with the number of the first change on
-          that day. These details say nothing about persons.
+          for it; with several methods one after the other their order and, for each, the question the facilitator gave
+          it, at most 140 characters; the facilitator can change methods that have not begun later, and the copy is then
+          stored anew), which step the wall is in and how far it has got (from which follows whether notes are written
+          hidden or have been revealed), the clock of the step (when it runs out or, while paused, how much time is
+          left, and how often it was set) and, for the wall’s brake (below), a day in UTC with the number of the first
+          change on that day. These details say nothing about persons.
         </li>
         <li>
           <strong>Per person:</strong> the display name (a first name or a pseudonym is enough, at most 40 characters),
@@ -241,23 +243,24 @@ export function PrivacyEn() {
         facilitator can delete it.
       </p>
       <p>
-        <strong>Everyone on the wall sees</strong> the question, the names, who facilitates and who is here right now,
-        after revealing all notes with their text and all groups with their title, before it their own notes and the
-        number of the others’. <strong>Who wrote a note the application shows to nobody and sends to no browser</strong>
-        , in no phase: the server stores the identifier of the writer with the note, but does not send it. Every browser
-        only learns whether a note is its own; there the person who wrote it sees the word “Yours”. That does not make a
-        note anonymous in every case: every note carries the times it was written and changed, and everyone sees who is
-        here right now and when the number of notes rises. In a small group this can let people guess who wrote
-        something.
+        <strong>Everyone on the wall sees</strong> the question (and the methods with their own questions), the names,
+        who facilitates and who is here right now, after revealing all notes with their text and all groups with their
+        title, before it their own notes and the number of the others’.{" "}
+        <strong>Who wrote a note the application shows to nobody and sends to no browser</strong>, in no phase: the
+        server stores the identifier of the writer with the note, but does not send it. Every browser only learns
+        whether a note is its own; there the person who wrote it sees the word “Yours”. That does not make a note
+        anonymous in every case: every note carries the times it was written and changed, and everyone sees who is here
+        right now and when the number of notes rises. In a small group this can let people guess who wrote something.
       </p>
       <p>
         <strong>Save as Markdown.</strong> Every person on the wall can fetch it onto their device as a file with “Save
         as Markdown”. The server puts the file together only at this request, from exactly what the person may see on
-        the wall: the question, the groups with their titles, the texts of the notes and the result of a counted vote or
-        estimate, never a ballot and never a single estimate; while notes are written hidden, only their own notes and
-        the number of the others’. No names are in it, nor who wrote a note. Your browser identifies itself with its
-        session key for this (section 4). The server stores nothing about this request and does not keep the file;
-        afterwards the file lies on your device alone, and what happens to it is your decision.
+        the wall: the question, the methods with their own questions, the groups with their titles, the texts of the
+        notes and the result of a counted vote or estimate, never a ballot and never a single estimate; while notes are
+        written hidden, only their own notes and the number of the others’. No names are in it, nor who wrote a note.
+        Your browser identifies itself with its session key for this (section 4). The server stores nothing about this
+        request and does not keep the file; afterwards the file lies on your device alone, and what happens to it is
+        your decision.
       </p>
       <p>
         <strong>The wall’s brake.</strong> A wall stores at most 1,500 changes on one day in UTC (writing, changing,
@@ -266,12 +269,12 @@ export function PrivacyEn() {
         changes for this, not persons. Purpose and legal basis are the same as for the daily budget (section 2.2).
       </p>
       <p>
-        The question, the display name, the texts of the notes and the titles of the groups are free text: write nothing
-        into them that not everyone on the wall should read, and nothing about health or other matters that deserve
-        special protection. The operator evaluates none of it; the application contains no evaluation per person and,
-        apart from the two counters (walls of a day, section 2.2; grouping in the last 24 hours, section 3.4), no
-        statistics across walls. What goes to an AI service when grouping is in section 3.4, with a key of the
-        facilitator’s own in section 3.5.
+        The question, the questions of the methods, the display name, the texts of the notes and the titles of the
+        groups are free text: write nothing into them that not everyone on the wall should read, and nothing about
+        health or other matters that deserve special protection. The operator evaluates none of it; the application
+        contains no evaluation per person and, apart from the two counters (walls of a day, section 2.2; grouping in the
+        last 24 hours, section 3.4), no statistics across walls. What goes to an AI service when grouping is in section
+        3.4, with a key of the facilitator’s own in section 3.5.
       </p>
 
       <h3>3.2 Where</h3>
@@ -330,13 +333,14 @@ export function PrivacyEn() {
       </p>
       <p>
         <strong>What goes to the AI service.</strong> The Worker (section 2.1) reads the notes from the wall and sends
-        to “Cloudflare Workers AI”, an AI service of Cloudflare, the wall’s question and the text of every note that
-        lies in no group a person created by hand or renamed (below, “Without AI”), together with the language the
-        headings are to be written in. This happens in several requests: once all these notes together, then in batches
-        of 50. When the service has not answered a request after a few seconds, the same request goes out a second time
-        beside it, and the first readable answer counts; a request without a usable answer is repeated once. So the same
-        texts can go to the service up to four times. The computing is done by a language model that Cloudflare offers
-        in this service (currently “Gemma” by Google); which one is a setting of the application and can change.{" "}
+        to “Cloudflare Workers AI”, an AI service of Cloudflare, the wall’s question (with several methods, the question
+        of the method the wall is in, where the facilitator gave it one of its own) and the text of every note that lies
+        in no group a person created by hand or renamed (below, “Without AI”), together with the language the headings
+        are to be written in. This happens in several requests: once all these notes together, then in batches of 50.
+        When the service has not answered a request after a few seconds, the same request goes out a second time beside
+        it, and the first readable answer counts; a request without a usable answer is repeated once. So the same texts
+        can go to the service up to four times. The computing is done by a language model that Cloudflare offers in this
+        service (currently “Gemma” by Google); which one is a setting of the application and can change.{" "}
         <strong>What does not go along:</strong> who wrote a note, any name, any identifier of a note or a person, where
         a note lies, and the address of the wall: in the text for the model the notes are only numbered. A note can
         itself say something about people, though; whatever it says goes along (section 3.1, free text).
@@ -404,15 +408,15 @@ export function PrivacyEn() {
       <p>
         <strong>What each request contains.</strong> The key (in the header <code>Authorization</code>), the name of the
         model, fixed instructions in English (among them the language the headings are to be written in), the wall’s
-        question and the texts of the revealed notes that lie in no group a person created or renamed (section 3.4,
-        “Without AI”): one numbered line per note, in the order they were written. The requests that assign the notes to
-        the themes also carry the themes the provider named in its first answer. In addition the schema of the expected
-        answer and technical details go along (such as how long the answer may be at most). As with every request, the
-        browser adds: the IP address of the device, <code>Origin</code> (the address of the application, not that of the
-        wall), the browser’s identification (User-Agent), the preferred languages (Accept-Language) and, depending on
-        the browser, further details about browser and device (client hints). No referrer and no cookies go along. With
-        Anthropic alone, headers of Anthropic’s program library are added, which name, among other things, the browser’s
-        name and version.
+        question (or the own question of the method the wall is in, section 3.4) and the texts of the revealed notes
+        that lie in no group a person created or renamed (section 3.4, “Without AI”): one numbered line per note, in the
+        order they were written. The requests that assign the notes to the themes also carry the themes the provider
+        named in its first answer. In addition the schema of the expected answer and technical details go along (such as
+        how long the answer may be at most). As with every request, the browser adds: the IP address of the device,{" "}
+        <code>Origin</code> (the address of the application, not that of the wall), the browser’s identification
+        (User-Agent), the preferred languages (Accept-Language) and, depending on the browser, further details about
+        browser and device (client hints). No referrer and no cookies go along. With Anthropic alone, headers of
+        Anthropic’s program library are added, which name, among other things, the browser’s name and version.
       </p>
       <p>
         <strong>What does not go along:</strong> who wrote a note, any name, any identifier of a note or a person, where
@@ -595,17 +599,17 @@ export function PrivacyEn() {
       <p>
         The recipient is <strong>Cloudflare, Inc. (USA)</strong> as a processor: all data from sections 2 and 3, the
         data of the walls stored in data centres in the EU, the connection data at the nearest location, and, when
-        grouping, the wall’s question and the texts of the notes in the AI service “Workers AI”, which may also compute
-        outside the EU (section 3.4). Basis for the transfer: the EU-US Data Privacy Framework, in addition the standard
-        contractual clauses.
+        grouping, the wall’s question (or the method’s) and the texts of the notes in the AI service “Workers AI”, which
+        may also compute outside the EU (section 3.4). Basis for the transfer: the EU-US Data Privacy Framework, in
+        addition the standard contractual clauses.
       </p>
       <p>
         Only when the facilitator groups with an AI key of their own is there a second recipient: the one provider they
         chose, <strong>Mistral AI</strong> (France), <strong>OpenAI</strong> (USA) or <strong>Anthropic</strong> (USA).
-        The facilitator’s browser sends the wall’s question and the texts of the notes straight to it, under the
-        facilitator’s contract with this provider, not under one of the operator’s (section 3.5). Whether the provider
-        transfers the data to a third country, and on which basis, is a matter of that contract; the operator does not
-        know it.
+        The facilitator’s browser sends the wall’s question (or the method’s) and the texts of the notes straight to it,
+        under the facilitator’s contract with this provider, not under one of the operator’s (section 3.5). Whether the
+        provider transfers the data to a third country, and on which basis, is a matter of that contract; the operator
+        does not know it.
       </p>
       <p>
         Nobody else. The operator passes no data on to further third parties, sells nothing and hands out the content of

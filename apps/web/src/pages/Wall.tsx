@@ -59,6 +59,7 @@ import {
   extendClock,
   criterionName,
   generateHexId,
+  itemSpan,
   MAX_GROUPS,
   MAX_NOTES,
   methodOfStep,
@@ -79,6 +80,7 @@ import {
   WALL_ID_PATTERN,
   type Ballot,
   type EstimateResult,
+  type MethodId,
   type Note,
   type NoteAction,
   type Participant,
@@ -88,6 +90,7 @@ import {
   type WallInfo,
 } from "@ideabeam/shared";
 import { ActionsPanel, type Goal } from "../components/Actions";
+import { AgendaDialog } from "../components/AgendaDialog";
 import { BallotPanel, Results, type Marks } from "../components/Ballot";
 import { ConsentPanel, ConsentResults, type Consent } from "../components/Consent";
 import { ScorePanel, ScoreResults, halfScored, scored, type Scores } from "../components/Score";
@@ -467,6 +470,7 @@ function OnWall({ wallId }: { wallId: string }) {
     countVotes,
     setTeams,
     setAuto,
+    setAgenda,
     nextTurn,
   } = useWall.getState();
   const adminToken = useWalls((walls) => walls.adminTokens[wallId]);
@@ -481,7 +485,9 @@ function OnWall({ wallId }: { wallId: string }) {
   // the dialog that asks first: deleting the wall, having the wall forget oneself, revealing the notes, or taking
   // an arrangement back once the wall has changed since; the dialog of the moderation's own key; and the one that
   // shows the wall's link as a QR code
-  const [asking, setAsking] = useState<"delete" | "erase" | "reveal" | "undo" | "key" | "qr" | "teams" | null>(null);
+  const [asking, setAsking] = useState<
+    "delete" | "erase" | "reveal" | "undo" | "key" | "qr" | "teams" | "agenda" | null
+  >(null);
   // The wall as its surface or as its list: the browser's choice, else the list in a narrow window (lib/wall-view.ts).
   // Either one answers the wall's two actions, „Neuer Zettel“ and „Neue Gruppe“.
   const [mode, setMode] = useState<WallView>(firstView);
@@ -530,6 +536,23 @@ function OnWall({ wallId }: { wallId: string }) {
     state.agenda === null || steps[at] === undefined
       ? ""
       : stepName(lang, methodOfStep(state.agenda, at), steps[at].key);
+  // An agenda of several methods (stage M7): which method of how many the wall is in, its steps counted within it,
+  // and the prompt it asks where it has one. A step of the next method is named by its method: „Weiter: Methode 2:
+  // Nutzen und Aufwand“.
+  const items = state.agenda?.items ?? [];
+  const itemAt = (at: number) => steps[at]?.item ?? 0;
+  const spanOf = (item: number) => (state.agenda === null ? { from: 0, end: 0 } : itemSpan(state.agenda, item));
+  const itemHere = itemAt(state.step);
+  const span = spanOf(itemHere);
+  const prompt = items.length > 1 ? (items[itemHere]?.prompt ?? null) : null;
+  /** a step, as the moderation's key names where it goes: within the method its step, else the method */
+  const goName = (at: number) =>
+    itemAt(at) === itemHere || items[itemAt(at)] === undefined
+      ? nameOf(at)
+      : t("wall.step.nextMethod", {
+          n: itemAt(at) + 1,
+          name: methodTexts(lang, (items[itemAt(at)] as { methodId: MethodId }).methodId).name,
+        });
   const nextStep = state.step + 1 < steps.length ? state.step + 1 : null;
   const backStep = state.step > 0 && state.step - 1 < steps.length ? state.step - 1 : null;
   // the next step shows the notes that are hidden now to everybody: moving there is revealing, and asks first. (Into
@@ -822,6 +845,22 @@ function OnWall({ wallId }: { wallId: string }) {
     setWas({ step: state.step, sight: step.writes });
     if (was.sight !== "all" && step.writes === "all") {
       setSaid(notes.length === 0 ? t("wall.revealedNone") : t("wall.revealed", { count: notes.length }));
+    } else if (was.step !== state.step && items.length > 1 && method !== null) {
+      // the method is said with its short description whenever the wall enters it (stage M7)
+      const entered = itemAt(was.step) !== itemHere;
+      setSaid(
+        entered
+          ? t("wall.step.saidItem", {
+              item: itemHere + 1,
+              items: items.length,
+              method: method.name,
+              short: method.short,
+              n: state.step - span.from + 1,
+              of: span.end - span.from,
+              name: nameOf(state.step),
+            })
+          : t("wall.step.said", { n: state.step - span.from + 1, of: span.end - span.from, name: nameOf(state.step) }),
+      );
     } else if (was.step !== state.step) {
       setSaid(t("wall.step.said", { n: state.step + 1, of: steps.length, name: nameOf(state.step) }));
     }
@@ -1268,7 +1307,7 @@ function OnWall({ wallId }: { wallId: string }) {
             ? [
                 {
                   id: "app-more-back",
-                  label: t("wall.step.back", { name: nameOf(backStep) }),
+                  label: t("wall.step.back", { name: goName(backStep) }),
                   onPress: () => goStep(backStep),
                 },
               ]
@@ -1297,6 +1336,10 @@ function OnWall({ wallId }: { wallId: string }) {
           // (lib/key-switch.ts)
           ...(admin && providers.length > 0
             ? [{ id: "app-more-key", label: t("key.entry"), onPress: () => setAsking("key") }]
+            : []),
+          // the moderation's agenda: the methods not reached yet may change (stage M7)
+          ...(admin && state.agenda !== null
+            ? [{ id: "app-more-agenda", label: t("wall.agenda.open"), onPress: () => setAsking("agenda") }]
             : []),
           // everybody's: the wall's link as a code to scan, and the wall as a file, at any time (while the notes are
           // hidden, a person's own notes)
@@ -1354,7 +1397,7 @@ function OnWall({ wallId }: { wallId: string }) {
             ) : admin && nextStep !== null ? (
               <button className="sb-primary-action" type="button" onClick={goNext}>
                 <Icon name="arrow-right" />
-                <span className="sb-primary-action__label">{t("wall.step.forward", { name: nameOf(nextStep) })}</span>
+                <span className="sb-primary-action__label">{t("wall.step.forward", { name: goName(nextStep) })}</span>
               </button>
             ) : (
               <button
@@ -1384,7 +1427,7 @@ function OnWall({ wallId }: { wallId: string }) {
             {admin && nextStep !== null ? (
               <button className="sb-primary-action" type="button" onClick={goNext}>
                 <Icon name="arrow-right" />
-                <span className="sb-primary-action__label">{t("wall.step.forward", { name: nameOf(nextStep) })}</span>
+                <span className="sb-primary-action__label">{t("wall.step.forward", { name: goName(nextStep) })}</span>
               </button>
             ) : (
               <button
@@ -1420,7 +1463,7 @@ function OnWall({ wallId }: { wallId: string }) {
             ) : admin && nextStep !== null ? (
               <button className="sb-primary-action" type="button" onClick={goNext}>
                 <Icon name={nextReveals ? "eye" : "arrow-right"} />
-                <span className="sb-primary-action__label">{t("wall.step.forward", { name: nameOf(nextStep) })}</span>
+                <span className="sb-primary-action__label">{t("wall.step.forward", { name: goName(nextStep) })}</span>
               </button>
             ) : null}
           </ActionZone>
@@ -1499,7 +1542,7 @@ function OnWall({ wallId }: { wallId: string }) {
                 </button>
                 <button className="sb-primary-action" type="button" onClick={goNext}>
                   <Icon name={nextReveals ? "eye" : "arrow-right"} />
-                  <span className="sb-primary-action__label">{t("wall.step.forward", { name: nameOf(nextStep) })}</span>
+                  <span className="sb-primary-action__label">{t("wall.step.forward", { name: goName(nextStep) })}</span>
                 </button>
               </div>
             ) : (
@@ -1520,16 +1563,46 @@ function OnWall({ wallId }: { wallId: string }) {
         <section className="app-state" aria-label={t("wall.state")}>
           {/* where the wall stands in its method: step x of y, its name and the step after it. A method of one step
               has no steps to count */}
-          {steps.length > 1 && (
-            <p className="app-state__step">
+          {items.length > 1 ? (
+            <p className="app-state__step" data-testid="position">
               {nextStep !== null
-                ? t("wall.step.positionNext", {
-                    n: state.step + 1,
-                    of: steps.length,
+                ? t("wall.step.itemNext", {
+                    item: itemHere + 1,
+                    items: items.length,
+                    method: method?.name ?? "",
+                    n: state.step - span.from + 1,
+                    of: span.end - span.from,
                     name: nameOf(state.step),
-                    next: nameOf(nextStep),
+                    next: goName(nextStep),
                   })
-                : t("wall.step.positionLast", { n: state.step + 1, of: steps.length, name: nameOf(state.step) })}
+                : t("wall.step.itemLast", {
+                    item: itemHere + 1,
+                    items: items.length,
+                    method: method?.name ?? "",
+                    n: state.step - span.from + 1,
+                    of: span.end - span.from,
+                    name: nameOf(state.step),
+                  })}
+            </p>
+          ) : (
+            steps.length > 1 && (
+              <p className="app-state__step">
+                {nextStep !== null
+                  ? t("wall.step.positionNext", {
+                      n: state.step + 1,
+                      of: steps.length,
+                      name: nameOf(state.step),
+                      next: nameOf(nextStep),
+                    })
+                  : t("wall.step.positionLast", { n: state.step + 1, of: steps.length, name: nameOf(state.step) })}
+              </p>
+            )
+          )}
+          {/* the prompt of the method the wall is in, where it asks something other than the wall's question
+              (stage M7) */}
+          {prompt !== null && (
+            <p className="app-state__prompt" data-testid="prompt">
+              {t("wall.step.prompt", { prompt })}
             </p>
           )}
           {/* what to do now, in the method's words (stage M5) */}
@@ -1584,7 +1657,7 @@ function OnWall({ wallId }: { wallId: string }) {
                     <div className="app-state__key">
                       <button className="sb-text-action" type="button" onClick={goNext}>
                         <Icon name="arrow-right" />
-                        {t("wall.step.forward", { name: nameOf(nextStep) })}
+                        {t("wall.step.forward", { name: goName(nextStep) })}
                       </button>
                     </div>
                   )}
@@ -1592,7 +1665,7 @@ function OnWall({ wallId }: { wallId: string }) {
                     <div className="app-state__key">
                       <button className="sb-text-action" type="button" onClick={goNext}>
                         <Icon name="arrow-right" />
-                        {t("wall.step.forward", { name: nameOf(nextStep) })}
+                        {t("wall.step.forward", { name: goName(nextStep) })}
                       </button>
                     </div>
                   )}
@@ -1909,6 +1982,19 @@ function OnWall({ wallId }: { wallId: string }) {
           }
         }}
       />
+      {admin && state.agenda !== null && (
+        <AgendaDialog
+          open={asking === "agenda"}
+          lang={lang}
+          agenda={state.agenda}
+          reach={state.reach}
+          onSave={(next) => {
+            setAgenda(next);
+            setSaid(t("wall.agenda.saved"));
+          }}
+          onClose={() => setAsking(null)}
+        />
+      )}
       {admin && teams !== null && (
         <TeamsDialog
           open={asking === "teams" && teamStep}

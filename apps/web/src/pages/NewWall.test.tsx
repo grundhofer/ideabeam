@@ -270,3 +270,78 @@ test("a method that begins with fixed fields sends the language of their titles 
     agenda: { items: [{ methodId: "annahmen", language: "de" }] },
   });
 });
+
+// Stage M7: an agenda of several methods. „Weitere Methode anhängen“ adds an item and puts the focus into the
+// choice, which then chooses that item's method; above the choice the agenda as a numbered list, each item with its
+// name and short description, its prompt, and keys to move and remove it. No dragging: buttons alone.
+test("an agenda of three methods: appended, chosen, given a prompt, moved and removed with keys, sent in its order (stage M7)", async () => {
+  const fetched = vi
+    .spyOn(globalThis, "fetch")
+    .mockImplementation(() => Promise.resolve(new Response(JSON.stringify({ wallId: WALL, adminToken: TOKEN }))));
+  renderApp("/neu");
+  await screen.findByRole("heading", { level: 1, name: "Neue Wand" });
+  // one method: no list, the choice is „Methode“
+  expect(screen.queryByRole("heading", { name: /^Ablauf/ })).toBeNull();
+  const add = screen.getByRole("button", { name: "Weitere Methode anhängen" });
+  fireEvent.click(add);
+  // the focus is in the choice of the second item, on the method it starts with
+  const second = screen.getByRole("group", { name: "Methode 2 von 2" });
+  expect(document.activeElement).toBe(
+    within(second).getByRole("radio", { name: "Still sammeln, bündeln, verdeckt wählen" }),
+  );
+  fireEvent.click(within(second).getByRole("radio", { name: "Nutzen und Aufwand" }));
+  fireEvent.click(add);
+  fireEvent.click(
+    within(screen.getByRole("group", { name: "Methode 3 von 3" })).getByRole("radio", {
+      name: "Scheitern vorwegdenken",
+    }),
+  );
+  // the list: every item with its name and, always, its short description
+  const list = screen.getByRole("heading", { name: /^Ablauf/ }).closest("section") as HTMLElement;
+  const rows = within(list).getAllByRole("listitem");
+  expect(rows.map((row) => row.querySelector(".app-agenda__name")?.textContent)).toEqual([
+    "1. Still sammeln, bündeln, verdeckt wählen",
+    "2. Nutzen und Aufwand",
+    "3. Scheitern vorwegdenken",
+  ]);
+  for (const [at, method] of (["still-sammeln", "nutzen-aufwand", "scheitern"] as const).entries()) {
+    expect(rows[at]?.textContent).toContain(methodTexts("de", method).short);
+  }
+  // a prompt of its own for the second
+  fireEvent.change(screen.getByLabelText(/Frage für Methode 2/), { target: { value: "  Was zuerst? " } });
+  // the third moves up: the focus goes with it, to the same key in its new place
+  const up = screen.getByRole("button", { name: "Nach oben: 3. Scheitern vorwegdenken" });
+  fireEvent.click(up);
+  expect(document.activeElement).toBe(screen.getByRole("button", { name: "Nach oben: 2. Scheitern vorwegdenken" }));
+  // the first cannot move up: the key stays, and does nothing
+  const firstUp = screen.getByRole("button", { name: "Nach oben: 1. Still sammeln, bündeln, verdeckt wählen" });
+  expect(firstUp.getAttribute("aria-disabled")).toBe("true");
+  // a fourth, removed again
+  fireEvent.click(add);
+  fireEvent.click(screen.getByRole("button", { name: "Entfernen: 4. Still sammeln, bündeln, verdeckt wählen" }));
+  expect(within(list).getAllByRole("listitem")).toHaveLength(3);
+  type("Was hält uns auf?");
+  submit();
+  await waitFor(() => expect(useWalls.getState().walls).toHaveLength(1));
+  expect(JSON.parse(String(fetched.mock.calls[0]?.[1]?.body))).toEqual({
+    question: "Was hält uns auf?",
+    agenda: {
+      items: [
+        { methodId: "still-sammeln" },
+        { methodId: "scheitern" },
+        { methodId: "nutzen-aufwand", prompt: "Was zuerst?" },
+      ],
+    },
+  });
+});
+
+test("an agenda holds eight methods at most: then „Weitere Methode anhängen“ says so and adds none (stage M7)", async () => {
+  renderApp("/neu");
+  await screen.findByRole("heading", { level: 1, name: "Neue Wand" });
+  const add = screen.getByRole("button", { name: "Weitere Methode anhängen" });
+  for (let n = 0; n < 9; n += 1) fireEvent.click(add);
+  const list = screen.getByRole("heading", { name: /^Ablauf/ }).closest("section") as HTMLElement;
+  expect(within(list).getAllByRole("listitem")).toHaveLength(8);
+  expect(add.getAttribute("aria-disabled")).toBe("true");
+  expect(screen.getByText("Höchstens 8 Methoden: Entferne eine, um eine andere anzuhängen.")).toBeTruthy();
+});

@@ -225,6 +225,9 @@ export function applyServerEvent(state: WallState, event: ServerEvent): WallStat
       };
     case "auto.changed":
       return { ...state, manual: event.manual, ...numbered(state, event.seq) };
+    // the methods not reached yet changed (stage M7): the steps reached stand as they were
+    case "agenda.changed":
+      return { ...state, agenda: event.agenda, manual: event.manual, ...numbered(state, event.seq) };
     case "step.changed":
       return {
         ...state,

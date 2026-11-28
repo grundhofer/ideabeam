@@ -2,7 +2,12 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import * as z from "zod/mini";
-import { agendaRequestSchema, resolvedAgendaSchema } from "./domain/agenda.js";
+import {
+  agendaItemRequestSchema,
+  agendaRequestSchema,
+  MAX_AGENDA_ITEMS,
+  resolvedAgendaSchema,
+} from "./domain/agenda.js";
 import { MAX_STEPS } from "./domain/method.js";
 import { teamViewSchema } from "./domain/teams.js";
 import { turnViewSchema } from "./domain/turns.js";
@@ -37,12 +42,14 @@ z.config({ jitless: true });
 // `step.changed`; the step a note was written in (`Note.step`), and actions with „Wer“ and „Bis wann“ (`note.action`).
 // Stage M6 brought the consent round (a ballot of kind `consent`, its result), a score's criteria taken from notes (in
 // the vote's round and its result), roles of teams (in the agenda), and the record of a decision and of a measurable
-// result in `note.action` (`why`, `open`, `target`, `goal`).
+// result in `note.action` (`why`, `open`, `target`, `goal`). Stage M7 brought the agenda of several methods: each
+// item's prompt in the agenda, and the moderation's change of the items not reached yet (`admin.agenda.set`,
+// `agenda.changed`).
 
 // The version of these frames. A deploy disconnects every socket, and a tab that reconnects still runs the old
 // script: the worker names its version in every `sync`, and a browser that reads another one asks for a reload
 // instead of guessing. Raised with every change a running tab cannot read (PLAN.md 3.4).
-export const PROTOCOL_VERSION = 11;
+export const PROTOCOL_VERSION = 12;
 
 // The admin's capability, minted with the wall and kept in the creating browser: 128 bits of hex. Anything else
 // cannot be one and is refused before it is compared.
@@ -446,6 +453,15 @@ export const clientCommandSchema = z.discriminatedUnion("type", [
     from: z.int().check(z.minimum(0), z.maximum(MAX_STEPS - 1)),
     to: z.int().check(z.minimum(0), z.maximum(MAX_STEPS - 1)),
   }),
+  // The moderation's change of the agenda (stage M7, domain/agenda.ts, `decideAgendaSet`): the whole list of its
+  // methods as the moderation wants it. The methods the wall has begun stand first, as they are; the rest may be
+  // added, removed and reordered. Absolute: sent a second time it finds the agenda so; made for an agenda the wall has
+  // left (it reached a method meanwhile, or somebody changed it) it is refused (`STALE`).
+  z.object({
+    type: z.literal("admin.agenda.set"),
+    opId: hexIdSchema,
+    items: z.array(agendaItemRequestSchema).check(z.minLength(1), z.maxLength(MAX_AGENDA_ITEMS)),
+  }),
   // The moderation's controls of the writing's clock. Each names the revision of the clock it was made for
   // (`rev`): one that arrives a second time, or after somebody else's control, is refused (`STALE`) and does not
   // act again. `start` sets the time and lets it run, also over a clock that runs already.
@@ -548,6 +564,9 @@ export type ContentCommand = Extract<
 
 /** The moderation's command that moves the wall to another step. */
 export type StepCommand = Extract<ClientCommand, { type: "admin.step.go" }>;
+
+/** The moderation's change of the agenda (stage M7). */
+export type AgendaCommand = Extract<ClientCommand, { type: "admin.agenda.set" }>;
 
 /** The moderation's „Nächster Zettel“. */
 export type TurnCommand = Extract<ClientCommand, { type: "admin.turn.next" }>;
@@ -800,6 +819,14 @@ export const serverEventSchema = z.discriminatedUnion("type", [
   }),
   // The moderation switched a step's moving on by itself off or on: the steps where it is off.
   z.object({ type: z.literal("auto.changed"), seq: z.int(), manual: z.array(z.int().check(z.minimum(0))) }),
+  // The moderation changed the methods the wall has not reached yet (stage M7): the whole agenda as it stands now,
+  // and the steps whose moving on by itself is switched off (those of a method that was taken away fall away).
+  z.object({
+    type: z.literal("agenda.changed"),
+    seq: z.int(),
+    agenda: resolvedAgendaSchema,
+    manual: z.array(z.int().check(z.minimum(0))),
+  }),
   // To every socket of the person who voted, before the `ack`: the ballot as stored, and how many have voted now.
   z.object({
     type: z.literal("ballot.stored"),

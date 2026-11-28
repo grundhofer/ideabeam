@@ -102,8 +102,9 @@ export type Purpose = (typeof PURPOSES)[number];
 
 /** The longest suggested time of one step, in seconds. */
 export const STEP_MAX_SECONDS = 60 * 60;
-/** How many steps a wall's agenda holds at most: eight methods of the longest kind, far past any workshop. */
-export const MAX_STEPS = 60;
+/** How many steps a wall's agenda holds at most: eight methods of the longest kind (nine steps each, stage M7), far
+ *  past any workshop (test/agenda.test.ts holds it). */
+export const MAX_STEPS = 80;
 
 const stepKeySchema = z.string().check(z.regex(/^[a-z][a-zA-Z0-9]{0,31}$/));
 

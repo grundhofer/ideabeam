@@ -165,14 +165,17 @@ export function stepContext(
   if (step === undefined) return NO_STEP;
   const seen = sightOf(agenda, flow);
   const can = capabilities(step);
+  const ofItem = (steps: number[]) => steps.filter((at) => agenda.steps[at]?.item === step.item);
   return {
     sight: noteLevel(agenda.steps, flow.reach),
     writes: noteLevel(agenda.steps, flow.reach, writingFrom(agenda.steps, flow.step)),
     seen,
     at: flow.step,
-    actionSteps: stepsOfKind(agenda.steps, "action"),
-    decisionSteps: stepsOfKind(agenda.steps, "decision"),
-    resultSteps: stepsOfKind(agenda.steps, "result"),
+    // the records of the method the wall is in (stage M7: an earlier method's actions are its own, and stay as they
+    // were recorded there)
+    actionSteps: ofItem(stepsOfKind(agenda.steps, "action")),
+    decisionSteps: ofItem(stepsOfKind(agenda.steps, "decision")),
+    resultSteps: ofItem(stepsOfKind(agenda.steps, "result")),
     keepsSteps: keepsSteps(agenda.steps),
     // „Ordnen“ hands every note to the AI and moves any of them: not while some notes are hidden from somebody (a
     // step that sorts, gone back to from a later round of hidden writing)

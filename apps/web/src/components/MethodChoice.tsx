@@ -30,11 +30,13 @@ type Props = {
   lang: MethodLanguage;
   value: MethodId;
   onChange(method: MethodId): void;
+  /** the group's name where it is not „Methode“: the item of an agenda it chooses for (stage M7) */
+  legend?: string | undefined;
 };
 
 const id = (method: MethodId, part: string) => `app-method-${method}-${part}`;
 
-export function MethodChoice({ lang, value, onChange }: Props) {
+export function MethodChoice({ lang, value, onChange, legend }: Props) {
   const { t } = useTranslation();
   const [open, setOpen] = useState<MethodId | null>(null);
   const words = METHOD_TEXTS[lang];
@@ -46,7 +48,7 @@ export function MethodChoice({ lang, value, onChange }: Props) {
 
   return (
     <fieldset className="app-methods">
-      <legend className="sb-field__label">{t("new.method")}</legend>
+      <legend className="sb-field__label">{legend ?? t("new.method")}</legend>
       {groups.map(({ purpose, methods }) => (
         <div key={purpose} className="app-methods__group">
           <h2 className="sb-list-header" id={`app-methods-${purpose}`}>

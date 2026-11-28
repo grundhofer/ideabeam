@@ -1057,6 +1057,89 @@
   font: var(--sb-type-label);
   letter-spacing: var(--sb-type-label-tracking);
 }
+/* the agenda of several methods (stage M7, components/AgendaBuilder.tsx): above the choice the numbered list, each
+   item with its name, its short description, its prompt and its keys in a row; under the choice „Weitere Methode
+   anhängen“. Flat rows with hairlines, as every list; the item being chosen carries a bar at its start */
+.app-agenda {
+  display: grid;
+  gap: var(--sb-space-4);
+  min-inline-size: 0;
+}
+.app-agenda__list .sb-list-header {
+  padding-inline: 0;
+}
+.app-agenda__list > .sb-list {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.app-agenda__item {
+  position: relative;
+  display: grid;
+  gap: var(--sb-space-2);
+  padding-block: var(--sb-space-3);
+  padding-inline-start: var(--sb-space-3);
+}
+.app-agenda__item + .app-agenda__item::before {
+  content: "";
+  position: absolute;
+  inset-block-start: 0;
+  inset-inline: 0;
+  border-block-start: var(--sb-border-width-hairline) solid var(--sb-color-border);
+}
+.app-agenda__item[aria-current="true"] {
+  box-shadow: inset var(--sb-border-width-strong) 0 0 var(--sb-color-accent);
+}
+.app-agenda__name,
+.app-agenda__short,
+.app-agenda__state {
+  margin: 0;
+  max-inline-size: var(--sb-size-measure-prose);
+}
+.app-agenda__name {
+  font-weight: var(--sb-type-body-strong-weight);
+}
+.app-agenda__state {
+  font: var(--sb-type-caption);
+  letter-spacing: var(--sb-type-caption-tracking);
+}
+.app-agenda__fields {
+  display: grid;
+  gap: var(--sb-space-2);
+  max-inline-size: var(--sb-size-measure-prose);
+}
+.app-agenda__keys {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--sb-space-1);
+}
+.app-agenda__add {
+  display: grid;
+  justify-items: start;
+  gap: var(--sb-space-1);
+}
+.app-agenda__add .sb-field__help {
+  margin: 0;
+}
+/* the methods on the start (stage M7): by purpose, each with its name and short description */
+.app-landing-methods__list {
+  display: grid;
+  gap: var(--sb-space-3);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.app-landing-methods__name,
+.app-landing-methods__short {
+  margin: 0;
+}
+.app-landing-methods__name {
+  font-weight: var(--sb-type-body-strong-weight);
+}
+.app-landing-methods__credit {
+  margin-block-start: var(--sb-space-8);
+}
 /* the wall's step at the top of the state: the step and the one after it as a label above the large sentence, in
    the room the state's padding had, so the state is no taller for it. The method with its short description stands
    at the head of the people's column as a quiet caption */
@@ -1070,6 +1153,13 @@
   padding-block-start: var(--sb-space-2);
 }
 /* what to do now in the method's words (stage M5): under the step's name, a sentence of the body */
+/* the prompt of the method the wall is in (stage M7): what it asks, above what to do now */
+.app-state__prompt {
+  margin: 0 0 var(--sb-space-1);
+  max-inline-size: var(--sb-size-measure-prose);
+  font-weight: var(--sb-type-body-strong-weight);
+  text-wrap: pretty;
+}
 .app-state__hint {
   margin: 0 0 var(--sb-space-2);
   max-inline-size: var(--sb-size-measure-prose);

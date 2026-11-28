@@ -19,27 +19,35 @@ import { estimateUnitSchema } from "./vote.js";
 // of the steps, not a reference to the catalogue, so a deploy that changes a method does not shift the steps of a
 // wall that runs. The words stay keys (methods/texts.ts).
 //
-// Stage M1: one method a wall (PLAN-METHODEN.md 7, question 7); the request already has the shape of the agenda of
-// several methods that M7 brings.
+// Stage M1: one method a wall (PLAN-METHODEN.md 7, question 7); the request already had the shape of the agenda of
+// several methods. Stage M7 runs several, one after the other on the same wall (up to MAX_AGENDA_ITEMS), each with an
+// optional prompt of its own (the wall's question where it has none); the moderation may change the items the wall
+// has not reached (`decideAgendaSet`), never a step it has reached.
 
-/** How many methods an agenda may name. One in M1; M7 raises it. */
-export const MAX_AGENDA_ITEMS = 1;
+/** How many methods an agenda may name (stage M7). */
+export const MAX_AGENDA_ITEMS = 8;
+/** The longest prompt of an agenda item: as long as a wall's question. */
+export const PROMPT_MAX = 140;
 
-/** What `POST /api/walls` may ask for: the methods, in order. `unit`: what the estimates of a method that estimates
- *  count („Tage“, „€“), as the moderation typed it on `/neu` (stage M3); it goes into the vote of every step of the
- *  method that estimates, and means nothing to a method without one. `language` (stage M6): the language of the
- *  moderation's browser, for the titles of the fields a method begins with (`Method.fields`, „Annahmen prüfen“); the
- *  wall stores the titles as text, not the language. Left out: German. */
+/** The prompt of an agenda item: what its method asks, where it is not the wall's question (stage M7). */
+export const promptSchema = z.string().check(z.trim(), z.minLength(1), z.maxLength(PROMPT_MAX));
+
+/** One method of what `POST /api/walls` may ask for (and `admin.agenda.set`, stage M7). `unit`: what the estimates
+ *  of a method that estimates count („Tage“, „€“), as the moderation typed it on `/neu` (stage M3); it goes into the
+ *  vote of every step of the method that estimates, and means nothing to a method without one. `language` (stage
+ *  M6): the language of the moderation's browser, for the titles of the fields a method begins with (`Method.fields`,
+ *  „Annahmen prüfen“). Left out: German. `prompt` (stage M7): what this method asks; left out, the wall's question. */
+export const agendaItemRequestSchema = z.strictObject({
+  methodId: methodIdSchema,
+  unit: z.optional(estimateUnitSchema),
+  language: z.optional(z.enum(["de", "en"])),
+  prompt: z.optional(promptSchema),
+});
+export type AgendaItemRequest = z.infer<typeof agendaItemRequestSchema>;
+
+/** What `POST /api/walls` may ask for: the methods, in order. */
 export const agendaRequestSchema = z.strictObject({
-  items: z
-    .array(
-      z.strictObject({
-        methodId: methodIdSchema,
-        unit: z.optional(estimateUnitSchema),
-        language: z.optional(z.enum(["de", "en"])),
-      }),
-    )
-    .check(z.minLength(1), z.maxLength(MAX_AGENDA_ITEMS)),
+  items: z.array(agendaItemRequestSchema).check(z.minLength(1), z.maxLength(MAX_AGENDA_ITEMS)),
 });
 export type AgendaRequest = z.infer<typeof agendaRequestSchema>;
 
@@ -47,25 +55,51 @@ export type AgendaRequest = z.infer<typeof agendaRequestSchema>;
 export const resolvedStepSchema = z.extend(stepSchema, { item: z.int().check(z.minimum(0)) });
 export type ResolvedStep = z.infer<typeof resolvedStepSchema>;
 
+/** An item of a wall's agenda as it stores it: which method, in which version; its prompt, where it has one (stage
+ *  M7); and, for a method that begins with fixed fields, the language of their titles, so that the fields of an item
+ *  after the first can be made when the wall reaches it (stage M7). */
+export const resolvedItemSchema = z.object({
+  methodId: methodIdSchema,
+  version: z.int(),
+  prompt: z.optional(promptSchema),
+  language: z.optional(z.enum(["de", "en"])),
+});
+export type ResolvedItem = z.infer<typeof resolvedItemSchema>;
+
 /** A wall's agenda as it stores it and sends it in every `sync`: which methods, in which version, and their steps. */
 export const resolvedAgendaSchema = z.object({
-  items: z.array(z.object({ methodId: methodIdSchema, version: z.int() })).check(z.minLength(1), z.maxLength(8)),
+  items: z.array(resolvedItemSchema).check(z.minLength(1), z.maxLength(MAX_AGENDA_ITEMS)),
   steps: z.array(resolvedStepSchema).check(z.minLength(1), z.maxLength(MAX_STEPS)),
 });
 export type ResolvedAgenda = z.infer<typeof resolvedAgendaSchema>;
 
+/** The items a request asks for, resolved against the catalogue, numbered from `first` on: every method's steps, in
+ *  order, each with the item it belongs to. */
+function resolveItems(
+  items: readonly AgendaItemRequest[],
+  first: number,
+): { items: ResolvedItem[]; steps: ResolvedStep[] } {
+  return {
+    items: items.map(({ methodId, prompt, language }) => ({
+      methodId,
+      version: CATALOGUE[methodId].version,
+      ...(prompt === undefined ? {} : { prompt }),
+      ...(language !== undefined && CATALOGUE[methodId].fields !== undefined ? { language } : {}),
+    })),
+    steps: items.flatMap(({ methodId, unit }, at) =>
+      CATALOGUE[methodId].steps.map((step): ResolvedStep => ({
+        ...step,
+        ...(step.vote?.kind === "estimate" && unit !== undefined ? { vote: { ...step.vote, unit } } : {}),
+        item: first + at,
+      })),
+    ),
+  };
+}
+
 /** The agenda a request asks for, resolved against the catalogue: every method's steps, in order, each with the
  *  item it belongs to. */
 export function resolveAgenda(request: AgendaRequest): ResolvedAgenda {
-  const items = request.items.map(({ methodId }) => ({ methodId, version: CATALOGUE[methodId].version }));
-  const steps = request.items.flatMap(({ methodId, unit }, item) =>
-    CATALOGUE[methodId].steps.map((step): ResolvedStep => ({
-      ...step,
-      ...(step.vote?.kind === "estimate" && unit !== undefined ? { vote: { ...step.vote, unit } } : {}),
-      item,
-    })),
-  );
-  return { items, steps };
+  return resolveItems(request.items, 0);
 }
 
 /** The agenda of one method. */
@@ -78,6 +112,104 @@ export function agendaOf(methodId: MethodId): ResolvedAgenda {
 export function agendaFor(request: { hidden: boolean; agenda?: AgendaRequest }): ResolvedAgenda {
   if (request.agenda !== undefined) return resolveAgenda(request.agenda);
   return agendaOf(request.hidden ? DEFAULT_METHOD : "free");
+}
+
+// ───────────────────────── items (stage M7) ─────────────────────────
+
+/** The steps of agenda item `item`: from its first step to the one after its last (`end`, exclusive). Both -1 where
+ *  the agenda has no such item. */
+export function itemSpan(agenda: Pick<ResolvedAgenda, "steps">, item: number): { from: number; end: number } {
+  const from = agenda.steps.findIndex((step) => step.item === item);
+  if (from < 0) return { from: -1, end: -1 };
+  let end = from;
+  while (end < agenda.steps.length && agenda.steps[end]?.item === item) end += 1;
+  return { from, end };
+}
+
+/** The agenda item a step belongs to. */
+export function itemOfStep(agenda: Pick<ResolvedAgenda, "steps">, step: number): number {
+  return agenda.steps[step]?.item ?? 0;
+}
+
+/** What the method of step `step` asks: its item's prompt, else the wall's question. */
+export function promptOf(agenda: ResolvedAgenda, step: number, question: string): string {
+  return agenda.items[itemOfStep(agenda, step)]?.prompt ?? question;
+}
+
+/** How many items a wall that has reached step `reach` has begun: every item whose first step is reached. They never
+ *  change again (`decideAgendaSet`). */
+export function reachedItems(agenda: ResolvedAgenda, reach: number): number {
+  return agenda.items.filter((_, item) => {
+    const { from } = itemSpan(agenda, item);
+    return from >= 0 && from <= reach;
+  }).length;
+}
+
+/** The items of an agenda as a request would name them (stage M7): what the moderation edits, and what a request is
+ *  compared with. The unit is the one the method's estimates carry. */
+export function requestOf(agenda: ResolvedAgenda): AgendaItemRequest[] {
+  return agenda.items.map((item, at) => {
+    const unit = agenda.steps.find((step) => step.item === at && step.vote?.kind === "estimate")?.vote;
+    return {
+      methodId: item.methodId,
+      ...(unit?.kind === "estimate" && unit.unit !== null && unit.unit !== undefined ? { unit: unit.unit } : {}),
+      ...(item.language === undefined ? {} : { language: item.language }),
+      ...(item.prompt === undefined ? {} : { prompt: item.prompt }),
+    };
+  });
+}
+
+/** Whether two items name the same method with the same prompt and unit (the language of a field's title is the
+ *  browser's, and changes nothing once the fields are made). */
+function sameItem(a: AgendaItemRequest, b: AgendaItemRequest): boolean {
+  return (
+    a.methodId === b.methodId && (a.prompt ?? null) === (b.prompt ?? null) && (a.unit ?? null) === (b.unit ?? null)
+  );
+}
+
+export type AgendaDecision =
+  | { kind: "refused"; code: "NOT_ADMIN" | "INVALID" | "STALE" }
+  /** The agenda says so already: the command sent a second time. */
+  | { kind: "unchanged" }
+  /** The agenda after the change, and the steps whose moving on by itself the moderation switched off that still
+   *  stand (`Flow.manual`): those of the items that were replaced fall away. */
+  | { kind: "changed"; agenda: ResolvedAgenda; manual: number[] };
+
+/** What the moderation's `admin.agenda.set` (stage M7) makes of a wall's agenda: `items` is the whole agenda as the
+ *  moderation wants it. The items the wall has begun (`reachedItems`) must stand in it first, as they are: a step
+ *  that was reached never changes. A command that names them otherwise was made for an agenda the wall has left
+ *  (`STALE`): the wall reached an item meanwhile, or somebody else changed it. The items after them are the
+ *  moderation's to add, remove and reorder; they are resolved against the catalogue anew, and the agenda must run
+ *  (`checkAgenda`) and fit (MAX_AGENDA_ITEMS, MAX_STEPS), else `INVALID`. */
+export function decideAgendaSet(
+  agenda: ResolvedAgenda,
+  flow: { reach: number; manual?: readonly number[] },
+  items: readonly AgendaItemRequest[],
+  by: { role: string },
+): AgendaDecision {
+  if (by.role !== "admin") return { kind: "refused", code: "NOT_ADMIN" };
+  if (items.length === 0 || items.length > MAX_AGENDA_ITEMS) return { kind: "refused", code: "INVALID" };
+  const fixed = reachedItems(agenda, flow.reach);
+  const stored = requestOf(agenda);
+  if (
+    items.length < fixed ||
+    stored.slice(0, fixed).some((item, at) => !sameItem(item, items[at] as AgendaItemRequest))
+  ) {
+    return { kind: "refused", code: "STALE" };
+  }
+  const wanted = items.slice(fixed);
+  const kept = stored.slice(fixed);
+  if (wanted.length === kept.length && wanted.every((item, at) => sameItem(item, kept[at] as AgendaItemRequest))) {
+    return { kind: "unchanged" };
+  }
+  const tail = resolveItems(wanted, fixed);
+  const next: ResolvedAgenda = {
+    items: [...agenda.items.slice(0, fixed), ...tail.items],
+    steps: [...agenda.steps.filter((step) => step.item < fixed), ...tail.steps],
+  };
+  if (next.steps.length > MAX_STEPS || checkAgenda(next).length > 0) return { kind: "refused", code: "INVALID" };
+  const end = itemSpan(agenda, fixed - 1).end;
+  return { kind: "changed", agenda: next, manual: (flow.manual ?? []).filter((step) => step < end) };
 }
 
 /** The method a step belongs to. */
@@ -200,10 +332,13 @@ export function startsWriting(
  *  Ziel und Daten“, the reasons of „Scheitern vorwegdenken“ after the plan was presented), or where notes are
  *  actions. Stage M6: also where notes are of another kind than ideas and the reasons beside an estimate (criteria,
  *  decisions, goals, results), and where a step takes its options or criteria from the notes of certain steps. Every
- *  method before stage M5 keeps none: every note of it counts from step 0, as it always did. */
-export function keepsSteps(steps: readonly Step[]): boolean {
+ *  method before stage M5 keeps none: every note of it counts from step 0, as it always did. Stage M7: an agenda of
+ *  more than one method keeps them always, so that each note belongs to the method it was written in (the export
+ *  lists it there) and the next method's writing begins a round of its own. */
+export function keepsSteps(steps: readonly (Step & { item?: number })[]): boolean {
   return steps.some(
     (step, at) =>
+      (step.item ?? 0) > 0 ||
       (step.noteKind !== undefined && step.noteKind !== "reason" && step.noteKind !== "idea") ||
       step.optionsFrom !== undefined ||
       step.criteriaFrom !== undefined ||
@@ -269,8 +404,10 @@ const FIELD_GAP = 64;
  *  no canvas of anybody else's. */
 const FIELDS_PER_ROW = 3;
 
-/** The frames of a method's fixed fields, in their order: three in a row, the rest centred in a row below. */
-export function fieldBoxes(count: number): Array<{ x: number; y: number; w: number; h: number }> {
+/** The frames of a method's fixed fields, in their order: three in a row, the rest centred in a row below. `top`:
+ *  where the first row begins; below what the wall holds already, for a method that is not the agenda's first (stage
+ *  M7, `fieldsTop`). */
+export function fieldBoxes(count: number, top = 0): Array<{ x: number; y: number; w: number; h: number }> {
   const boxes: Array<{ x: number; y: number; w: number; h: number }> = [];
   for (let at = 0; at < count; at += 1) {
     const row = Math.floor(at / FIELDS_PER_ROW);
@@ -279,12 +416,23 @@ export function fieldBoxes(count: number): Array<{ x: number; y: number; w: numb
     const col = at % FIELDS_PER_ROW;
     boxes.push({
       x: Math.round(offset + col * (FIELD_WIDTH + FIELD_GAP)),
-      y: row * (FIELD_HEIGHT + FIELD_GAP),
+      y: top + row * (FIELD_HEIGHT + FIELD_GAP),
       w: FIELD_WIDTH,
       h: FIELD_HEIGHT,
     });
   }
   return boxes;
+}
+
+/** Where the fields of a method after the agenda's first begin (stage M7): a gap below the lowest of what the wall
+ *  holds, its groups and its notes (`noteHeight`, the height of a note as drawn), so they cover nothing. */
+export function fieldsTop(
+  groups: ReadonlyArray<{ y: number; h: number }>,
+  notes: ReadonlyArray<{ y: number }>,
+  noteHeight: number,
+): number {
+  const bottoms = [...groups.map((group) => group.y + group.h), ...notes.map((note) => note.y + noteHeight)];
+  return bottoms.length === 0 ? 0 : Math.max(...bottoms) + 2 * FIELD_GAP;
 }
 
 // ───────────────────────── checks ─────────────────────────

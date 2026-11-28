@@ -76,14 +76,19 @@
   "landing": {
     "tab": "Alle schreiben Zettel, eine KI ordnet sie",
     "claim": "Alle schreiben Zettel, eine KI ordnet sie.",
-    "lede": "Eine Person legt eine Wand mit einer Frage an und teilt den Link. Alle schreiben ihre Ideen auf Zettel, erst verdeckt, dann für alle sichtbar. Auf Knopfdruck schlägt eine KI Gruppen mit Überschriften vor. Kostenlos, ohne Konto.",
+    "lede": "Eine Person legt eine Wand mit einer Frage an, wählt eine geführte Methode oder mehrere nacheinander und teilt den Link. Alle schreiben erst verdeckt, dann für alle sichtbar, und die App führt durch die Schritte bis zum Ergebnis. Auf Knopfdruck schlägt eine KI Gruppen mit Überschriften vor. Kostenlos, ohne Konto.",
     "ctaHint": "Kein Konto nötig. Du stellst eine Frage und teilst den Link.",
-    "description": "Eine Wand ist eine Frage und eine Fläche für Zettel. Erst schreiben alle für sich, ohne die Zettel der anderen zu lesen. Dann deckt die Moderation auf und lässt die KI Gruppen vorschlagen. Sie sieht den Vorschlag, bevor er gilt, und kann ihn zurücknehmen.",
+    "description": "Eine Wand ist eine Frage und eine Fläche für Zettel. Eine geführte Methode gibt ihr den Ablauf: Erst schreiben alle für sich, ohne die Zettel der anderen zu lesen; dann deckt die Moderation auf, und ihr ordnet, stimmt verdeckt ab oder haltet fest, was ihr entscheidet. Die KI schlägt auf Wunsch Gruppen vor; die Moderation sieht den Vorschlag, bevor er gilt, und kann ihn zurücknehmen.",
     "trust": {
       "account": "Kein Konto, auch nicht für die Moderation",
       "where": "Gespeichert in der EU",
       "ai": "Die KI speichert laut Cloudflare nichts und lernt nicht daraus",
       "tracking": "Keine Analyse-Skripte, keine Cookies"
+    },
+    "methods": {
+      "title": "Geführte Methoden",
+      "intro": "Eine Methode gibt der Wand einen Ablauf: Schritte mit Zeit, wer mit wem arbeitet und was wann sichtbar wird. Erst schreibt jede Person allein und verdeckt, dann arbeitet ihr gemeinsam; so lenkt die erste Meinung im Raum nicht alle anderen. Mehrere Methoden laufen auf Wunsch nacheinander auf einer Wand.",
+      "attribution": "{{methods}}: {{credit}}"
     },
     "preview": {
       "label": "Beispiel: eine geordnete Wand",
@@ -97,7 +102,7 @@
       "note3": "Der Build dauert zu lange",
       "note4": "Zwei Ticket-Systeme nebeneinander"
     },
-    "howTitle": "So läuft ein Brainstorming",
+    "howTitle": "So läuft ein Workshop",
     "howRoles": "Eine Person moderiert, alle anderen kommen über den Link dazu.",
     "steps": {
       "open": {
@@ -105,8 +110,8 @@
         "text": "Du legst eine Wand mit deiner Frage an und teilst den Link oder seinen QR-Code. Wer ihn öffnet, gibt einen Vornamen oder ein Pseudonym ein."
       },
       "write": {
-        "title": "2. Schreiben, dann aufdecken",
-        "text": "Alle schreiben ihre Zettel, zunächst verdeckt: Niemand liest mit, bis die Moderation aufdeckt."
+        "title": "2. Der Methode folgen",
+        "text": "Die App führt Schritt für Schritt: allein und verdeckt schreiben, aufdecken, zu zweit oder in Kleingruppen arbeiten, verdeckt abstimmen. Niemand liest mit, bis die Moderation aufdeckt."
       },
       "arrange": {
         "title": "3. Ordnen lassen",
@@ -223,6 +228,28 @@
     "source": "Quelle: liberatingstructures.com",
     "licence": "Lizenz CC BY-SA 4.0"
   },
+  "agenda": {
+    "heading": "Ablauf",
+    "method": "Methode {{n}} von {{of}}",
+    "begun": "Begonnen: lässt sich nicht mehr ändern.",
+    "begunPrompt": "Begonnen, mit der Frage „{{prompt}}“: lässt sich nicht mehr ändern.",
+    "choosing": "Wird unten gewählt.",
+    "prompt": "Frage für Methode {{n}}",
+    "promptLabel": "Frage der Methode",
+    "promptHelp": "Leer lassen: Es gilt die Frage der Wand.",
+    "unit": "Einheit der Schätzung, Methode {{n}}",
+    "choose": "Methode {{n}} wählen: {{name}}",
+    "chooseWord": "Methode wählen",
+    "up": "Nach oben: {{n}}. {{name}}",
+    "down": "Nach unten: {{n}}. {{name}}",
+    "remove": "Entfernen: {{n}}. {{name}}",
+    "add": "Weitere Methode anhängen",
+    "addHint": "Bis zu {{max}} Methoden laufen nacheinander auf derselben Wand.",
+    "full": "Höchstens {{max}} Methoden: Entferne eine, um eine andere anzuhängen.",
+    "saidMoved": "{{name}} ist jetzt Methode {{n}} von {{of}}.",
+    "saidRemoved": "{{name}} ist entfernt.",
+    "saidAdded": "Methode {{n}} ist angehängt. Wähle sie unten aus."
+  },
   "join": {
     "title": "Beitreten",
     "joining": "Beitritt läuft …",
@@ -310,7 +337,12 @@
       "said": "Schritt {{n}} von {{of}}: {{name}}.",
       "forward": "Weiter: {{name}}",
       "back": "Zurück: {{name}}",
-      "method": "{{name}}: {{short}}"
+      "method": "{{name}}: {{short}}",
+      "itemNext": "Methode {{item}} von {{items}} · {{method}} · Schritt {{n}} von {{of}}: {{name}} · danach {{next}}",
+      "itemLast": "Methode {{item}} von {{items}} · {{method}} · Schritt {{n}} von {{of}}: {{name}} · der letzte Schritt",
+      "nextMethod": "Methode {{n}}: {{name}}",
+      "saidItem": "Methode {{item}} von {{items}}: {{method}}. {{short}} Schritt {{n}} von {{of}}: {{name}}.",
+      "prompt": "Frage dieser Methode: {{prompt}}"
     },
     "revealFinal": "Das lässt sich nicht rückgängig machen.",
     "revealedNone": "Aufgedeckt. Auf der Wand liegt noch kein Zettel.",
@@ -453,6 +485,13 @@
       "role": "Eure Rolle: {{role}}. {{hint}}",
       "areaRole": "Team {{n}} · {{role}}",
       "areaOwnRole": "Team {{n}} · {{role}} · dein Team"
+    },
+    "agenda": {
+      "open": "Ablauf",
+      "title": "Ablauf",
+      "text": "Methoden, die noch nicht begonnen haben, kannst du anhängen, entfernen und verschieben. Begonnene bleiben, wie sie sind.",
+      "save": "Übernehmen",
+      "saved": "Der Ablauf ist geändert."
     },
     "teams": {
       "open": "Teams",
@@ -703,6 +742,8 @@
     "limitGroups": "Mehr als {{max}}\u00a0Gruppen passen nicht auf eine Wand. Lösch eine, dann ist wieder Platz.",
     "conflict": "Der Zettel ließ sich nicht anlegen. Schreib ihn noch mal.",
     "invalid": "Die Wand hat die Änderung nicht angenommen. Versuch es noch mal.",
+    "invalidAgenda": "Diesen Ablauf nimmt die Wand nicht an: höchstens 8 Methoden. Versuch es noch mal.",
+    "staleAgenda": "Die Wand hatte im selben Moment eine Methode begonnen oder der Ablauf war schon geändert: Deine Änderung wurde nicht übernommen. Unter „Ablauf“ steht er, wie er jetzt ist.",
     "phaseGroups": "Gruppen gibt es erst, wenn die Zettel aufgedeckt sind.",
     "phaseClock": "Die Zettel sind schon aufgedeckt: Die Uhr gibt es nur, solange verdeckt geschrieben wird.",
     "staleClock": "Die Uhr wurde im selben Moment schon anders gestellt: Dein Schritt wurde nicht übernommen. Sie zeigt, was jetzt gilt.",

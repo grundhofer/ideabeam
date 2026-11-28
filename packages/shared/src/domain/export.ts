@@ -57,6 +57,10 @@ type VoteKind = RankingResult["kind"];
 //    objections still open and the review date; the measurable results it recorded, as a nested list under the goal
 //    each belongs to, with target, owner and review date; and, in a step whose teams have roles, the notes of each
 //    team under its role (from the team's area, as the list has them), never who was in it.
+//  - **One section per method of an agenda of several** (stage M7): `## 1. <name>` with the method's short
+//    description, its attribution, its prompt where it has one, and below it, one heading level down, what the
+//    method made: its counted votes, the groups whose earliest note was written in it, its notes by step and its
+//    records. A wall of one method keeps the file as it was.
 //  - **The fixed words in the language of whoever asks** (`de` or `en`, as „Ordnen“ takes it: a wall has no
 //    language of its own). They stand in the table below and nowhere else; the Worker writes the file, so they
 //    cannot come from the app's string tables.
@@ -70,7 +74,10 @@ export interface ExportInput {
   sight: Seen;
   /** The wall's steps as it stores them (its agenda): the names of the steps the notes were written in, and which take
    *  actions. Left out: the catalogue's steps of the method. */
-  steps?: readonly Step[];
+  steps?: readonly (Step & { item?: number })[];
+  /** The methods of the wall's agenda with their prompts (stage M7). With more than one, the file has a section for
+   *  each, and `methodId` is not read. */
+  items?: ReadonlyArray<{ methodId: MethodId; prompt?: string | undefined }>;
   /** Every note of the wall, with its writer: what of it goes into the file is decided here, by `notesFor`. */
   notes: readonly StoredNote[];
   groups: readonly Group[];
@@ -103,6 +110,8 @@ const COUNTED_EN: Record<VoteKind, (limit: number) => string> = {
 
 const WORDS = {
   de: {
+    item: (n: number, name: string) => `${n}. ${name}`,
+    prompt: "Frage",
     consent: "Zustimmungsrunde",
     answered: (n: number) => `Verdeckt abgegeben, zugleich ausgezählt: ${n === 1 ? "1 Antwort" : `${n} Antworten`}.`,
     agree: (n: number) => `Zustimmung: ${n}`,
@@ -176,6 +185,8 @@ const WORDS = {
             : `${points} Punkte`,
   },
   en: {
+    item: (n: number, name: string) => `${n}. ${name}`,
+    prompt: "Question",
     consent: "Consent round",
     answered: (n: number) => `Answered in secret, counted at once: ${n === 1 ? "1 answer" : `${n} answers`}.`,
     agree: (n: number) => `Agree: ${n}`,
@@ -372,6 +383,9 @@ function areasOf(teams: Teams | null | undefined, step: number): readonly TeamAr
 
 /** The wall as one person may see it, as a Markdown document. */
 export function wallMarkdown(input: ExportInput): string {
+  if (input.items !== undefined && input.items.length > 1 && input.steps !== undefined) {
+    return agendaMarkdown(input, input.items, input.steps);
+  }
   const words = WORDS[input.language];
   const view = notesFor(input.notes, input.sight, input.viewer, input.teams);
   const groups = [...input.groups].sort((a, b) => a.ord - b.ord || (a.id < b.id ? -1 : a.id > b.id ? 1 : 0));
@@ -558,6 +572,169 @@ export function wallMarkdown(input: ExportInput): string {
     for (const text of loose) lines.push(`- ${escapeMarkdown(text)}`);
     lines.push("");
   }
+  return lines.join("\n").trimEnd() + "\n";
+}
+
+/** The wall of an agenda of several methods as one person may see it (stage M7): the title, the date and what is
+ *  hidden, then a section for each method with what it made. Everything a method made is found by the step it belongs
+ *  to: a result by its step, a note by the step it was written in, a group by the earliest note in it (a group without
+ *  notes stands with the last method that has notes, or the first). */
+function agendaMarkdown(
+  input: ExportInput,
+  items: ReadonlyArray<{ methodId: MethodId; prompt?: string | undefined }>,
+  steps: readonly (Step & { item?: number })[],
+): string {
+  const language = input.language;
+  const words = WORDS[language];
+  const view = notesFor(input.notes, input.sight, input.viewer, input.teams);
+  const groups = [...input.groups].sort((a, b) => a.ord - b.ord || (a.id < b.id ? -1 : a.id > b.id ? 1 : 0));
+  const notes = [...view.notes].sort((a, b) => a.createdAt - b.createdAt || (a.id < b.id ? -1 : a.id > b.id ? 1 : 0));
+  const known = new Set(groups.map((group) => group.id));
+  const itemOf = (step: number) => steps[step]?.item ?? 0;
+  const methodAt = (step: number) => items[itemOf(step)]?.methodId ?? input.methodId;
+  const firstOf = (item: number) =>
+    Math.max(
+      0,
+      steps.findIndex((step) => (step.item ?? 0) === item),
+    );
+  const writing = typeof input.sight === "string" ? input.sight !== "all" : view.hidden > 0;
+  const lines: string[] = [
+    `# ${escapeMarkdown(input.question)}`,
+    "",
+    `_${words.stand(exportDate(input.at, language))}_`,
+    "",
+  ];
+  if (writing && view.hidden > 0) {
+    const said =
+      typeof input.sight !== "string"
+        ? words.hiddenSome(view.hidden)
+        : input.sight === "team"
+          ? words.hiddenTeam(view.hidden)
+          : words.hidden(view.hidden);
+    lines.push(`_${said}_`, "");
+  }
+  if (notes.length === 0 && groups.length === 0) lines.push(`_${writing ? words.noneOwn : words.none}_`, "");
+  // a group belongs to the method of its earliest note; one without notes to the last method with notes
+  const groupItem = new Map<string, number>();
+  for (const note of notes) {
+    if (note.groupId === null || !known.has(note.groupId) || groupItem.has(note.groupId)) continue;
+    groupItem.set(note.groupId, itemOf(note.step ?? 0));
+  }
+  const lastWithNotes = Math.max(0, ...notes.map((note) => itemOf(note.step ?? 0)));
+  const results = input.results ?? [];
+  const counts = teamCounts(input.teams);
+  items.forEach((item, at) => {
+    const method = methodTexts(language, item.methodId);
+    lines.push(`## ${words.item(at + 1, escapeMarkdown(method.name))}`, "", escapeMarkdown(method.short), "");
+    const attribution = methodAttribution(language, item.methodId);
+    if (attribution !== null) lines.push(`_${escapeMarkdown(`${attribution.credit} ${attribution.licence}`)}_`, "");
+    if (item.prompt !== undefined) lines.push(`**${words.prompt}:** ${escapeMarkdown(item.prompt)}`, "");
+    const first = firstOf(at);
+    const mine = (step: number) => itemOf(step) === at;
+    const teamParts = counts
+      .filter(({ step }) => mine(step))
+      .map(({ step, teams }) => words.teamCount(stepName(language, item.methodId, steps[step]?.key ?? ""), teams));
+    if (teamParts.length > 0) lines.push(`_${escapeMarkdown(words.teams(teamParts.join("; ")))}_`, "");
+    // the section's body, one heading level below the method's
+    const body: string[] = [];
+    const own = results.filter((result) => mine(result.step));
+    const rankings = own.filter(
+      (result): result is RankingResult => result.kind !== "estimate" && result.kind !== "consent",
+    );
+    let rounds = 0;
+    let before: EstimateSummary | null = null;
+    for (const result of own) {
+      if (result.kind === "estimate") {
+        rounds += 1;
+        body.push(...estimateLines(result, rounds, before, language));
+        before = result.summary;
+        continue;
+      }
+      if (result.kind === "consent") {
+        body.push(...consentLines(result, language));
+        continue;
+      }
+      body.push(`## ${rankings.length === 1 ? words.result : words.resultOf(result.step - first + 1)}`, "");
+      body.push(`_${words.counted(result.kind, result.limit, result.voters)}_`, "");
+      const criteria = criteriaWords(result, steps, item.methodId, language);
+      if (result.kind === "score" && criteria.length > 0) {
+        body.push(...scoreTable(result, criteria, language), "");
+        continue;
+      }
+      for (const row of result.rows) {
+        const label = row.label.trim() === "" ? words.untitled : escapeMarkdown(row.label);
+        body.push(`- ${words.place(row.rank, label, words.amount(result.kind, row.points, row.by))}`);
+      }
+      body.push("");
+    }
+    for (const group of groups) {
+      if ((groupItem.get(group.id) ?? lastWithNotes) !== at) continue;
+      const title = group.title.trim() === "" ? words.untitled : escapeMarkdown(group.title);
+      body.push(`## ${title}`, "");
+      const texts = notes.filter((note) => note.groupId === group.id).map((note) => note.text);
+      if (texts.length === 0) body.push(`_${words.emptyGroup}_`);
+      for (const text of texts) body.push(`- ${escapeMarkdown(text)}`);
+      body.push("");
+    }
+    const ofKind = (kind: Step["noteKind"]) =>
+      notes.filter(
+        (note) => note.action !== undefined && mine(note.step ?? 0) && steps[note.step ?? 0]?.noteKind === kind,
+      );
+    const decided = ofKind("decision");
+    const measured = ofKind("result");
+    const agreed = ofKind("action");
+    const recorded = new Set([...decided, ...measured, ...agreed]);
+    const loose = notes.filter(
+      (note) => mine(note.step ?? 0) && !recorded.has(note) && (note.groupId === null || !known.has(note.groupId)),
+    );
+    const bySteps = new Map<number, string[]>();
+    for (const note of loose) bySteps.set(note.step ?? 0, [...(bySteps.get(note.step ?? 0) ?? []), note.text]);
+    for (const [step, texts] of [...bySteps.entries()].sort((a, b) => a[0] - b[0])) {
+      body.push(`## ${escapeMarkdown(stepName(language, methodAt(step), steps[step]?.key ?? ""))}`, "");
+      for (const text of texts) body.push(`- ${escapeMarkdown(text)}`);
+      body.push("");
+    }
+    if (decided.length > 0) {
+      body.push(`## ${words.decisions}`, "");
+      for (const note of decided) {
+        body.push(`- ${escapeMarkdown(note.text)}`, `  - ${words.decidedBy}`);
+        if (note.action?.why) body.push(`  - ${words.why}: ${escapeMarkdown(note.action.why)}`);
+        if (note.action?.open) body.push(`  - ${words.open}: ${escapeMarkdown(note.action.open)}`);
+        if (note.action?.due) body.push(`  - ${words.review}: ${escapeMarkdown(note.action.due)}`);
+      }
+      body.push("");
+    }
+    if (measured.length > 0) {
+      body.push(`## ${words.goals}`, "");
+      const labels = new Map<string, string>();
+      for (const result of rankings)
+        for (const row of result.rows) if (!labels.has(row.id)) labels.set(row.id, row.label);
+      for (const note of measured) {
+        const goal = note.action?.goal;
+        const label = goal === undefined || goal === null ? undefined : labels.get(goal);
+        const parts = [
+          ...(label === undefined ? [] : [words.goal(label.trim() === "" ? words.untitled : escapeMarkdown(label))]),
+          ...(note.action?.target ? [`${words.target}: ${escapeMarkdown(note.action.target)}`] : []),
+          ...(note.action?.who ? [`${words.owner}: ${escapeMarkdown(note.action.who)}`] : []),
+          ...(note.action?.due ? [`${words.review}: ${escapeMarkdown(note.action.due)}`] : []),
+        ];
+        body.push(`- [ ] ${escapeMarkdown(note.text)}${parts.length > 0 ? ` — ${parts.join(", ")}` : ""}`);
+      }
+      body.push("");
+    }
+    if (agreed.length > 0) {
+      body.push(`## ${words.agreed}`, "");
+      for (const note of agreed) {
+        const parts = [
+          ...(note.action?.who ? [`${words.who}: ${escapeMarkdown(note.action.who)}`] : []),
+          ...(note.action?.due ? [`${words.due}: ${escapeMarkdown(note.action.due)}`] : []),
+        ];
+        body.push(`- [ ] ${escapeMarkdown(note.text)}${parts.length > 0 ? ` — ${parts.join(", ")}` : ""}`);
+      }
+      body.push("");
+    }
+    lines.push(...body.map((line) => (line.startsWith("## ") ? `#${line}` : line)));
+  });
   return lines.join("\n").trimEnd() + "\n";
 }
 

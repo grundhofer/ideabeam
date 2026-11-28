@@ -32,6 +32,7 @@ import {
   CRITERIA_QUESTION,
   enter,
   enterAdjust,
+  enterAgenda,
   enterConsent,
   enterEstimate,
   enterGoals,
@@ -262,7 +263,24 @@ const screens: Screen[] = [
     prepare: then(
       (page) => page.evaluate(() => localStorage.setItem("sb-lang", "en")),
       (page) => page.reload(),
+      // the guided methods, loaded with their part, in English
+      (page) => expect(page.locator('.app-landing-methods [data-method="free"]')).toContainText("Free wall"),
       (page) => page.locator("details.sb-faq__item").first().locator("summary").click(),
+    ),
+  },
+  {
+    // the guided methods on the start (stage M7): every method with its short description, by purpose, and the
+    // attribution of Liberating Structures. Also at 200 %
+    name: "start-methoden",
+    largeText: true,
+    path: "/",
+    heading: CLAIM,
+    view: view("start"),
+    overlay: null,
+    prepare: then(
+      (page) => page.locator('.app-landing-methods [data-method="free"]').waitFor(),
+      (page) => page.getByRole("heading", { name: "Geführte Methoden" }).scrollIntoViewIfNeeded(),
+      (page) => expect(page.getByTestId("landing-attribution")).toContainText("CC BY-SA 4.0"),
     ),
   },
   {
@@ -340,6 +358,25 @@ const screens: Screen[] = [
       (page) => page.getByRole("radio", { name: "Schätzen – Diskutieren – Schätzen" }).check(),
       (page) => page.fill("#app-f-unit", "Tage"),
       (page) => expect(page.locator("#app-f-unit")).toBeVisible(),
+    ),
+  },
+  {
+    // an agenda of three methods (stage M7): the numbered list above the choice, each item with its short
+    // description, its prompt and its keys; the choice chooses the third. Also at 200 %
+    name: "neu-ablauf",
+    largeText: true,
+    path: "/neu",
+    heading: "Neue Wand",
+    view: view("neu"),
+    overlay: null,
+    prepare: then(
+      (page) => page.fill("#app-f-question", QUESTION),
+      press("Weitere Methode anhängen"),
+      (page) => page.getByRole("radio", { name: "Nutzen und Aufwand" }).check(),
+      press("Weitere Methode anhängen"),
+      (page) => page.getByRole("radio", { name: "Scheitern vorwegdenken" }).check(),
+      (page) => page.getByLabel("Frage für Methode 2").fill("Was packen wir zuerst an?"),
+      (page) => expect(page.locator(".app-agenda__item")).toHaveCount(3),
     ),
   },
   {
@@ -1585,6 +1622,23 @@ const screens: Screen[] = [
       (page) => page.getByRole("button", { name: "Tauschen: Anna" }).click(),
       (page) => expect(page.locator(".app-state__sentence")).toHaveText("Euer Team: 1 Zettel. Ihr seid 2 im Team."),
       (page) => expect(page.locator("#app-dlg-teams")).toContainText("Mit wem tauscht Anna?"),
+    ),
+  },
+  {
+    // an agenda of three methods (stage M7) in its second method: the state says „Methode 2 von 3“ with the method,
+    // the step and the prompt; „Mehr“ → „Ablauf“ open, the two begun without keys, the third with its keys. Also at
+    // 200 %
+    name: "wand-ablauf",
+    largeText: true,
+    path: "/",
+    heading: QUESTION,
+    view: '[data-sb-view="wand"]',
+    overlay: "app-dlg-agenda",
+    prepare: then(
+      (page) => enterAgenda(page),
+      press("Mehr"),
+      item("Ablauf"),
+      (page) => expect(page.locator("#app-dlg-agenda .app-agenda__item")).toHaveCount(3),
     ),
   },
   {

@@ -7,15 +7,21 @@
 // Every claim of the first section is a link to the answer that carries its caveats („Gespeichert in der EU“ is
 // only honest next to the answer that says where the connection ends and where the AI computes). The texts say what
 // v0.1 does as built (stage 5, step B): hidden writing, revealing, grouping by Cloudflare's AI with its caveat, the
-// Markdown file, the QR code. The moderation's own key is not offered while no provider is measured, so they do not
-// name it.
-import { useEffect } from "react";
+// Markdown file, the QR code; since stage M7 of the methods also the guided methods, one or several in a row on one
+// wall, with the section „Geführte Methoden“: every method of the catalogue with its short description
+// (components/LandingMethods.tsx, loaded when the start is drawn, so the start's own files hold no method's words).
+// The moderation's own key is not offered while no provider is measured, so they do not name it.
+import { lazy, Suspense, useEffect } from "react";
 import { useTranslation } from "react-i18next";
 import { Link, useLocation } from "react-router";
 import { MAX_NOTES, MAX_ONLINE, WALL_DAILY_RUNS } from "@ideabeam/shared";
 import { View } from "../components/View";
+import { useLang } from "../i18n";
 import { Icon } from "../sebaro/react/Icon";
 import { useWalls } from "../store/walls";
+
+// the methods' words load with this part, not with the start (tests/worker.spec.ts)
+const LandingMethods = lazy(() => import("../components/LandingMethods"));
 
 const STEPS = ["open", "write", "arrange"] as const;
 const WHY = ["equal", "fast", "data", "languages"] as const;
@@ -71,6 +77,7 @@ function Preview() {
 
 export default function Start() {
   const { t } = useTranslation();
+  const lang = useLang();
   const { hash } = useLocation();
   const [last] = useWalls((state) => state.walls);
 
@@ -136,6 +143,16 @@ export default function Start() {
             </li>
           ))}
         </ol>
+      </section>
+
+      <section className="sb-container sb-section" aria-labelledby="app-h-methods">
+        <h2 className="sb-section__title" id="app-h-methods">
+          {t("landing.methods.title")}
+        </h2>
+        <p className="sb-page-lead__text app-measure">{t("landing.methods.intro")}</p>
+        <Suspense fallback={null}>
+          <LandingMethods lang={lang} />
+        </Suspense>
       </section>
 
       <section className="sb-container sb-section" aria-labelledby="app-h-why">

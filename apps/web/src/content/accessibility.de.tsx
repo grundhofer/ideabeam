@@ -68,6 +68,11 @@ export function AccessibilityDe() {
           Befehlspalette öffnet sich mit Strg+K (auf dem Mac ⌘K).
         </li>
         <li>
+          Mehrere Methoden nacheinander: „Weitere Methode anhängen“ setzt den Fokus in die Auswahl der Methode, deren
+          Pfeiltasten die Methode wählen. Jede Methode im Ablauf hat Tasten „Methode wählen“, „Nach oben“, „Nach unten“
+          und „Entfernen“; nach dem Verschieben bleibt der Fokus auf derselben Taste. Gezogen wird nichts.
+        </li>
+        <li>
           Bedienelemente zeigen den Fokusrahmen von sebaro, dem Designsystem von {app}. Geprüft ist das nicht für jedes
           Element.
         </li>
@@ -162,16 +167,18 @@ export function AccessibilityDe() {
           sich öffnet, mit allen Zetteln in der Ansicht.
         </li>
         <li>
-          Doppelte Schriftgröße (200 %) bei 1440 Pixel Breite, hell, für die Startseite, die Tür einer Wand und die Wand
-          in ihren Abschnitten: kein seitliches Scrollen, kein abgeschnittener Text, axe ohne Befund: bestanden.
+          Doppelte Schriftgröße (200 %) bei 1440 Pixel Breite, hell, für die Startseite (auch mit den geführten
+          Methoden), die Tür einer Wand, „Neue Wand“ mit einem Ablauf aus drei Methoden, die Wand in ihren Abschnitten
+          und ihren Dialog „Ablauf“: kein seitliches Scrollen, kein abgeschnittener Text, axe ohne Befund: bestanden.
         </li>
         <li>
           Tests nur mit der Tastatur: eine Wand anlegen (mit dem Satz am Feld zuerst) und an ihrer Tür beitreten; die
           Wand über den Dialog löschen, mit dem Fokus zurück nach Escape; „Hell oder Dunkel“ und die Sprache im Kopf der
           Seite und im Menü „Mehr“; die Befehlspalette; auf der Fläche einen Zettel schreiben, ändern, bewegen und
           löschen, Gruppen bewegen, in der Größe ändern, umbenennen und löschen, mehrere Zettel auswählen; in der Liste
-          das Menü einer Zeile und „Verschieben nach …“; ordnen, verwerfen, anwenden und zurücknehmen in der Liste:
-          bestanden. Das ist kein Durchgang durch alle Aufgaben.
+          das Menü einer Zeile und „Verschieben nach …“; ordnen, verwerfen, anwenden und zurücknehmen in der Liste;
+          einen Ablauf aus drei Methoden unter „Neue Wand“ zusammenstellen (anhängen, wählen, eine Frage je Methode,
+          verschieben) und die Wand anlegen: bestanden. Das ist kein Durchgang durch alle Aufgaben.
         </li>
         <li>
           Die vier festen Aufgaben von sebaro nur mit der Tastatur: etwas anlegen (eine Wand) bestanden; es nach einer

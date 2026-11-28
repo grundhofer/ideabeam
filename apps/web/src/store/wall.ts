@@ -9,6 +9,8 @@ import {
   generateSessionKey,
   initialWallState,
   PROTOCOL_VERSION,
+  type AgendaCommand,
+  type AgendaItemRequest,
   type AutoCommand,
   type Ballot,
   type BallotCommand,
@@ -36,7 +38,8 @@ export type Refusal = "NAME_TAKEN" | "WALL_FULL";
  *  moderation's step moves (revealing among them), the controls of the writing's clock and counting a vote; and
  *  everybody's ballot, which shows as stored once the wall has stored it (stage M2); the moderation's teams and the
  *  switch of a step's moving on by itself (stage M4). */
-type FlowCommand = StepCommand | ClockCommand | BallotCommand | CountCommand | TeamsCommand | AutoCommand | TurnCommand;
+type FlowCommand =
+  StepCommand | ClockCommand | BallotCommand | CountCommand | TeamsCommand | AutoCommand | TurnCommand | AgendaCommand;
 
 /** A change of this browser that the wall did not take, and so is taken back: the reason, and the kind of command
  *  it was (null: neither a change of the wall's content nor a step of its flow). Beside the wall's own reasons:
@@ -143,6 +146,9 @@ type Live = {
   /** The moderation's „Nächster Zettel“ in a step that reveals by turn (stage M5): made for as many shown notes as
    *  this browser knows. Nothing shows before the wall has said so, to everyone at once. */
   nextTurn(): void;
+  /** The moderation's agenda, whole (stage M7): the methods begun as they are, then those after them as the
+   *  moderation wants them. Nothing shows before the wall has said so, to everyone at once. */
+  setAgenda(items: AgendaItemRequest[]): void;
   /** The reason of the last reject has been read. */
   dismissRejected(): void;
 };
@@ -407,6 +413,9 @@ export const useWall = create<Live>()((set, get) => {
     },
     setAuto(step, on) {
       ask({ type: "admin.step.auto", opId: generateHexId(), step, on });
+    },
+    setAgenda(items) {
+      ask({ type: "admin.agenda.set", opId: generateHexId(), items });
     },
     nextTurn() {
       const { step, turns } = get().state;
