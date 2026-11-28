@@ -1057,6 +1057,40 @@
   font: var(--sb-type-label);
   letter-spacing: var(--sb-type-label-tracking);
 }
+/* From 1024 px the choice on `/neu` (not the one in the dialog „Ablauf“, which keeps its column) leaves the page's
+   one column, which stays as it is above and below it: it takes the width of the site's head, inside its gutter, in
+   the middle of the window as the column stands, and each purpose's rows stand side by side in as many columns as
+   fit. Still flat rows with hairlines, each with its line above it, every row as it is on a phone (its short
+   description always). The width: the window's (100vw, whose scroll bar only takes a
+   few pixels of the gutter), never wider than sebaro's container; a column at least 22 rem (no sebaro token: a rem,
+   so the rows grow with the text; three columns in the container, two at 1024 px) */
+@media (min-width: 64rem) {
+  [data-sb-view="neu"] .app-methods {
+    --app-methods-width: min(
+      calc(100vw - 2 * var(--sb-spacing-gutter-wide)),
+      calc(var(--sb-size-container-max) - 2 * var(--sb-spacing-gutter-wide))
+    );
+    inline-size: var(--app-methods-width);
+    margin-inline: calc((100% - var(--app-methods-width)) / 2);
+  }
+  /* the column's container clips sideways (sebaro.css); the choice reaches past it on purpose and stays inside the
+     window, so the column of `/neu` does not clip */
+  [data-sb-view="neu"] .sb-container {
+    overflow-x: visible;
+  }
+  [data-sb-view="neu"] .app-methods > .app-methods__group > .sb-list {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(min(100%, 22rem), 1fr));
+    column-gap: var(--sb-space-6);
+  }
+  [data-sb-view="neu"] .app-methods .app-method::before {
+    content: "";
+    position: absolute;
+    inset-block-start: 0;
+    inset-inline: 0;
+    border-block-start: var(--sb-border-width-hairline) solid var(--sb-color-border);
+  }
+}
 /* the agenda of several methods (stage M7, components/AgendaBuilder.tsx): above the choice the numbered list, each
    item with its name, its short description, its prompt and its keys in a row; under the choice „Weitere Methode
    anhängen“. Flat rows with hairlines, as every list; the item being chosen carries a bar at its start */
@@ -1215,6 +1249,17 @@
   min-inline-size: 0;
   /* no sebaro token: a reading width for the ballot's rows, a rem, so it grows with the text */
   max-inline-size: 48rem;
+}
+/* in the place of the surface the column stands in the middle of the wall's content, not at its start, where it left
+   the middle of a wide window empty; its rows stay start-aligned in it. The score by criteria (its selects side by
+   side, its table) may be wider, so the table's column heads stay on one line where there is room (no sebaro token:
+   a rem, so it grows with the text) */
+.app-wall > :is(.app-ballot, .app-results) {
+  justify-self: center;
+  inline-size: 100%;
+}
+.app-wall > :is(.app-score, .app-results--table) {
+  max-inline-size: 72rem;
 }
 .app-ballot__left {
   margin: 0 0 var(--sb-space-2);

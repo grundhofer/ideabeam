@@ -149,7 +149,10 @@ export function ScoreResults(props: { result: RankingResult; criteria: readonly 
   const lang = i18n.language;
   const heading = compact ? "app-h-score-side" : "app-h-score-result";
   return (
-    <section className={compact ? "app-results app-results--side" : "app-results"} aria-labelledby={heading}>
+    <section
+      className={compact ? "app-results app-results--side" : "app-results app-results--table"}
+      aria-labelledby={heading}
+    >
       <h2 className="sb-list-header" id={heading}>
         {t("score.result.heading")}
       </h2>
