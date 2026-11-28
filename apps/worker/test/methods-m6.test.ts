@@ -17,7 +17,7 @@
 
 import { runInDurableObject, SELF } from "cloudflare:test";
 import { describe, expect, it } from "vitest";
-import { generateHexId, type CreateWallResponse, type MethodId, type ServerEvent } from "@ideabeam/shared";
+import { areaBox, generateHexId, type CreateWallResponse, type MethodId, type ServerEvent } from "@ideabeam/shared";
 import { ask, join, postWall, resync, settle, stubOf, type Sync, type TestSocket } from "./helpers.js";
 
 type StepChanged = Extract<ServerEvent, { type: "step.changed" }>;
@@ -287,9 +287,15 @@ describe("fixed fields", () => {
     expect(exported).toContain("| Place | Option | Harm if wrong | How little we know | Overall | Rated by |");
     expect(exported).toContain("## Customers\n\n- Workshops order online");
     // on to the tests in small groups and their agreement: the export still holds the fields and the table
-    for (const from of [2, 3, 4]) {
+    for (const from of [2, 3]) {
       expect(await ask(anna.socket, { type: "admin.step.go", from, to: from + 1 })).toBe("ack");
     }
+    // the teams' areas of the tests lie below the fields, not on the second row of them
+    const areas = (await resync(anna.socket)).teams?.areas ?? [];
+    expect(areas.length).toBeGreaterThan(0);
+    const bottom = Math.max(...fields.map((group) => group.y + group.h));
+    for (const area of areas) expect(areaBox(area).y).toBeGreaterThan(bottom);
+    expect(await ask(anna.socket, { type: "admin.step.go", from: 4, to: 5 })).toBe("ack");
     const test = await write(ben, "Test: call ten workshops", 16, 1300);
     expect(await ask(anna.socket, { type: "note.action", noteId: test, action: { who: "Ben", due: "Friday" } })).toBe(
       "ack",

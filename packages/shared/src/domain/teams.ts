@@ -25,10 +25,13 @@ import { estimateNoteHeight, NOTE_WIDTH } from "./note-size.js";
 // they saw; the notes they write afterwards go to their new team alone.
 
 /** Where a team writes: a span of slots on a band of the surface (`areaBox`). Teams that are merged take the slots
- *  of both, so a four's area holds the areas of its two pairs and the notes written there stay inside it. */
+ *  of both, so a four's area holds the areas of its two pairs and the notes written there stay inside it. `top`: the
+ *  band lies lower than `AREA_TOP`, below the wall's groups (the fixed fields of „Annahmen prüfen“ reach into the
+ *  band); without it the band lies where it always has. */
 export const teamAreaSchema = z.object({
   first: z.int().check(z.minimum(0)),
   count: z.int().check(z.minimum(1)),
+  top: z.optional(z.int()),
 });
 export type TeamArea = z.infer<typeof teamAreaSchema>;
 
@@ -140,9 +143,17 @@ export function formTeams(present: readonly string[], size: number, seed: number
   return teams;
 }
 
-/** The areas of teams formed anew: one slot each. */
-export function freshAreas(count: number): TeamArea[] {
-  return Array.from({ length: count }, (_, first) => ({ first, count: 1 }));
+/** The areas of teams formed anew: one slot each; on a band at `top` where it is given. */
+export function freshAreas(count: number, top?: number): TeamArea[] {
+  return Array.from({ length: count }, (_, first) => ({ first, count: 1, ...(top === undefined ? {} : { top }) }));
+}
+
+/** Where the band of areas formed anew lies (`TeamArea.top`): at `AREA_TOP`, unless one of the wall's groups reaches
+ *  down into it; then a gap below the lowest group, so no area lies on a group and no note written in a team lands in
+ *  a frame it does not belong to. undefined: at `AREA_TOP`. */
+export function bandTop(groups: ReadonlyArray<{ y: number; h: number }>): number | undefined {
+  const lowest = Math.max(-Infinity, ...groups.map((group) => group.y + group.h));
+  return lowest + AREA_GAP > AREA_TOP ? lowest + AREA_GAP : undefined;
 }
 
 /** Pairs become fours (docs/architektur-methoden.md 3.2): the teams are put together two by two, in their order,
@@ -175,13 +186,14 @@ function spanOf(areas: ReadonlyArray<TeamArea | undefined>): TeamArea {
   if (known.length === 0) return { first: 0, count: 1 };
   const first = Math.min(...known.map((area) => area.first));
   const end = Math.max(...known.map((area) => area.first + area.count));
-  return { first, count: end - first };
+  const top = known[0]?.top;
+  return { first, count: end - first, ...(top === undefined ? {} : { top }) };
 }
 
 /** The areas of teams that are kept for another round (stage M5, `keep`): the same spans, beside the last ones. */
 export function shiftedAreas(areas: readonly TeamArea[]): TeamArea[] {
   const end = Math.max(0, ...areas.map((area) => area.first + area.count));
-  return areas.map((area) => ({ first: area.first + end, count: area.count }));
+  return areas.map((area) => ({ ...area, first: area.first + end }));
 }
 
 /** Somebody who is in no team comes (late, or back after the forming): they join the smallest team, the first of
@@ -223,7 +235,8 @@ export function sameTeams(a: readonly string[][], b: readonly string[][]): boole
  *  were formed for it already. A step entered again (the moderation went back) gets the teams it had; one entered
  *  for the first time forms them as it says: anew at random, by merging the teams in force, or by keeping them with
  *  fresh areas (stage M5). Whoever is present
- *  and in no team then joins one (`placeLatecomer`). `now` is the moment the grouping in force is replaced. */
+ *  and in no team then joins one (`placeLatecomer`). `now` is the moment the grouping in force is replaced. `groups`:
+ *  the wall's groups, which teams formed anew keep their areas clear of (`bandTop`). */
 export function enterTeams(
   current: Teams | null,
   step: Pick<Step, "team">,
@@ -231,6 +244,7 @@ export function enterTeams(
   present: readonly string[],
   seed: number,
   now: number,
+  groups: ReadonlyArray<{ y: number; h: number }> = [],
 ): Teams | null {
   const settings = step.team;
   if (settings === undefined) return null;
@@ -262,7 +276,7 @@ export function enterTeams(
     // never entered while teams of another step are in force, unless it is entered again: then `known` holds)
     const used = current === null ? [] : [current.areas, ...current.history.map((entry) => entry.areas)].flat();
     const end = Math.max(0, ...used.map((area) => area.first + area.count));
-    areas = freshAreas(teams.length).map((area) => ({ first: area.first + end, count: area.count }));
+    areas = freshAreas(teams.length, bandTop(groups)).map((area) => ({ ...area, first: area.first + end }));
     usedSeed = seed;
   }
   for (const person of [...present].sort()) {
@@ -380,7 +394,7 @@ export const AREA_HEIGHT = 1_280;
 export function areaBox(area: TeamArea): { x: number; y: number; w: number; h: number } {
   return {
     x: AREA_LEFT + area.first * (AREA_SLOT + AREA_GAP),
-    y: AREA_TOP,
+    y: area.top ?? AREA_TOP,
     w: area.count * AREA_SLOT + (area.count - 1) * AREA_GAP,
     h: AREA_HEIGHT,
   };

@@ -8,6 +8,8 @@ import {
   areaBox,
   areaHead,
   autoAt,
+  bandTop,
+  CATALOGUE,
   checkAgenda,
   checkTeams,
   decideAuto,
@@ -16,6 +18,8 @@ import {
   decideTeamsSet,
   enterTeams,
   eventFor,
+  fieldBoxes,
+  fieldsTop,
   formTeams,
   initialFlow,
   layoutIntoAreas,
@@ -25,6 +29,7 @@ import {
   placeLatecomer,
   revealedFor,
   shareTeam,
+  shiftedAreas,
   stepContext,
   swapped,
   teamCount,
@@ -413,6 +418,28 @@ describe("areas and the export", () => {
       ),
     ).toBe(1);
     expect(areaAt([{ first: 0, count: 1 }], { x: -10, y: 0 })).toBeNull();
+  });
+
+  it("areas formed anew keep clear of the wall's groups, the fields of „Annahmen prüfen“ alone or after other notes; merged and kept areas stay on their band", () => {
+    const overlaps = (a: { x: number; y: number; w: number; h: number }, b: typeof a) =>
+      a.x < b.x + b.w && b.x < a.x + a.w && a.y < b.y + b.h && b.y < a.y + a.h;
+    const tests = CATALOGUE.annahmen.steps[4] ?? {};
+    // the method alone: its fields from the top, two rows, the second reaching into the band of AREA_TOP
+    // and the method after other notes (stage M7): its fields below them
+    for (const fields of [fieldBoxes(5), fieldBoxes(5, fieldsTop([], [{ y: 1_500 }], 200))]) {
+      const teams = enterTeams(null, tests, 4, PEOPLE, 7, NOW, fields) as Teams;
+      expect(teams.teams).toHaveLength(3);
+      for (const area of teams.areas)
+        for (const field of fields) expect(overlaps(areaBox(area), field), JSON.stringify(area)).toBe(false);
+      const top = bandTop(fields) as number;
+      expect(teams.areas.every((area) => area.top === top)).toBe(true);
+      expect(areaBox(mergeTeams(teams.teams, teams.areas).areas[0] as never).y).toBe(top);
+      expect(shiftedAreas(teams.areas).every((area) => areaBox(area).y === top)).toBe(true);
+    }
+    // groups above the band move nothing: the areas lie where they always have, without a top of their own
+    expect(bandTop([{ y: 0, h: 600 }])).toBeUndefined();
+    const plain = enterTeams(null, AGENDA.steps[1] ?? {}, 1, PEOPLE, 7, NOW, [{ y: 0, h: 600 }]) as Teams;
+    expect(plain.areas[0]).toEqual({ first: 0, count: 1 });
   });
 
   it("names how many teams each step had, never who was in them, and the attribution", () => {
